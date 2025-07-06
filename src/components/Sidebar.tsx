@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, PlusCircle, Zap, CheckSquare, Gift, Heart, BarChart3 } from 'lucide-react';
+import { Home, PlusCircle, Zap, CheckSquare, Gift, Heart, BarChart3, Target } from 'lucide-react';
 import { PageType } from '../types';
 
 interface SidebarProps {
@@ -12,6 +12,7 @@ const navigation = [
   { id: 'log-activity' as PageType, icon: PlusCircle, label: 'Log Activity' },
   { id: 'habits' as PageType, icon: Zap, label: 'Manage Habits' },
   { id: 'todo' as PageType, icon: CheckSquare, label: 'To-Do List' },
+  { id: 'goals' as PageType, icon: Target, label: 'Smart Goals' }, // NUEVO
   { id: 'rewards' as PageType, icon: Gift, label: 'Rewards' },
   { id: 'wellbeing' as PageType, icon: Heart, label: 'Emotional Well-being' },
   { id: 'analytics' as PageType, icon: BarChart3, label: 'Analytics' },

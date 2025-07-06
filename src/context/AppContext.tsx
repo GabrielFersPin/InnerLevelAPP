@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { AppData, Task, Habit, Todo, Reward, RedeemedReward, EmotionalLog } from '../types';
+import { AppData, Task, Habit, Todo, Reward, RedeemedReward, EmotionalLog, Goal } from '../types';
 
 interface AppState extends AppData {}
 
@@ -13,6 +13,9 @@ type AppAction =
   | { type: 'ADD_REWARD'; payload: Reward }
   | { type: 'REDEEM_REWARD'; payload: { rewardId: number; redeemedReward: RedeemedReward } }
   | { type: 'ADD_EMOTIONAL_LOG'; payload: EmotionalLog }
+  | { type: 'ADD_GOAL'; payload: Goal } // NUEVO
+  | { type: 'UPDATE_GOAL'; payload: { goalId: number; updates: Partial<Goal> } } // NUEVO
+  | { type: 'DELETE_GOAL'; payload: number } // NUEVO
   | { type: 'LOAD_DATA'; payload: AppData };
 
 const initialState: AppState = {
@@ -36,7 +39,8 @@ const initialState: AppState = {
     {id: 3, name: "New Book", description: "Buy that book from your wishlist", points: 200, category: "Learning", redeemed: false}
   ],
   redeemedRewards: [],
-  emotionalLogs: []
+  emotionalLogs: [],
+  goals: [] // NUEVO
 };
 
 function appReducer(state: AppState, action: AppAction): AppState {
@@ -77,6 +81,20 @@ function appReducer(state: AppState, action: AppAction): AppState {
       };
     case 'ADD_EMOTIONAL_LOG':
       return { ...state, emotionalLogs: [...state.emotionalLogs, action.payload] };
+    // NUEVAS ACCIONES PARA GOALS
+    case 'ADD_GOAL':
+      return { ...state, goals: [...state.goals, action.payload] };
+    case 'UPDATE_GOAL':
+      return {
+        ...state,
+        goals: state.goals.map(goal =>
+          goal.id === action.payload.goalId
+            ? { ...goal, ...action.payload.updates }
+            : goal
+        )
+      };
+    case 'DELETE_GOAL':
+      return { ...state, goals: state.goals.filter(g => g.id !== action.payload) };
     default:
       return state;
   }
@@ -103,11 +121,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       todos: JSON.parse(localStorage.getItem('innerlevel_todos') || '[]'),
       rewards: JSON.parse(localStorage.getItem('innerlevel_rewards') || 'null'),
       redeemedRewards: JSON.parse(localStorage.getItem('innerlevel_redeemed') || '[]'),
-      emotionalLogs: JSON.parse(localStorage.getItem('innerlevel_emotional') || '[]')
+      emotionalLogs: JSON.parse(localStorage.getItem('innerlevel_emotional') || '[]'),
+      goals: JSON.parse(localStorage.getItem('innerlevel_goals') || '[]') // NUEVO
     };
 
     // Only load if we have existing data, otherwise keep initial state
-    if (savedData.tasks.length > 0 || savedData.todos.length > 0 || savedData.redeemedRewards.length > 0) {
+    if (savedData.tasks.length > 0 || savedData.todos.length > 0 || savedData.redeemedRewards.length > 0 || savedData.goals.length > 0) {
       dispatch({
         type: 'LOAD_DATA',
         payload: {
@@ -127,6 +146,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('innerlevel_rewards', JSON.stringify(state.rewards));
     localStorage.setItem('innerlevel_redeemed', JSON.stringify(state.redeemedRewards));
     localStorage.setItem('innerlevel_emotional', JSON.stringify(state.emotionalLogs));
+    localStorage.setItem('innerlevel_goals', JSON.stringify(state.goals)); // NUEVO
   }, [state]);
 
   return (

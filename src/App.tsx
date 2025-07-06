@@ -8,6 +8,7 @@ import { TodoList } from './components/TodoList';
 import { Rewards } from './components/Rewards';
 import { Wellbeing } from './components/Wellbeing';
 import { Analytics } from './components/Analytics';
+import Goals from './components/Goals'; // NUEVO IMPORT
 import { PageType } from './types';
 
 function App() {
@@ -23,6 +24,8 @@ function App() {
         return <Habits />;
       case 'todo':
         return <TodoList />;
+      case 'goals': // NUEVO CASE
+        return <Goals />;
       case 'rewards':
         return <Rewards />;
       case 'wellbeing':
