@@ -17,7 +17,7 @@ function App() {
   const renderCurrentPage = () => {
     switch (currentPage) {
       case 'dashboard':
-        return <Dashboard />;
+        return <Dashboard onPageChange={setCurrentPage} />;
       case 'log-activity':
         return <LogActivity />;
       case 'habits':

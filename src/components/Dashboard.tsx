@@ -2,8 +2,13 @@ import React from 'react';
 import { useAppContext } from '../context/AppContext';
 import { Trophy, Calendar, Flame, PlusCircle, CheckSquare, Gift } from 'lucide-react';
 import { format } from 'date-fns';
+import { PageType } from '../types';
 
-export function Dashboard() {
+interface DashboardProps {
+  onPageChange: (page: PageType) => void;
+}
+
+export function Dashboard({ onPageChange }: DashboardProps) {
   const { state } = useAppContext();
 
   // Calculate metrics
@@ -169,15 +174,24 @@ export function Dashboard() {
           ⚡ Quick Actions
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button className="flex items-center justify-center gap-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white px-6 py-4 rounded-xl hover:from-purple-700 hover:to-purple-800 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+          <button 
+            onClick={() => onPageChange('log-activity')}
+            className="flex items-center justify-center gap-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white px-6 py-4 rounded-xl hover:from-purple-700 hover:to-purple-800 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+          >
             <PlusCircle size={20} />
             <span className="font-medium">Log Activity</span>
           </button>
-          <button className="flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+          <button 
+            onClick={() => onPageChange('todo')}
+            className="flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+          >
             <CheckSquare size={20} />
             <span className="font-medium">Add Task</span>
           </button>
-          <button className="flex items-center justify-center gap-3 bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-4 rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+          <button 
+            onClick={() => onPageChange('rewards')}
+            className="flex items-center justify-center gap-3 bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-4 rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+          >
             <Gift size={20} />
             <span className="font-medium">View Rewards</span>
           </button>
