@@ -21,7 +21,7 @@ const navigation = [
 
 export function Sidebar({ currentPage, onPageChange }: SidebarProps) {
   return (
-    <nav className="w-80 bg-white/95 backdrop-blur-lg p-6 shadow-xl rounded-r-3xl fixed h-full overflow-y-auto z-40">
+    <nav className="w-80 bg-white/95 backdrop-blur-lg p-6 shadow-xl rounded-r-3xl fixed h-full overflow-y-auto z-30">
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
           🎮 InnerLevel

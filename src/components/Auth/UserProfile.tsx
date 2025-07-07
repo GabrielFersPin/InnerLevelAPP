@@ -47,7 +47,7 @@ export function UserProfile({ isOpen, onClose }: UserProfileProps) {
   if (!isOpen || !user || !profile) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
       <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
         <div className="text-center mb-8">
           <div className="w-20 h-20 bg-gradient-to-r from-purple-600 to-purple-700 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -148,7 +148,7 @@ export function UserProfile({ isOpen, onClose }: UserProfileProps) {
 
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
         >
           ✕
         </button>

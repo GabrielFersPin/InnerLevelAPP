@@ -46,7 +46,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800">
-      <Header />
+      <Header onNavigateHome={() => setCurrentPage('dashboard')} />
       <div className="container mx-auto flex min-h-screen max-w-7xl">
         <Sidebar currentPage={currentPage} onPageChange={setCurrentPage} />
         

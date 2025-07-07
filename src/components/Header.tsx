@@ -2,9 +2,13 @@ import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { AuthModal } from './Auth/AuthModal';
 import { UserProfile } from './Auth/UserProfile';
-import { User, LogIn } from 'lucide-react';
+import { User, LogIn, Home } from 'lucide-react';
 
-export function Header() {
+interface HeaderProps {
+  onNavigateHome?: () => void;
+}
+
+export function Header({ onNavigateHome }: HeaderProps) {
   const { user, profile, loading } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -19,7 +23,18 @@ export function Header() {
 
   return (
     <>
-      <div className="fixed top-4 right-4 z-50">
+      <div className="fixed top-4 right-4 z-50 flex items-center gap-3">
+        {/* Home Button - Always visible */}
+        <button
+          onClick={onNavigateHome}
+          className="flex items-center gap-2 bg-white/95 backdrop-blur-lg px-4 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-purple-300"
+          title="Go to Dashboard"
+        >
+          <Home className="w-4 h-4 text-gray-600" />
+          <span className="text-sm font-medium text-gray-700">Dashboard</span>
+        </button>
+
+        {/* User Profile or Sign In Button */}
         {user && profile ? (
           <button
             onClick={() => setShowProfileModal(true)}
@@ -36,7 +51,7 @@ export function Header() {
         ) : (
           <button
             onClick={() => setShowAuthModal(true)}
-            className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white px-4 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:from-purple-700 hover:to-purple-800"
+            className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white px-6 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:from-purple-700 hover:to-purple-800"
           >
             <LogIn className="w-4 h-4" />
             <span className="font-medium">Sign In</span>
