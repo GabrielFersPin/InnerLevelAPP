@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { AppData, Task, Habit, Todo, Reward, RedeemedReward, EmotionalLog, Goal } from '../types';
+import { useUserData } from '../hooks/useUserData';
 
 interface AppState extends AppData {}
 
@@ -110,6 +111,9 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
+  
+  // Initialize user data hook
+  useUserData();
 
   const generateId = () => Date.now() + Math.random();
 

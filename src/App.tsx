@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { AppProvider } from './context/AppContext';
+import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
 import { LogActivity } from './components/LogActivity';
@@ -40,6 +41,7 @@ function App() {
   return (
     <AppProvider>
       <div className="min-h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800">
+        <Header />
         <div className="container mx-auto flex min-h-screen max-w-7xl">
           <Sidebar currentPage={currentPage} onPageChange={setCurrentPage} />
           
