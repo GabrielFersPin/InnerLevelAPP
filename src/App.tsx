@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { AppProvider } from './context/AppContext';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
@@ -11,9 +10,13 @@ import { Wellbeing } from './components/Wellbeing';
 import { Analytics } from './components/Analytics';
 import Goals from './components/Goals'; // NUEVO IMPORT
 import { PageType } from './types';
+import { useUserData } from './hooks/useUserData';
 
 function App() {
   const [currentPage, setCurrentPage] = useState<PageType>('dashboard');
+  
+  // Initialize user data hook
+  useUserData();
 
   const renderCurrentPage = () => {
     switch (currentPage) {
@@ -39,20 +42,18 @@ function App() {
   };
 
   return (
-    <AppProvider>
-      <div className="min-h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800">
-        <Header />
-        <div className="container mx-auto flex min-h-screen max-w-7xl">
-          <Sidebar currentPage={currentPage} onPageChange={setCurrentPage} />
-          
-          <main className="flex-1 ml-80 p-8 bg-white/95 backdrop-blur-lg rounded-l-3xl mt-5 mb-5 mr-5 shadow-xl overflow-y-auto max-h-[calc(100vh-40px)]">
-            <div className="animate-fadeIn">
-              {renderCurrentPage()}
-            </div>
-          </main>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800">
+      <Header />
+      <div className="container mx-auto flex min-h-screen max-w-7xl">
+        <Sidebar currentPage={currentPage} onPageChange={setCurrentPage} />
+        
+        <main className="flex-1 ml-80 p-8 bg-white/95 backdrop-blur-lg rounded-l-3xl mt-5 mb-5 mr-5 shadow-xl overflow-y-auto max-h-[calc(100vh-40px)]">
+          <div className="animate-fadeIn">
+            {renderCurrentPage()}
+          </div>
+        </main>
       </div>
-    </AppProvider>
+    </div>
   );
 }
 
