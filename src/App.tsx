@@ -9,6 +9,7 @@ import { Rewards } from './components/Rewards';
 import { Wellbeing } from './components/Wellbeing';
 import { Analytics } from './components/Analytics';
 import Goals from './components/Goals'; // NUEVO IMPORT
+import { Profile } from './components/Profile';
 import { PageType } from './types';
 import { useUserData } from './hooks/useUserData';
 
@@ -36,6 +37,8 @@ function App() {
         return <Wellbeing />;
       case 'analytics':
         return <Analytics />;
+      case 'profile':
+        return <Profile />;
       default:
         return <Dashboard />;
     }
