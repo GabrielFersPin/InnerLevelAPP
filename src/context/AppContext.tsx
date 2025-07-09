@@ -110,7 +110,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
-
+  
   const generateId = () => Date.now() + Math.random();
 
   // Load data from localStorage on mount

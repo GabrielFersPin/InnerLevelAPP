@@ -61,6 +61,37 @@ export interface AppData {
   rewards: Reward[];
   redeemedRewards: RedeemedReward[];
   emotionalLogs: EmotionalLog[];
+  goals: Goal[];
 }
 
-export type PageType = 'dashboard' | 'log-activity' | 'habits' | 'todo' | 'rewards' | 'wellbeing' | 'analytics';
+export interface Goal {
+  id: number;
+  title: string;
+  description: string;
+  timeframe: string;
+  priority: 'High' | 'Medium' | 'Low';
+  status: 'Active' | 'Completed' | 'Paused';
+  createdAt: string;
+  progress: number;
+  aiPlan?: {
+    habits: Array<{
+      name: string;
+      category: string;
+      points: number;
+      description: string;
+    }>;
+    rewards: Array<{
+      name: string;
+      description: string;
+      points: number;
+      category: string;
+    }>;
+    milestones: Array<{
+      title: string;
+      description: string;
+      points: number;
+    }>;
+  };
+}
+
+export type PageType = 'dashboard' | 'log-activity' | 'habits' | 'todo' | 'goals' | 'rewards' | 'wellbeing' | 'analytics' | 'profile';

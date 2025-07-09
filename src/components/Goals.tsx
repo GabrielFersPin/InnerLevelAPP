@@ -221,7 +221,7 @@ export default function Goals() {
                 value={goalForm.title}
                 onChange={(e) => setGoalForm(prev => ({ ...prev, title: e.target.value }))}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                placeholder="e.g., Conseguir un trabajo en tecnología, Perder 10kg, Aprender Python..."
+                placeholder="e.g., Get a job in technology, Lose 10kg, Learn Python..."
                 required
               />
             </div>

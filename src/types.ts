@@ -6,4 +6,5 @@ export type PageType =
   | 'goals'
   | 'rewards'
   | 'wellbeing'
-  | 'analytics';
+  | 'analytics'
+  | 'profile';
