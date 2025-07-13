@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
-import { AuthModal } from './Auth/AuthModal';
-import { UserProfile } from './Auth/UserProfile';
+// import { useAuth } from '../hooks/useAuth';
+// import { AuthModal } from './Auth/AuthModal';
+// import { UserProfile } from './Auth/UserProfile';
 import { User, LogIn, Home } from 'lucide-react';
 
 interface HeaderProps {
@@ -9,17 +9,14 @@ interface HeaderProps {
 }
 
 export function Header({ onNavigateHome }: HeaderProps) {
-  const { user, profile, loading } = useAuth();
+  // const { user, profile, loading } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
 
-  if (loading) {
-    return (
-      <div className="fixed top-4 right-4 z-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-      </div>
-    );
-  }
+  // Temporarily disable auth functionality
+  const user = null;
+  const profile = null;
+  const loading = false;
 
   return (
     <>
@@ -59,7 +56,8 @@ export function Header({ onNavigateHome }: HeaderProps) {
         )}
       </div>
 
-      <AuthModal 
+      {/* Temporarily disabled auth modals */}
+      {/* <AuthModal 
         isOpen={showAuthModal} 
         onClose={() => setShowAuthModal(false)} 
       />
@@ -67,7 +65,7 @@ export function Header({ onNavigateHome }: HeaderProps) {
       <UserProfile 
         isOpen={showProfileModal} 
         onClose={() => setShowProfileModal(false)} 
-      />
+      /> */}
     </>
   );
 }

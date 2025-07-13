@@ -62,6 +62,21 @@ export interface AppData {
   redeemedRewards: RedeemedReward[];
   emotionalLogs: EmotionalLog[];
   goals: Goal[];
+  // LifeQuest Cards data
+  cards: {
+    inventory: Card[];
+    activeCards: string[];
+    cooldowns: Record<string, Date>;
+  };
+  quests: {
+    active: Quest[];
+    completed: Quest[];
+  };
+  energy: EnergyState;
+  recommendations: {
+    daily: Card[];
+    lastGenerated: Date;
+  };
 }
 
 export interface Goal {
@@ -94,4 +109,92 @@ export interface Goal {
   };
 }
 
-export type PageType = 'dashboard' | 'log-activity' | 'habits' | 'todo' | 'goals' | 'rewards' | 'wellbeing' | 'analytics' | 'profile';
+// LifeQuest Cards - New RPG System Types
+export interface Card {
+  id: string;
+  name: string;
+  description: string;
+  type: 'action' | 'power' | 'recovery' | 'event' | 'equipment';
+  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+  energyCost: number;
+  duration: number; // horas
+  impact: number; // puntos hacia quest
+  cooldown?: number; // horas
+  conditions?: {
+    requiredEnergyLevel?: string; // "> 75%"
+    timeRequired?: string;
+    mentalState?: string[];
+    prerequisiteCards?: string[];
+  };
+  effects?: {
+    type: 'energy' | 'multiplier' | 'unlock' | 'bonus';
+    target: string;
+    value: number;
+    duration?: number;
+  }[];
+  tags: string[];
+  createdAt: Date;
+  aiGenerated: boolean;
+  usageCount: number;
+  lastUsed?: Date;
+  isOnCooldown: boolean;
+}
+
+export interface Quest {
+  id: string;
+  name: string;
+  description: string;
+  type: 'career' | 'health' | 'relationships' | 'skills' | 'creative';
+  difficulty: 'easy' | 'medium' | 'hard' | 'epic' | 'legendary';
+  estimatedDuration: number; // días
+  deadline?: Date;
+  progress: number; // 0-100
+  status: 'active' | 'completed' | 'paused' | 'failed';
+  milestones: {
+    id: string;
+    name: string;
+    requiredProgress: number;
+    rewards: { type: string; value: number }[];
+    completed: boolean;
+  }[];
+  rewards: {
+    experience: number;
+    cards: string[];
+    unlocks: string[];
+  };
+  createdAt: Date;
+}
+
+export interface EnergyState {
+  current: number;
+  maximum: number;
+  regenerationRate: number; // por hora
+  lastUpdate: Date;
+  dailyUsage: {
+    date: string;
+    usage: { time: string; amount: number; activity: string }[];
+  }[];
+}
+
+export interface UserInventory {
+  cards: Card[];
+  activeCards: string[]; // IDs de cartas actualmente en uso
+  favoriteCards: string[];
+}
+
+export interface CardResult {
+  success: boolean;
+  energyConsumed: number;
+  progressGained: number;
+  effects: string[];
+  message: string;
+}
+
+export interface EnergyForecast {
+  estimatedConsumption: number;
+  remainingEnergy: number;
+  regenerationTime: number;
+  recommendations: string[];
+}
+
+export type PageType = 'dashboard' | 'log-activity' | 'habits' | 'todo' | 'goals' | 'rewards' | 'wellbeing' | 'analytics' | 'profile' | 'card-inventory' | 'quest-designer' | 'card-generator';

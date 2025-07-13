@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { AppData, Task, Habit, Todo, Reward, RedeemedReward, EmotionalLog, Goal } from '../types';
+import { AppData, Task, Habit, Todo, Reward, RedeemedReward, EmotionalLog, Goal, Card, Quest, CardResult } from '../types/index';
 
 interface AppState extends AppData {}
 
@@ -13,9 +13,22 @@ type AppAction =
   | { type: 'ADD_REWARD'; payload: Reward }
   | { type: 'REDEEM_REWARD'; payload: { rewardId: number; redeemedReward: RedeemedReward } }
   | { type: 'ADD_EMOTIONAL_LOG'; payload: EmotionalLog }
-  | { type: 'ADD_GOAL'; payload: Goal } // NUEVO
-  | { type: 'UPDATE_GOAL'; payload: { goalId: number; updates: Partial<Goal> } } // NUEVO
-  | { type: 'DELETE_GOAL'; payload: number } // NUEVO
+  | { type: 'ADD_GOAL'; payload: Goal }
+  | { type: 'UPDATE_GOAL'; payload: { goalId: number; updates: Partial<Goal> } }
+  | { type: 'DELETE_GOAL'; payload: number }
+  // LifeQuest Cards Actions
+  | { type: 'ADD_CARD'; payload: Card }
+  | { type: 'EXECUTE_CARD'; payload: { cardId: string; result: CardResult } }
+  | { type: 'UPDATE_CARD_COOLDOWN'; payload: { cardId: string; cooldownUntil: Date } }
+  | { type: 'ACTIVATE_CARD'; payload: string }
+  | { type: 'DEACTIVATE_CARD'; payload: string }
+  | { type: 'CREATE_QUEST'; payload: Quest }
+  | { type: 'UPDATE_QUEST_PROGRESS'; payload: { questId: string; progress: number } }
+  | { type: 'COMPLETE_QUEST'; payload: string }
+  | { type: 'UPDATE_ENERGY'; payload: { current?: number; maximum?: number; regenerationRate?: number } }
+  | { type: 'CONSUME_ENERGY'; payload: number }
+  | { type: 'GENERATE_RECOMMENDATIONS'; payload: Card[] }
+  | { type: 'UPDATE_ENERGY_FROM_TIME' }
   | { type: 'LOAD_DATA'; payload: AppData };
 
 const initialState: AppState = {
@@ -40,7 +53,28 @@ const initialState: AppState = {
   ],
   redeemedRewards: [],
   emotionalLogs: [],
-  goals: [] // NUEVO
+  goals: [],
+  // LifeQuest Cards initial state
+  cards: {
+    inventory: [],
+    activeCards: [],
+    cooldowns: {}
+  },
+  quests: {
+    active: [],
+    completed: []
+  },
+  energy: {
+    current: 100,
+    maximum: 100,
+    regenerationRate: 4.17, // ~100 energy per day (24 hours)
+    lastUpdate: new Date(),
+    dailyUsage: []
+  },
+  recommendations: {
+    daily: [],
+    lastGenerated: new Date()
+  }
 };
 
 function appReducer(state: AppState, action: AppAction): AppState {
@@ -95,6 +129,164 @@ function appReducer(state: AppState, action: AppAction): AppState {
       };
     case 'DELETE_GOAL':
       return { ...state, goals: state.goals.filter(g => g.id !== action.payload) };
+    
+    // LifeQuest Cards Reducers
+    case 'ADD_CARD':
+      return {
+        ...state,
+        cards: {
+          ...state.cards,
+          inventory: [...state.cards.inventory, action.payload]
+        }
+      };
+    
+    case 'EXECUTE_CARD': {
+      const { cardId, result } = action.payload;
+      const executedCard = state.cards.inventory.find(c => c.id === cardId);
+      return {
+        ...state,
+        cards: {
+          ...state.cards,
+          inventory: state.cards.inventory.map(card =>
+            card.id === cardId 
+              ? { 
+                  ...card, 
+                  usageCount: card.usageCount + 1,
+                  lastUsed: new Date(),
+                  isOnCooldown: card.cooldown ? true : false
+                }
+              : card
+          ),
+          cooldowns: executedCard?.cooldown 
+            ? { 
+                ...state.cards.cooldowns, 
+                [cardId]: new Date(Date.now() + executedCard.cooldown * 60 * 60 * 1000) 
+              }
+            : state.cards.cooldowns
+        },
+        energy: {
+          ...state.energy,
+          current: Math.max(0, state.energy.current - result.energyConsumed)
+        }
+      };
+    }
+    
+    case 'UPDATE_CARD_COOLDOWN':
+      return {
+        ...state,
+        cards: {
+          ...state.cards,
+          cooldowns: {
+            ...state.cards.cooldowns,
+            [action.payload.cardId]: action.payload.cooldownUntil
+          },
+          inventory: state.cards.inventory.map(card =>
+            card.id === action.payload.cardId
+              ? { ...card, isOnCooldown: action.payload.cooldownUntil > new Date() }
+              : card
+          )
+        }
+      };
+    
+    case 'ACTIVATE_CARD':
+      return {
+        ...state,
+        cards: {
+          ...state.cards,
+          activeCards: [...state.cards.activeCards, action.payload]
+        }
+      };
+    
+    case 'DEACTIVATE_CARD':
+      return {
+        ...state,
+        cards: {
+          ...state.cards,
+          activeCards: state.cards.activeCards.filter(id => id !== action.payload)
+        }
+      };
+    
+    case 'CREATE_QUEST':
+      return {
+        ...state,
+        quests: {
+          ...state.quests,
+          active: [...state.quests.active, action.payload]
+        }
+      };
+    
+    case 'UPDATE_QUEST_PROGRESS':
+      return {
+        ...state,
+        quests: {
+          ...state.quests,
+          active: state.quests.active.map(quest =>
+            quest.id === action.payload.questId
+              ? { ...quest, progress: Math.min(100, action.payload.progress) }
+              : quest
+          )
+        }
+      };
+    
+    case 'COMPLETE_QUEST': {
+      const completedQuest = state.quests.active.find(q => q.id === action.payload);
+      return {
+        ...state,
+        quests: {
+          active: state.quests.active.filter(q => q.id !== action.payload),
+          completed: completedQuest 
+            ? [...state.quests.completed, { ...completedQuest, status: 'completed' as const }]
+            : state.quests.completed
+        }
+      };
+    }
+    
+    case 'UPDATE_ENERGY':
+      return {
+        ...state,
+        energy: {
+          ...state.energy,
+          ...action.payload,
+          lastUpdate: new Date()
+        }
+      };
+    
+    case 'CONSUME_ENERGY':
+      return {
+        ...state,
+        energy: {
+          ...state.energy,
+          current: Math.max(0, state.energy.current - action.payload),
+          lastUpdate: new Date()
+        }
+      };
+    
+    case 'GENERATE_RECOMMENDATIONS':
+      return {
+        ...state,
+        recommendations: {
+          daily: action.payload,
+          lastGenerated: new Date()
+        }
+      };
+    
+    case 'UPDATE_ENERGY_FROM_TIME': {
+      const now = new Date();
+      const timeDiff = (now.getTime() - state.energy.lastUpdate.getTime()) / (1000 * 60 * 60); // hours
+      const energyGained = Math.min(
+        state.energy.maximum - state.energy.current,
+        timeDiff * state.energy.regenerationRate
+      );
+      return {
+        ...state,
+        energy: {
+          ...state.energy,
+          current: Math.min(state.energy.maximum, state.energy.current + energyGained),
+          lastUpdate: now
+        }
+      };
+    }
+    
     default:
       return state;
   }
@@ -113,41 +305,74 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   
   const generateId = () => Date.now() + Math.random();
 
-  // Load data from localStorage on mount
+  // Load data from localStorage on mount - temporarily disabled
   useEffect(() => {
-    const savedData = {
-      tasks: JSON.parse(localStorage.getItem('innerlevel_tasks') || '[]'),
-      habits: JSON.parse(localStorage.getItem('innerlevel_habits') || 'null'),
-      todos: JSON.parse(localStorage.getItem('innerlevel_todos') || '[]'),
-      rewards: JSON.parse(localStorage.getItem('innerlevel_rewards') || 'null'),
-      redeemedRewards: JSON.parse(localStorage.getItem('innerlevel_redeemed') || '[]'),
-      emotionalLogs: JSON.parse(localStorage.getItem('innerlevel_emotional') || '[]'),
-      goals: JSON.parse(localStorage.getItem('innerlevel_goals') || '[]') // NUEVO
-    };
+    try {
+      const savedData = {
+        tasks: JSON.parse(localStorage.getItem('innerlevel_tasks') || '[]'),
+        habits: JSON.parse(localStorage.getItem('innerlevel_habits') || 'null'),
+        todos: JSON.parse(localStorage.getItem('innerlevel_todos') || '[]'),
+        rewards: JSON.parse(localStorage.getItem('innerlevel_rewards') || 'null'),
+        redeemedRewards: JSON.parse(localStorage.getItem('innerlevel_redeemed') || '[]'),
+        emotionalLogs: JSON.parse(localStorage.getItem('innerlevel_emotional') || '[]'),
+        goals: JSON.parse(localStorage.getItem('innerlevel_goals') || '[]'),
+        // LifeQuest Cards data
+        cards: JSON.parse(localStorage.getItem('innerlevel_cards') || 'null'),
+        quests: JSON.parse(localStorage.getItem('innerlevel_quests') || 'null'),
+        energy: JSON.parse(localStorage.getItem('innerlevel_energy') || 'null'),
+        recommendations: JSON.parse(localStorage.getItem('innerlevel_recommendations') || 'null')
+      };
 
-    // Only load if we have existing data, otherwise keep initial state
-    if (savedData.tasks.length > 0 || savedData.todos.length > 0 || savedData.redeemedRewards.length > 0 || savedData.goals.length > 0) {
-      dispatch({
-        type: 'LOAD_DATA',
-        payload: {
-          ...savedData,
-          habits: savedData.habits || initialState.habits,
-          rewards: savedData.rewards || initialState.rewards
-        }
-      });
+      // Only load if we have existing data, otherwise keep initial state
+      if (savedData.tasks.length > 0 || savedData.todos.length > 0 || savedData.redeemedRewards.length > 0 || savedData.goals.length > 0 || savedData.cards) {
+        dispatch({
+          type: 'LOAD_DATA',
+          payload: {
+            ...savedData,
+            habits: savedData.habits || initialState.habits,
+            rewards: savedData.rewards || initialState.rewards,
+            cards: savedData.cards || initialState.cards,
+            quests: savedData.quests || initialState.quests,
+            energy: savedData.energy || initialState.energy,
+            recommendations: savedData.recommendations || initialState.recommendations
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error loading from localStorage:', error);
+      // Clear corrupted data
+      localStorage.clear();
     }
   }, []);
 
-  // Save data to localStorage whenever state changes
+  // Save data to localStorage whenever state changes - temporarily disabled
   useEffect(() => {
-    localStorage.setItem('innerlevel_tasks', JSON.stringify(state.tasks));
-    localStorage.setItem('innerlevel_habits', JSON.stringify(state.habits));
-    localStorage.setItem('innerlevel_todos', JSON.stringify(state.todos));
-    localStorage.setItem('innerlevel_rewards', JSON.stringify(state.rewards));
-    localStorage.setItem('innerlevel_redeemed', JSON.stringify(state.redeemedRewards));
-    localStorage.setItem('innerlevel_emotional', JSON.stringify(state.emotionalLogs));
-    localStorage.setItem('innerlevel_goals', JSON.stringify(state.goals)); // NUEVO
+    try {
+      localStorage.setItem('innerlevel_tasks', JSON.stringify(state.tasks));
+      localStorage.setItem('innerlevel_habits', JSON.stringify(state.habits));
+      localStorage.setItem('innerlevel_todos', JSON.stringify(state.todos));
+      localStorage.setItem('innerlevel_rewards', JSON.stringify(state.rewards));
+      localStorage.setItem('innerlevel_redeemed', JSON.stringify(state.redeemedRewards));
+      localStorage.setItem('innerlevel_emotional', JSON.stringify(state.emotionalLogs));
+      localStorage.setItem('innerlevel_goals', JSON.stringify(state.goals));
+      // LifeQuest Cards localStorage
+      localStorage.setItem('innerlevel_cards', JSON.stringify(state.cards));
+      localStorage.setItem('innerlevel_quests', JSON.stringify(state.quests));
+      localStorage.setItem('innerlevel_energy', JSON.stringify(state.energy));
+      localStorage.setItem('innerlevel_recommendations', JSON.stringify(state.recommendations));
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+    }
   }, [state]);
+
+  // Update energy from time passage every minute - temporarily disabled
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     dispatch({ type: 'UPDATE_ENERGY_FROM_TIME' });
+  //   }, 60000); // Update every minute
+
+  //   return () => clearInterval(interval);
+  // }, []);
 
   return (
     <AppContext.Provider value={{ state, dispatch, generateId }}>

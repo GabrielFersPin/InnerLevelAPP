@@ -1,18 +1,40 @@
 import React from 'react';
 import { useAppContext } from '../context/AppContext';
-import { Trophy, Calendar, Flame, PlusCircle, CheckSquare, Gift } from 'lucide-react';
-import { format } from 'date-fns';
-import { PageType } from '../types';
+import { Trophy, Crown } from 'lucide-react';
+import { PageType } from '../types/index';
 
 interface DashboardProps {
   onPageChange: (page: PageType) => void;
 }
 
 export function Dashboard({ onPageChange }: DashboardProps) {
-  const { state } = useAppContext();
+  const { state, dispatch } = useAppContext();
+  const [selectedCard, setSelectedCard] = useState<any>(null);
+  const [isCardExecutorOpen, setIsCardExecutorOpen] = useState(false);
+  const [dailyCards, setDailyCards] = useState<any[]>([]);
 
-  // Calculate metrics
+  // Initialize sample data if needed
+  useEffect(() => {
+    if (state.cards.inventory.length === 0) {
+      sampleCards.forEach(card => {
+        dispatch({ type: 'ADD_CARD', payload: card });
+      });
+    }
+  }, [state.cards.inventory.length, dispatch]);
+
+  // Generate daily recommendations
+  useEffect(() => {
+    const currentHour = new Date().getHours();
+    const timeOfDay = currentHour < 12 ? 'morning' : currentHour < 18 ? 'afternoon' : 'evening';
+    const recommendations = getDailyRecommendations(state.energy.current, timeOfDay);
+    setDailyCards(recommendations);
+  }, [state.energy.current]);
+
+  // Calculate enhanced metrics
   const totalPoints = state.tasks.reduce((sum, task) => sum + task.points, 0);
+  const totalExperience = state.quests.completed.reduce((sum, quest) => sum + quest.rewards.experience, 0);
+  const activeQuestCount = state.quests.active.length;
+  const cardCount = state.cards.inventory.length;
   
   const weekAgo = new Date();
   weekAgo.setDate(weekAgo.getDate() - 7);
@@ -40,163 +62,207 @@ export function Dashboard({ onPageChange }: DashboardProps) {
     }
   }
 
-  // Get recent activities and pending tasks
-  const recentActivities = state.tasks
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 5);
-
-  const pendingTasks = state.todos
-    .filter(todo => todo.status !== 'Completed')
-    .sort((a, b) => {
-      const priorityOrder = { 'High': 0, 'Medium': 1, 'Low': 2 };
-      return priorityOrder[a.priority] - priorityOrder[b.priority];
-    })
-    .slice(0, 5);
-
-  const metrics = [
-    { icon: Trophy, label: 'Total Points', value: totalPoints, color: 'text-purple-600' },
-    { icon: Calendar, label: 'Points This Week', value: weekPoints, color: 'text-blue-600' },
-    { icon: Flame, label: 'Current Streak', value: streak, color: 'text-orange-600' },
-  ];
+  const handleCardExecute = (result: any) => {
+    dispatch({ type: 'EXECUTE_CARD', payload: { cardId: selectedCard.id, result } });
+    dispatch({ type: 'CONSUME_ENERGY', payload: result.energyConsumed });
+    
+    // Update quest progress if applicable
+    state.quests.active.forEach(quest => {
+      if (selectedCard.tags.some((tag: string) => tag === quest.type)) {
+        dispatch({ 
+          type: 'UPDATE_QUEST_PROGRESS', 
+          payload: { questId: quest.id, progress: quest.progress + (result.progressGained / 10) }
+        });
+      }
+    });
+  };
 
   return (
     <div className="space-y-8">
-      {/* Hero Section */}
-      <div className="bg-gradient-to-r from-purple-600 to-purple-800 rounded-2xl p-8 text-white text-center">
-        <h2 className="text-3xl font-bold mb-4">
-          Transform Your Emotional Well-being Into A Journey of Growth
-        </h2>
-        <p className="text-purple-100 text-lg leading-relaxed max-w-4xl mx-auto">
-          "The greatest glory in living lies not in never falling, but in rising every time we fall. 
-          The journey of self-discovery and emotional growth is not about being perfect, but about 
-          being present and learning from each moment." — Nelson Mandela
-        </p>
+      {/* Epic Hero Section */}
+      <div className="bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 rounded-2xl p-8 text-white text-center relative overflow-hidden">
+        <div className="absolute inset-0 opacity-20">
+          <div className="w-full h-full" style={{
+            backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)',
+            backgroundSize: '20px 20px'
+          }}></div>
+        </div>
+        <div className="relative">
+          <div className="flex items-center justify-center mb-4">
+            <Crown size={48} className="text-amber-200 mr-3" />
+            <h2 className="text-4xl font-bold">
+              ⚔️ War Room
+            </h2>
+            <Crown size={48} className="text-amber-200 ml-3" />
+          </div>
+          <p className="text-amber-100 text-lg leading-relaxed max-w-4xl mx-auto">
+            "Every great adventure begins with a single step into the unknown. Your journey of personal transformation 
+            awaits – equipped with powerful cards, guided by epic quests, and fueled by your inner strength."
+          </p>
+        </div>
       </div>
 
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {metrics.map((metric, index) => {
-          const Icon = metric.icon;
-          return (
-            <div key={index} className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-              <div className="flex items-center justify-center mb-4">
-                <Icon className={`w-8 h-8 ${metric.color}`} />
+      {/* Energy and Stats Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Energy Meter - Takes full width on mobile, 2 columns on desktop */}
+        <div className="lg:col-span-2">
+          <EnergyMeter 
+            energy={state.energy} 
+            size="large"
+            onEnergyUpdate={(newEnergy) => dispatch({ type: 'UPDATE_ENERGY', payload: newEnergy })}
+          />
+        </div>
+
+        {/* Quick Stats */}
+        <div className="rpg-panel p-6">
+          <h3 className="text-rpg-title text-xl font-bold mb-4">⚡ Quick Stats</h3>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <Trophy size={16} className="text-amber-400" />
+                <span className="text-rpg-content">Total Points</span>
               </div>
-              <div className="text-center">
-                <div className={`text-3xl font-bold ${metric.color} mb-2`}>
-                  {metric.value}
-                </div>
-                <div className="text-gray-600 text-sm font-medium uppercase tracking-wider">
-                  {metric.label}
-                </div>
-              </div>
+              <span className="text-rpg-accent font-bold">{totalPoints}</span>
             </div>
-          );
-        })}
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <Sparkles size={16} className="text-purple-400" />
+                <span className="text-rpg-content">Experience</span>
+              </div>
+              <span className="text-rpg-accent font-bold">{totalExperience}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <Target size={16} className="text-emerald-400" />
+                <span className="text-rpg-content">Active Quests</span>
+              </div>
+              <span className="text-rpg-accent font-bold">{activeQuestCount}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <BookOpen size={16} className="text-blue-400" />
+                <span className="text-rpg-content">Card Collection</span>
+              </div>
+              <span className="text-rpg-accent font-bold">{cardCount}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <Flame size={16} className="text-orange-400" />
+                <span className="text-rpg-content">Current Streak</span>
+              </div>
+              <span className="text-rpg-accent font-bold">{streak} days</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Recent Activities and Pending Tasks */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white rounded-2xl p-6 shadow-lg">
-          <h3 className="text-xl font-bold text-gray-800 mb-6 pb-3 border-b border-gray-200">
-            📝 Recent Activities
-          </h3>
-          <div className="space-y-3">
-            {recentActivities.length > 0 ? (
-              recentActivities.map((activity) => (
-                <div key={activity.id} className="bg-gray-50 rounded-xl p-4 border-l-4 border-purple-500 hover:bg-gray-100 transition-colors">
-                  <div className="font-semibold text-gray-800">{activity.task}</div>
-                  <div className="flex justify-between items-center mt-2 text-sm text-gray-600">
-                    <span>{format(new Date(activity.date), 'MMM dd, yyyy')}</span>
-                    <span className="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-3 py-1 rounded-full text-xs font-medium">
-                      +{activity.points} pts
-                    </span>
-                  </div>
-                  {activity.comment && (
-                    <div className="mt-2 text-sm text-gray-600 italic">{activity.comment}</div>
-                  )}
+      {/* Active Quests Progress */}
+      {state.quests.active.length > 0 && (
+        <div className="rpg-panel p-6">
+          <h3 className="text-rpg-title text-xl font-bold mb-4">🏆 Active Quests</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {state.quests.active.slice(0, 4).map((quest) => (
+              <div key={quest.id} className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/30">
+                <div className="flex justify-between items-start mb-2">
+                  <h4 className="text-rpg-content font-semibold text-sm">{quest.name}</h4>
+                  <span className="text-xs text-slate-400">{quest.progress}%</span>
                 </div>
-              ))
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <PlusCircle className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p>No activities logged yet. Start by adding some in the 'Log Activity' section!</p>
+                <div className="w-full bg-slate-700 rounded-full h-2 mb-2">
+                  <div 
+                    className="quest-progress h-2 rounded-full transition-all duration-500"
+                    style={{ width: `${quest.progress}%` }}
+                  />
+                </div>
+                <p className="text-xs text-slate-400">{quest.description}</p>
               </div>
-            )}
+            ))}
           </div>
         </div>
+      )}
 
-        <div className="bg-white rounded-2xl p-6 shadow-lg">
-          <h3 className="text-xl font-bold text-gray-800 mb-6 pb-3 border-b border-gray-200">
-            📋 Pending Tasks
-          </h3>
-          <div className="space-y-3">
-            {pendingTasks.length > 0 ? (
-              pendingTasks.map((task) => {
-                const priorityColors = {
-                  High: 'border-red-500 bg-red-50',
-                  Medium: 'border-yellow-500 bg-yellow-50',
-                  Low: 'border-green-500 bg-green-50'
-                };
-                const priorityTextColors = {
-                  High: 'text-red-600 bg-red-100',
-                  Medium: 'text-yellow-600 bg-yellow-100',
-                  Low: 'text-green-600 bg-green-100'
-                };
-                
-                return (
-                  <div key={task.id} className={`${priorityColors[task.priority]} rounded-xl p-4 border-l-4 hover:shadow-md transition-all`}>
-                    <div className="font-semibold text-gray-800">{task.task}</div>
-                    <div className="flex justify-between items-center mt-2 text-sm">
-                      <span className="text-gray-600">
-                        Due: {format(new Date(task.dueDate), 'MMM dd, yyyy')}
-                      </span>
-                      <span className={`${priorityTextColors[task.priority]} px-2 py-1 rounded-full text-xs font-medium`}>
-                        {task.priority}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <CheckSquare className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p>No pending tasks! You're all caught up.</p>
-              </div>
-            )}
+      {/* Daily Recommendations */}
+      <div className="rpg-panel p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-rpg-title text-xl font-bold">🔮 Today's Recommended Cards</h3>
+          <button 
+            onClick={() => onPageChange('card-generator')}
+            className="btn-rpg text-sm py-2 px-4"
+          >
+            Generate More
+          </button>
+        </div>
+        
+        {dailyCards.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {dailyCards.map((card) => (
+              <CardComponent
+                key={card.id}
+                card={card}
+                size="small"
+                onClick={() => {
+                  setSelectedCard(card);
+                  setIsCardExecutorOpen(true);
+                }}
+                isDisabled={state.energy.current < card.energyCost}
+              />
+            ))}
           </div>
+        ) : (
+          <div className="text-center py-8 text-slate-400">
+            <Sparkles className="w-12 h-12 mx-auto mb-3 text-slate-500" />
+            <p>Generate your first daily cards to get started!</p>
+          </div>
+        )}
+      </div>
+
+      {/* Epic Actions */}
+      <div className="rpg-panel p-6">
+        <h3 className="text-rpg-title text-xl font-bold mb-6">⚔️ Begin Your Adventure</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <button 
+            onClick={() => onPageChange('card-inventory')}
+            className="btn-rpg flex items-center justify-center gap-3 py-4"
+          >
+            <BookOpen size={20} />
+            <span>Card Grimoire</span>
+          </button>
+          <button 
+            onClick={() => onPageChange('quest-designer')}
+            className="btn-rpg flex items-center justify-center gap-3 py-4"
+          >
+            <Sword size={20} />
+            <span>Quest Scribe</span>
+          </button>
+          <button 
+            onClick={() => onPageChange('card-generator')}
+            className="btn-rpg flex items-center justify-center gap-3 py-4"
+          >
+            <Sparkles size={20} />
+            <span>Daily Oracle</span>
+          </button>
+          <button 
+            onClick={() => onPageChange('analytics')}
+            className="btn-rpg flex items-center justify-center gap-3 py-4"
+          >
+            <Trophy size={20} />
+            <span>Chronicles</span>
+          </button>
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="bg-white rounded-2xl p-6 shadow-lg">
-        <h3 className="text-xl font-bold text-gray-800 mb-6 pb-3 border-b border-gray-200">
-          ⚡ Quick Actions
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button 
-            onClick={() => onPageChange('log-activity')}
-            className="flex items-center justify-center gap-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white px-6 py-4 rounded-xl hover:from-purple-700 hover:to-purple-800 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-          >
-            <PlusCircle size={20} />
-            <span className="font-medium">Log Activity</span>
-          </button>
-          <button 
-            onClick={() => onPageChange('todo')}
-            className="flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-          >
-            <CheckSquare size={20} />
-            <span className="font-medium">Add Task</span>
-          </button>
-          <button 
-            onClick={() => onPageChange('rewards')}
-            className="flex items-center justify-center gap-3 bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-4 rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-          >
-            <Gift size={20} />
-            <span className="font-medium">View Rewards</span>
-          </button>
-        </div>
-      </div>
+      {/* Card Executor Modal */}
+      {selectedCard && (
+        <CardExecutor
+          card={selectedCard}
+          isOpen={isCardExecutorOpen}
+          onClose={() => {
+            setIsCardExecutorOpen(false);
+            setSelectedCard(null);
+          }}
+          onExecute={handleCardExecute}
+          currentEnergy={state.energy.current}
+        />
+      )}
     </div>
   );
 }

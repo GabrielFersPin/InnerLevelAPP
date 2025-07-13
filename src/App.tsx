@@ -11,13 +11,13 @@ import { Analytics } from './components/Analytics';
 import Goals from './components/Goals'; // NUEVO IMPORT
 import { Profile } from './components/Profile';
 import { PageType } from './types';
-import { useUserData } from './hooks/useUserData';
+// import { useUserData } from './hooks/useUserData';
 
 function App() {
   const [currentPage, setCurrentPage] = useState<PageType>('dashboard');
   
-  // Initialize user data hook
-  useUserData();
+  // Initialize user data hook - temporarily disabled
+  // useUserData();
 
   const renderCurrentPage = () => {
     switch (currentPage) {
@@ -29,7 +29,7 @@ function App() {
         return <Habits />;
       case 'todo':
         return <TodoList />;
-      case 'goals': // NUEVO CASE
+      case 'goals':
         return <Goals />;
       case 'rewards':
         return <Rewards />;
@@ -39,18 +39,25 @@ function App() {
         return <Analytics />;
       case 'profile':
         return <Profile />;
+      // LifeQuest Cards pages
+      case 'card-inventory':
+        return <div className="text-amber-200">Card Inventory - Coming Soon</div>;
+      case 'quest-designer':
+        return <div className="text-amber-200">Quest Designer - Coming Soon</div>;
+      case 'card-generator':
+        return <div className="text-amber-200">Card Generator - Coming Soon</div>;
       default:
-        return <Dashboard />;
+        return <Dashboard onPageChange={setCurrentPage} />;
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900">
       <Header onNavigateHome={() => setCurrentPage('dashboard')} />
       <div className="container mx-auto flex min-h-screen max-w-7xl">
         <Sidebar currentPage={currentPage} onPageChange={setCurrentPage} />
         
-        <main className="flex-1 ml-80 p-8 bg-white/95 backdrop-blur-lg rounded-l-3xl mt-5 mb-5 mr-5 shadow-xl overflow-y-auto max-h-[calc(100vh-40px)]">
+        <main className="flex-1 ml-80 p-8 bg-slate-800/90 backdrop-blur-lg border border-amber-500/30 rounded-l-3xl mt-5 mb-5 mr-5 shadow-2xl overflow-y-auto max-h-[calc(100vh-40px)]">
           <div className="animate-fadeIn">
             {renderCurrentPage()}
           </div>

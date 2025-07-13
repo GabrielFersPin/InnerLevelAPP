@@ -1,3 +1,115 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* LifeQuest Cards - RPG Theme Styles */
+@layer base {
+  body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  }
+}
+
+@layer components {
+  /* RPG Card Styles */
+  .card-common {
+    @apply border-slate-400 bg-slate-700/80 text-slate-200;
+  }
+  
+  .card-uncommon {
+    @apply border-emerald-400 bg-emerald-900/20 text-emerald-100 shadow-emerald-400/20;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+  }
+  
+  .card-rare {
+    @apply border-blue-400 bg-blue-900/20 text-blue-100 shadow-blue-400/20;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+  }
+  
+  .card-epic {
+    @apply border-purple-400 bg-purple-900/20 text-purple-100 shadow-purple-400/20;
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+  }
+  
+  .card-legendary {
+    @apply border-amber-400 bg-amber-900/20 text-amber-100 shadow-amber-400/20;
+    box-shadow: 0 0 25px rgba(245, 158, 11, 0.6);
+    animation: legendary-pulse 2s ease-in-out infinite alternate;
+  }
+  
+  /* RPG Button Styles */
+  .btn-rpg {
+    @apply bg-gradient-to-b from-amber-600 to-amber-800 text-amber-100 font-semibold py-2 px-4 rounded-lg border border-amber-500/50 shadow-lg hover:from-amber-500 hover:to-amber-700 transition-all duration-200;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  }
+  
+  .btn-rpg:hover {
+    box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+  }
+  
+  /* Energy Bar Styles */
+  .energy-bar {
+    @apply bg-gradient-to-r from-blue-500 to-cyan-400;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+  }
+  
+  /* Quest Progress Bar */
+  .quest-progress {
+    @apply bg-gradient-to-r from-emerald-500 to-green-400;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+  }
+  
+  /* RPG Panel */
+  .rpg-panel {
+    @apply bg-slate-800/90 border border-amber-500/30 rounded-xl backdrop-blur-lg shadow-2xl;
+  }
+  
+  /* Text Styles */
+  .text-rpg-title {
+    @apply text-amber-200 font-bold;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  }
+  
+  .text-rpg-content {
+    @apply text-slate-200;
+  }
+  
+  .text-rpg-accent {
+    @apply text-amber-400 font-medium;
+  }
+}
+
+@layer utilities {
+  .animate-fadeIn {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes legendary-pulse {
+    0% {
+      box-shadow: 0 0 25px rgba(245, 158, 11, 0.6);
+    }
+    100% {
+      box-shadow: 0 0 35px rgba(245, 158, 11, 0.8);
+    }
+  }
+  
+  /* Sparkle effect for magical elements */
+  .sparkle::before {
+    content: "✨";
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    font-size: 0.75rem;
+    opacity: 0.8;
+  }
+}
