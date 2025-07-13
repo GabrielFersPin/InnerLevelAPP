@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../context/AppContext';
-import { Trophy, Crown } from 'lucide-react';
+import { Trophy, Crown, Sparkles, Target, BookOpen, Flame, Sword } from 'lucide-react';
 import { PageType } from '../types/index';
+import { EnergyMeter } from './EnergyMeter';
+import { CardComponent } from './cards/CardComponent';
+import { CardExecutor } from './cards/CardExecutor';
+import { sampleCards, getDailyRecommendations } from '../data/sampleData';
 
 interface DashboardProps {
   onPageChange: (page: PageType) => void;
