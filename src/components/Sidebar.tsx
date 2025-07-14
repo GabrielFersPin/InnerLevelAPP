@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sword, PlusCircle, Zap, CheckSquare, Gift, Heart, BarChart3, Target, Settings, BookOpen, Scroll, Sparkles } from 'lucide-react';
+import { Home, BookOpen, User, Settings, Sword, Brain } from 'lucide-react';
 import { PageType } from '../types';
 
 interface SidebarProps {
@@ -8,23 +8,13 @@ interface SidebarProps {
 }
 
 const navigation = [
-  // War Room Section
-  { id: 'dashboard' as PageType, icon: Sword, label: '⚔️ War Room', description: 'Command Center' },
-  
-  // LifeQuest Cards Section
-  { id: 'card-inventory' as PageType, icon: BookOpen, label: '🎴 Card Grimoire', description: 'Card Collection' },
-  { id: 'quest-designer' as PageType, icon: Scroll, label: '📜 Quest Scribe', description: 'Create Adventures' },
-  { id: 'card-generator' as PageType, icon: Sparkles, label: '🔮 Daily Oracle', description: 'Generate Cards' },
-  
-  // Legacy Features (Enhanced)
-  { id: 'log-activity' as PageType, icon: PlusCircle, label: '📝 Activity Log', description: 'Record Actions' },
-  { id: 'habits' as PageType, icon: Zap, label: '⚡ Battle Habits', description: 'Power Training' },
-  { id: 'todo' as PageType, icon: CheckSquare, label: '✅ Task Quests', description: 'Daily Missions' },
-  { id: 'goals' as PageType, icon: Target, label: '🏆 Epic Goals', description: 'Grand Quests' },
-  { id: 'rewards' as PageType, icon: Gift, label: '🎁 Treasure Vault', description: 'Earned Rewards' },
-  { id: 'wellbeing' as PageType, icon: Heart, label: '💚 Soul Monitor', description: 'Inner Balance' },
-  { id: 'analytics' as PageType, icon: BarChart3, label: '📊 Chronicles', description: 'Progress Stats' },
-  { id: 'profile' as PageType, icon: Settings, label: '⚙️ Guild Settings', description: 'Configuration' },
+  // Core LifeQuest Pages
+  { id: 'character-hub' as PageType, icon: Home, label: '🏠 Character Hub', description: 'Dashboard & Overview' },
+  { id: 'card-deck' as PageType, icon: BookOpen, label: '🎴 Card Deck', description: 'Your Card Collection' },
+  { id: 'ai-card-generator' as PageType, icon: Brain, label: '🧠 AI Generator', description: 'Create Smart Cards' },
+  { id: 'training-ground' as PageType, icon: Sword, label: '⚔️ Training Ground', description: 'Execute Cards' },
+  { id: 'character-sheet' as PageType, icon: User, label: '🏆 Character Sheet', description: 'Stats & Progress' },
+  { id: 'guild-settings' as PageType, icon: Settings, label: '⚙️ Guild Settings', description: 'Configuration' },
 ];
 
 export function Sidebar({ currentPage, onPageChange }: SidebarProps) {
@@ -41,7 +31,7 @@ export function Sidebar({ currentPage, onPageChange }: SidebarProps) {
         {navigation.map((item) => {
           const Icon = item.icon;
           const isActive = currentPage === item.id;
-          const isNewFeature = ['card-inventory', 'quest-designer', 'card-generator'].includes(item.id);
+          const isNewFeature = ['ai-card-generator', 'training-ground', 'character-sheet'].includes(item.id);
           
           return (
             <button

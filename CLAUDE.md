@@ -1,344 +1,502 @@
-# Prompt para Claude Code - Transformación InnerLevel → LifeQuest Cards
+# Prompt para Claude Code - LifeQuest RPG: Personal Development Game
 
-## CONTEXTO ACTUAL
-Tengo una aplicación React + TypeScript llamada InnerLevel que es un tracker de crecimiento personal con:
-- Sistema de puntos y gamificación
+## CONTEXTO Y OBJETIVO
+Transformar mi aplicación InnerLevel (React + TypeScript + Tailwind) en **LifeQuest RPG** - un juego de desarrollo personal donde el usuario se convierte en un personaje que entrena habilidades reales mediante cartas especializadas según su arquetipo de personalidad.
+
+---
+
+## 🎮 ARQUITECTURA DE LA APLICACIÓN
+
+### **Navegación Simplificada (5 Funciones)**
+```
+🏠 Character Hub (Dashboard Principal)
+🎴 Card Deck (Mazo de Cartas) 
+⚔️ Training Ground (Ejecutar Cartas)
+🏆 Character Sheet (Stats y Progreso)
+⚙️ Guild Settings (Configuración)
+```
+
+### **Stack Tecnológico Mantenido**
+- React 18 + TypeScript + Vite
+- Tailwind CSS con **tema RPG épico** (slate-900/indigo-900, dorados)
 - Context + useReducer para estado
 - LocalStorage para persistencia
-- Supabase preparado pero usando localStorage
-- Tailwind CSS (cambiar de púrpura a tema RPG épico)
-- Componentes: Dashboard, Habits, Goals, Analytics, etc.
+- Preparado para Claude API (con fallbacks)
 
-## OBJETIVO
-Transformar InnerLevel en "LifeQuest Cards" - un RPG de cartas para desarrollo personal con:
+---
 
-### 1. NUEVO SISTEMA DE CARTAS
-Mantener la arquitectura existente pero agregar:
+## 🧙‍♂️ SISTEMA DE CLASES/ARQUETIPOS
 
+### **Test de Personalidad Inicial**
+Al primer uso, test de 10 preguntas que determina automáticamente la clase del usuario:
+
+#### **🔮 The Strategist - El Estratega**
+*"Planifica cada movimiento, optimiza cada resultado"*
+- **Personalidad**: Analítico, metódico, orientado a datos
+- **Atributos**: Intelligence (+40% XP aprendizaje), Focus (cartas intensivas), Analytics (métricas avanzadas)
+- **Mana**: 120 máximo, 8/hora regeneración
+- **Visual**: Azul cristal, interfaces HUD futurista
+- **Ideal para**: Tech jobs, análisis, optimización
+
+#### **⚔️ The Warrior - El Guerrero**
+*"Disciplina férrea, acción constante"*
+- **Personalidad**: Disciplinado, perseverante, orientado a acción
+- **Atributos**: Discipline (bonus hábitos), Stamina (regeneración rápida), Resilience (menos penalizaciones)
+- **Stamina**: 150 máximo, 10/hora regeneración
+- **Visual**: Rojo/dorado, forja medieval
+- **Ideal para**: Fitness, hábitos, disciplina personal
+
+#### **🎨 The Creator - El Creador**
+*"Innovación y expresión son tu fuerza"*
+- **Personalidad**: Creativo, experimental, orientado a proyectos
+- **Atributos**: Creativity (bonus proyectos), Inspiration (cartas especiales), Innovation (combos únicos)
+- **Inspiration**: 100 máximo, variable (15/hora creativo, 3/hora rutina)
+- **Visual**: Multicolor, estudio artístico
+- **Ideal para**: Arte, emprendimiento, innovación
+
+#### **🤝 The Connector - El Conector**
+*"Tu fuerza está en las relaciones que construyes"*
+- **Personalidad**: Social, empático, orientado a relaciones
+- **Atributos**: Charisma (bonus social), Network (cartas networking), Empathy (mayor impacto bienestar)
+- **Social Energy**: 110 máximo, 12/hora durante interacciones
+- **Visual**: Verde/oro, guild hall
+- **Ideal para**: Liderazgo, networking, relaciones
+
+#### **🧘‍♂️ The Sage - El Sabio**
+*"El crecimiento interior guía el éxito exterior"*
+- **Personalidad**: Reflexivo, espiritual, orientado al crecimiento
+- **Atributos**: Mindfulness (regeneración mejorada), Wisdom (aprende de fallos), Balance (equilibrio automático)
+- **Inner Peace**: 130 máximo, 15/hora durante descanso
+- **Visual**: Púrpura/blanco, templo zen
+- **Ideal para**: Mindfulness, bienestar, crecimiento espiritual
+
+---
+
+## 🎴 SISTEMA DE CARTAS
+
+### **Estructura de Carta**
 ```typescript
-// Nuevos tipos en src/types/index.ts
 interface Card {
   id: string;
   name: string;
   description: string;
-  type: 'action' | 'power' | 'recovery' | 'event' | 'equipment';
+  classTypes: CharacterClass[]; // Qué clases pueden usarla
   rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
   energyCost: number;
   duration: number; // horas
-  impact: number; // puntos hacia quest
+  impact: number; // XP ganado
   cooldown?: number; // horas
-  conditions?: {
-    requiredEnergyLevel?: string; // "> 75%"
-    timeRequired?: string;
-    mentalState?: string[];
+  skillBonus: {
+    skillName: string;
+    xpBonus: number;
+    temporaryBoost?: number;
+  }[];
+  requirements: {
+    level?: number;
+    skills?: Record<string, number>;
     prerequisiteCards?: string[];
   };
-  effects?: {
-    type: 'energy' | 'multiplier' | 'unlock' | 'bonus';
-    target: string;
-    value: number;
-    duration?: number;
-  }[];
+  conditions: {
+    energyLevel?: string; // "> 75%"
+    timeRequired?: string;
+    mentalState?: string[];
+  };
   tags: string[];
-  createdAt: Date;
-  aiGenerated: boolean;
-  usageCount: number;
-  lastUsed?: Date;
-  isOnCooldown: boolean;
 }
+```
 
-interface Quest {
+### **Distribución de Cartas**
+- **Cartas Base**: 20% (todas las clases pueden usar)
+- **Cartas de Clase**: 60% (específicas del arquetipo)
+- **Cartas Híbridas**: 20% (desbloqueables por nivel)
+
+### **Ejemplos de Cartas por Clase**
+
+#### **Strategist Cards**:
+```
+📊 "Data Analysis Sprint" (Common, 30 energía, 2h)
+- Analiza datos o métricas durante 2 horas
+- +Intelligence XP, +Focus temporal
+
+🔬 "Research Deep Dive" (Rare, 60 energía, 4h) 
+- Investigación intensiva sobre tema específico
+- +Intelligence XP masivo, cooldown 48h
+
+🧠 "Strategic Mastery Synthesis" (Legendary, 100 energía, 8h)
+- Proyecto maestro combinando conocimientos
+- +Todos los stats, título especial, cooldown 1 mes
+```
+
+#### **Warrior Cards**:
+```
+⚔️ "Daily Discipline Strike" (Common, 25 energía, 1h)
+- Completar rutina matutina perfecta
+- +Discipline XP, +Stamina regeneration boost
+
+🏃‍♂️ "Endurance Training" (Uncommon, 40 energía, 2h)
+- Entrenamiento físico o mental intensivo
+- +Stamina XP, +Resilience boost
+
+🛡️ "Unbreakable Fortress" (Epic, 80 energía, 3h)
+- Mantener disciplina durante día completo
+- +Discipline masivo, unlock cartas legendarias
+```
+
+*(Similar para Creator, Connector, Sage)*
+
+---
+
+## 📊 SISTEMA DE PROGRESIÓN
+
+### **Character Progression**
+```typescript
+interface Character {
   id: string;
   name: string;
-  description: string;
-  type: 'career' | 'health' | 'relationships' | 'skills' | 'creative';
-  difficulty: 'easy' | 'medium' | 'hard' | 'epic' | 'legendary';
-  estimatedDuration: number; // días
-  deadline?: Date;
-  progress: number; // 0-100
-  status: 'active' | 'completed' | 'paused' | 'failed';
-  milestones: {
-    id: string;
-    name: string;
-    requiredProgress: number;
-    rewards: { type: string; value: number }[];
-    completed: boolean;
-  }[];
-  rewards: {
-    experience: number;
-    cards: string[];
-    unlocks: string[];
+  class: CharacterClass;
+  level: number; // 1-50
+  experience: number;
+  skillPoints: number;
+  avatar: string; // URL del avatar según clase y nivel
+  
+  // Energía específica por clase
+  energy: {
+    current: number;
+    maximum: number;
+    regenerationRate: number;
+    lastUpdate: Date;
   };
-  createdAt: Date;
-}
-
-interface EnergyState {
-  current: number;
-  maximum: number;
-  regenerationRate: number; // por hora
-  lastUpdate: Date;
-  dailyUsage: {
-    date: string;
-    usage: { time: string; amount: number; activity: string }[];
-  }[];
-}
-
-interface UserInventory {
-  cards: Card[];
-  activeCards: string[]; // IDs de cartas actualmente en uso
-  favoriteCards: string[];
+  
+  // Habilidades específicas por clase
+  skills: Record<string, {
+    level: number;
+    experience: number;
+    totalXP: number;
+  }>;
+  
+  // Inventario y progreso
+  deck: Card[];
+  activeDeck: string[]; // IDs de cartas equipadas
+  completedCards: CardCompletion[];
+  achievements: Achievement[];
+  
+  // Estado del juego
+  currentGoals: Goal[];
+  dailyProgress: DailyProgress;
+  streak: number;
+  prestigeLevel: number;
 }
 ```
 
-### 2. NUEVOS COMPONENTES
-Crear estos componentes manteniendo el estilo visual existente:
+### **Skills por Clase**
+- **Strategist**: Intelligence, Focus, Analytics, Strategy
+- **Warrior**: Discipline, Stamina, Resilience, Consistency
+- **Creator**: Creativity, Innovation, Execution, Vision
+- **Connector**: Charisma, Network, Empathy, Leadership  
+- **Sage**: Mindfulness, Wisdom, Balance, Intuition
 
-#### A. Dashboard Principal (modificar Dashboard.tsx)
-- **EnergyMeter**: Barra de energía con regeneración en tiempo real
-- **QuestProgress**: Progreso de quests activas con barras animadas
-- **DailyRecommendations**: 3-4 cartas recomendadas para hoy
-- **QuickStats**: Nivel, experiencia, cartas desbloqueadas
+### **Niveles y Desbloqueables**
+- **Nivel 1-10**: Novice (cartas básicas)
+- **Nivel 11-25**: Adept (cartas avanzadas + combos)
+- **Nivel 26-40**: Expert (cartas épicas + híbridas)
+- **Nivel 41-50**: Master (cartas legendarias + prestigio)
 
-#### B. Nuevas páginas del sistema:
-- **CardInventory** (`src/components/CardInventory.tsx`):
-  - Grid de cartas con filtros por tipo, rareza, energía
-  - Drag & drop para organizar
-  - Vista detalle de carta con stats y condiciones
-  
-- **QuestDesigner** (`src/components/QuestDesigner.tsx`):
-  - Formulario para crear nueva quest
-  - Input: objetivo, plazo, tiempo disponible
-  - Preview de plan generado por IA
-  
-- **CardGenerator** (`src/components/CardGenerator.tsx`):
-  - Panel de generación diaria de cartas
-  - Análisis del día (energía, tiempo, mood)
-  - Vista previa de cartas sugeridas
+---
 
-#### C. Componentes de Carta:
-- **CardComponent** (`src/components/cards/CardComponent.tsx`):
-  - Diseño tipo TCG con rareza, energía, efectos
-  - Animaciones hover y selección
-  - Estados: disponible, cooldown, usado
-  
-- **CardExecutor** (`src/components/cards/CardExecutor.tsx`):
-  - Modal para ejecutar carta
-  - Timer, progreso, feedback
-  - Confirmación de completion
+## 🏠 COMPONENTES PRINCIPALES
 
-### 3. SERVICIOS NUEVOS
+### **1. Character Hub (Dashboard)**
+Componente: `src/components/CharacterHub.tsx`
 
-#### A. AIService (`src/services/aiService.ts`)
+**Elementos**:
+- **Avatar grande** con clase, nivel y barra XP
+- **Energy/Mana bar** con regeneración en tiempo real
+- **Skills overview** con barras de progreso por habilidad principal
+- **Daily recommendations** (3-4 cartas sugeridas por IA)
+- **Active goals progress** con barras visuales
+- **Quick stats**: Streak, cartas completadas hoy, próximo level up
+
+### **2. Card Deck (Mazo)**
+Componente: `src/components/CardDeck.tsx`
+
+**Elementos**:
+- **Grid de cartas** con filtros por tipo, rareza, energía requerida
+- **Active deck** (cartas equipadas para usar hoy)
+- **Card details modal** con stats completos y requisitos
+- **"Draw cards" button** para obtener cartas diarias nuevas
+- **Sorting/filtering** por clase, costo energético, impacto
+
+### **3. Training Ground (Ejecución)**
+Componente: `src/components/TrainingGround.tsx`
+
+**Elementos**:
+- **Card selector** para elegir carta a ejecutar
+- **Execution modal** con timer, instrucciones, progreso
+- **Real-time feedback** durante ejecución
+- **Completion screen** con XP ganado, level ups, logros
+- **Energy forecast** mostrando costo y regeneración
+
+### **4. Character Sheet (Stats)**
+Componente: `src/components/CharacterSheet.tsx`
+
+**Elementos**:
+- **Detailed stats** por cada habilidad con gráficos
+- **Achievement gallery** con títulos y logros desbloqueados
+- **Progression tree** mostrando próximos desbloqueables
+- **Historical data** con gráficos de progreso temporal
+- **Class comparison** (opcional) con otros arquetipos
+
+### **5. Guild Settings**
+Componente: `src/components/GuildSettings.tsx`
+
+**Elementos**:
+- **Goal management** (cambiar objetivos principales)
+- **Notification preferences** por tipo de carta/logro
+- **Avatar customization** con opciones desbloqueadas
+- **Data export/import** y opciones de prestigio
+- **Class retake** (opcional, penalización por cambio)
+
+---
+
+## 🧠 SISTEMA DE IA Y RECOMENDACIONES
+
+### **AIService Expandido**
 ```typescript
 class AIService {
-  async generateQuest(objective: string, timeline: number, availability: number) {
-    // Integración con Claude API para generar plan estructurado
-    const prompt = `Crear quest para objetivo: ${objective}...`;
+  async generateDailyRecommendations(character: Character): Promise<Card[]> {
+    const context = {
+      class: character.class,
+      level: character.level,
+      currentEnergy: character.energy.current,
+      skillLevels: character.skills,
+      recentProgress: character.dailyProgress,
+      activeGoals: character.currentGoals,
+      timeOfDay: new Date().getHours(),
+      dayOfWeek: new Date().getDay()
+    };
+    
+    // Prompt específico para cada clase
+    const classPrompts = {
+      strategist: "Genera cartas optimizadas para maximizar progreso analítico...",
+      warrior: "Genera cartas que mantengan disciplina y momentum...",
+      creator: "Genera cartas que potencien creatividad e innovación...",
+      connector: "Genera cartas que fortalezcan relaciones y network...",
+      sage: "Genera cartas que promuevan balance y crecimiento interior..."
+    };
+    
+    return await this.callClaude(classPrompts[character.class]);
+  }
+  
+  async createPersonalizedCards(goal: string, character: Character): Promise<Card[]> {
+    // Genera cartas específicas para objetivo + clase
+    const prompt = `
+    Objetivo: ${goal}
+    Clase: ${character.class}
+    Nivel: ${character.level}
+    Habilidades actuales: ${JSON.stringify(character.skills)}
+    
+    Genera 5-8 cartas progresivas específicamente para este objetivo,
+    optimizadas para la clase ${character.class} con mecánicas RPG auténticas.
+    `;
+    
     return await this.callClaude(prompt);
   }
-  
-  async generateDailyCards(userContext: any) {
-    // Generar 3-5 cartas basadas en energía, tiempo, progreso
-    const prompt = `Generar cartas para contexto: ${JSON.stringify(userContext)}...`;
-    return await this.callClaude(prompt);
-  }
 }
 ```
 
-#### B. CardEngine (`src/services/cardEngine.ts`)
+### **Sistema de Recomendaciones Inteligentes**
+- **Análisis contextual**: Hora, día, energía, humor
+- **Optimización por clase**: Cartas que maximizan strengths del arquetipo
+- **Progreso adaptativo**: Dificultad aumenta con el nivel
+- **Goal-driven**: Prioriza cartas relevantes al objetivo principal
+
+---
+
+## 🎨 DISEÑO VISUAL ÉPICO
+
+### **Tema Global RPG**
+- **Background**: `from-slate-900 via-slate-800 to-indigo-900`
+- **Paneles**: `bg-slate-800/90 border border-amber-500/30`
+- **Texto**: Títulos `text-amber-200`, contenido `text-slate-200`
+- **Acentos**: Dorado `#F59E0B`, azul mágico `#3B82F6`
+
+### **Colores por Rareza**
+```css
+.card-common { border-color: #94A3B8; box-shadow: 0 0 10px rgba(148, 163, 184, 0.3); }
+.card-uncommon { border-color: #10B981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+.card-rare { border-color: #3B82F6; box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+.card-epic { border-color: #A855F7; box-shadow: 0 0 25px rgba(168, 85, 247, 0.6); }
+.card-legendary { border-color: #F59E0B; box-shadow: 0 0 30px rgba(245, 158, 11, 0.8); animation: glow 2s ease-in-out infinite alternate; }
+```
+
+### **Elementos Específicos por Clase**
+- **Strategist**: Bordes azul cristal, iconos de datos/gráficos
+- **Warrior**: Bordes rojo/dorado, iconos de espadas/escudos
+- **Creator**: Bordes multicolor, iconos de arte/innovación
+- **Connector**: Bordes verde/oro, iconos sociales/network
+- **Sage**: Bordes púrpura/blanco, iconos zen/balance
+
+### **Animaciones RPG**
+- **Level up**: Explosión de partículas doradas
+- **Card completion**: Glow effect + sound effect sim
+- **Energy regeneration**: Pulse suave en barra de energía
+- **Skill progress**: Barra que se llena con partículas
+- **Achievement unlock**: Modal épico con fanfare visual
+
+---
+
+## 🧪 TEST DE PERSONALIDAD
+
+### **Componente**: `src/components/PersonalityTest.tsx`
+**10 preguntas** que determinan automáticamente la clase:
+
 ```typescript
-class CardEngine {
-  executeCard(card: Card, userState: any): CardResult {
-    // Lógica de ejecución, validación de condiciones
-    // Consumo de energía, aplicación de efectos
-    // Actualización de progreso de quest
-  }
-  
-  checkCooldowns(): void {
-    // Verificar y liberar cartas de cooldown
-  }
-  
-  calculateRecommendations(userState: any): Card[] {
-    // Algoritmo de recomendación basado en contexto
-  }
-}
+const personalityQuestions = [
+  {
+    question: "Cuando enfrentas un desafío grande, tu primera reacción es:",
+    options: [
+      { text: "Analizar todas las variables y crear un plan detallado", class: "strategist" },
+      { text: "Dividirlo en tareas pequeñas y empezar inmediatamente", class: "warrior" },
+      { text: "Buscar una solución creativa e innovadora", class: "creator" },
+      { text: "Hablar con otros para obtener perspectivas diferentes", class: "connector" },
+      { text: "Reflexionar sobre por qué este desafío apareció en tu vida", class: "sage" }
+    ]
+  },
+  // ... 9 preguntas más
+];
 ```
 
-#### C. EnergyManager (`src/services/energyManager.ts`)
-```typescript
-class EnergyManager {
-  updateEnergy(): number {
-    // Calcular energía regenerada desde último update
-    // Aplicar efectos de cartas activas
-  }
-  
-  consumeEnergy(amount: number): boolean {
-    // Validar y consumir energía
-  }
-  
-  predictEnergyUsage(cards: Card[]): EnergyForecast {
-    // Predecir uso de energía para cartas seleccionadas
-  }
-}
+**Resultado**: La clase con más respuestas se asigna automáticamente, con explicación personalizada de por qué esa clase encaja con la personalidad.
+
+---
+
+## 📱 FLUJO DE USUARIO COMPLETO
+
+### **Primera Vez (Onboarding)**:
+1. **Welcome screen** épico con trailer del concepto
+2. **Personality test** (10 preguntas, 3-5 minutos)
+3. **Class reveal** con animación épica y explicación
+4. **Avatar selection** según clase asignada
+5. **First goal setting** ("¿Qué quieres lograr?")
+6. **Tutorial interactivo** con primera carta
+
+### **Uso Diario**:
+1. **Login**: Energía regenerada, cartas nuevas disponibles
+2. **Character Hub**: Ver progreso, recomendaciones del día
+3. **Card selection**: Elegir 2-4 cartas para el día
+4. **Training**: Ejecutar cartas con timer y feedback
+5. **Evening review**: Progreso del día, preparación mañana
+
+### **Progresión a Largo Plazo**:
+- **Weekly**: Nuevas cartas desbloqueadas por progreso
+- **Monthly**: Evaluación de goals, nuevos objetivos
+- **Level milestones**: Cartas épicas, títulos, avatares
+- **Prestigio**: Reset completo con bonificadores permanentes
+
+---
+
+## 🗂️ ESTRUCTURA DE ARCHIVOS
+
+```
+src/
+├── components/
+│   ├── onboarding/
+│   │   ├── PersonalityTest.tsx
+│   │   ├── ClassReveal.tsx
+│   │   └── Tutorial.tsx
+│   ├── character/
+│   │   ├── CharacterHub.tsx
+│   │   ├── CharacterSheet.tsx
+│   │   ├── EnergyMeter.tsx
+│   │   └── SkillBars.tsx
+│   ├── cards/
+│   │   ├── CardDeck.tsx
+│   │   ├── CardComponent.tsx
+│   │   ├── CardExecutor.tsx
+│   │   └── CardRecommendations.tsx
+│   ├── training/
+│   │   ├── TrainingGround.tsx
+│   │   ├── ExecutionModal.tsx
+│   │   └── ProgressTracker.tsx
+│   └── ui/
+│       ├── RPGButton.tsx
+│       ├── ProgressBar.tsx
+│       └── Modal.tsx
+├── data/
+│   ├── characterClasses.ts
+│   ├── baseCards.ts
+│   ├── personalityTest.ts
+│   └── achievements.ts
+├── services/
+│   ├── aiService.ts
+│   ├── characterManager.ts
+│   ├── cardEngine.ts
+│   └── progressTracker.ts
+├── types/
+│   ├── character.types.ts
+│   ├── card.types.ts
+│   └── game.types.ts
+└── utils/
+    ├── experienceCalculator.ts
+    ├── classHelpers.ts
+    └── energyManager.ts
 ```
 
-### 4. ACTUALIZACIÓN DEL CONTEXTO
+---
 
-Modificar `src/context/AppContext.tsx` para incluir:
-```typescript
-interface AppState {
-  // Estado existente +
-  cards: {
-    inventory: Card[];
-    activeCards: string[];
-    cooldowns: Record<string, Date>;
-  };
-  quests: {
-    active: Quest[];
-    completed: Quest[];
-  };
-  energy: EnergyState;
-  recommendations: {
-    daily: Card[];
-    lastGenerated: Date;
-  };
-}
+## 🎯 DATOS DE EJEMPLO INCLUIDOS
 
-// Nuevas acciones
-type Action = 
-  | { type: 'ADD_CARD'; payload: Card }
-  | { type: 'EXECUTE_CARD'; payload: { cardId: string; feedback: any } }
-  | { type: 'CREATE_QUEST'; payload: Quest }
-  | { type: 'UPDATE_QUEST_PROGRESS'; payload: { questId: string; points: number } }
-  | { type: 'UPDATE_ENERGY'; payload: number }
-  | { type: 'GENERATE_RECOMMENDATIONS' }
-  // ... acciones existentes
+### **Contenido Inicial**:
+- **5 clases completas** con 15-20 cartas cada una
+- **Test de personalidad** funcional con lógica de asignación
+- **3 objetivos template** por clase (career, health, creative)
+- **Sistema de achievements** con 30+ logros desbloqueables
+- **Avatares base** por clase y nivel
+- **Tutorial interactivo** completo
+
+### **Cartas de Ejemplo Específicas**:
+```
+Strategist: "SQL Mastery Lab", "Data Portfolio Builder", "Strategic Interview Prep"
+Warrior: "Morning Discipline Ritual", "Habit Fortress", "Endurance Challenge"
+Creator: "Creative Flow Session", "Innovation Sprint", "Project Launch"
+Connector: "Network Expansion", "Meaningful Conversation", "Leadership Practice"
+Sage: "Mindfulness Meditation", "Wisdom Reading", "Balance Restoration"
 ```
 
-### 5. INTEGRACIÓN CON CLAUDE API
+---
 
-Agregar a `.env`:
-```
-VITE_CLAUDE_API_KEY=your_api_key
-```
+## 🚀 IMPLEMENTACIÓN PRIORITARIA
 
-Crear `src/lib/claude.ts`:
-```typescript
-export class ClaudeClient {
-  async complete(prompt: string): Promise<string> {
-    // Integración con Claude API
-    // Manejo de errores y rate limiting
-  }
-}
-```
+### **Phase 1 (Funcional Básico)**:
+1. ✅ Sistema de clases y test de personalidad
+2. ✅ Character Hub con stats y energía
+3. ✅ Card Deck básico con ejecución
+4. ✅ Training Ground con timer
+5. ✅ Progresión XP y level ups
 
-### 6. NAVEGACIÓN ACTUALIZADA - TEMA RPG
+### **Phase 2 (AI Integration)**:
+6. ✅ Recomendaciones diarias por IA
+7. ✅ Generación de cartas personalizadas
+8. ✅ Goal setting con cartas automáticas
 
-Modificar sidebar con iconografía RPG:
-- ⚔️ **War Room** (Dashboard) - Centro de comando del aventurero
-- 🎴 **Card Grimoire** (Card Inventory) - Libro de hechizos/cartas
-- 🗡️ **Active Quests** - Misiones en progreso
-- 📜 **Quest Scribe** (Quest Designer) - Crear nuevas aventuras
-- 🔮 **Daily Oracle** (Daily Generator) - Generador de cartas diarias
-- 📊 **Chronicles** (Analytics) - Estadísticas y progreso
-- ⚙️ **Guild Settings** (Settings) - Configuración del guild
+### **Phase 3 (Advanced Features)**:
+9. ✅ Achievement system completo
+10. ✅ Card combinations y synergies
+11. ✅ Prestigio system
 
-#### Iconografía específica:
-- **Energía**: ⚡ Lightning bolt con efecto mágico
-- **Experiencia**: ✨ Estrella brillante
-- **Cartas**: 🎴 Con overlays de elementos mágicos
-- **Quests**: 🏆 Trofeos y pergaminos
-- **Progreso**: 📈 Con gemas incrustadas
+---
 
-### 7. DATOS DE EJEMPLO
+## 📋 INSTRUCCIONES ESPECÍFICAS PARA CLAUDE CODE
 
-Crear `src/data/sampleData.ts` con:
-- Quest ejemplo: "Conseguir trabajo en ciencia de datos"
-- 20+ cartas base de diferentes tipos y rarezas
-- Usuarios de ejemplo con progreso
-- Templates de quests comunes
+1. **Mantener arquitectura existente** de InnerLevel como base
+2. **Implementar onboarding completo** con test de personalidad
+3. **Crear las 5 páginas principales** con navegación simplificada
+4. **Incluir datos de ejemplo** para todas las clases y cartas
+5. **Preparar integración AI** con fallbacks locales
+6. **Aplicar tema visual RPG** consistente en toda la app
+7. **Implementar sistema de progresión** completamente funcional
+8. **Agregar animaciones sutiles** para feedback visual
 
-### 8. CARACTERÍSTICAS VISUALES - TEMA RPG ÉPICO
+**La aplicación debe ser inmediatamente usable y adictiva, con progresión real desde el primer día.**
 
-Transformar completamente el estilo a un tema de RPG/Fantasy:
-
-#### A. Paleta de Colores Principal:
-- **Background**: Gradiente oscuro épico (`from-slate-900 via-slate-800 to-indigo-900`)
-- **Paneles**: Fondo semi-transparente con borde dorado (`bg-slate-800/90 border border-amber-500/30`)
-- **Texto**: Dorado claro para títulos (`text-amber-200`), plateado para contenido (`text-slate-200`)
-- **Acentos**: Azul mágico (`#3B82F6`) y verde esmeralda (`#10B981`)
-
-#### B. Colores de Rareza (Estilo RPG):
-- **Common**: Plateado/Gris (`#94A3B8`) - borde sutil
-- **Uncommon**: Verde Esmeralda (`#10B981`) - glow verde suave
-- **Rare**: Azul Cristal (`#3B82F6`) - glow azul mágico
-- **Epic**: Púrpura Místico (`#A855F7`) - glow púrpura intenso
-- **Legendary**: Dorado Divino (`#F59E0B`) - glow dorado pulsante
-
-#### C. Elementos de UI Épicos:
-- **Cartas**: Bordes ornamentados, esquinas redondeadas con detalles metálicos
-- **Botones**: Estilo medieval con gradientes metálicos y hover effects
-- **Barras de progreso**: Gemas incrustadas y efectos de brillo
-- **Iconos**: Lucide icons con overlays de elementos RPG (espadas, escudos, pergaminos)
-
-#### D. Efectos Visuales:
-- **Partículas**: Destellos dorados para acciones importantes
-- **Glow Effects**: Auras de colores según rareza de cartas
-- **Animaciones**: 
-  - Cartas que "flotan" con sombras dinámicas
-  - Transitions tipo "portal mágico"
-  - Hover effects con escalado sutil y brillo
-- **Texturas**: Fondos con patrones sutiles tipo pergamino o metal
-
-#### E. Tipografía RPG:
-- **Títulos**: Font-weight bold con text-shadow dorado
-- **Headers**: Letras capitales decorativas
-- **Contenido**: Clean pero con acentos metálicos
-
-#### F. Layout Fantasy:
-- **Sidebar**: Diseño tipo "panel de guild" con bordes ornamentados
-- **Main Content**: "Pergamino mágico" con esquinas redondeadas
-- **Modals**: "Ventanas de spell book" con marcos decorativos
-- **Cards**: Diseño tipo "cartas de tarot mágicas" con simbolos místicos
-
-### 9. FUNCIONALIDADES CLAVE
-
-#### A. Flujo principal diario:
-1. Usuario abre app → Energía se actualiza automáticamente
-2. Ve recomendaciones del día basadas en energía/tiempo
-3. Selecciona carta → Valida condiciones → Ejecuta
-4. Completa actividad → Da feedback → Gana puntos hacia quest
-5. Sistema aprende y ajusta futuras recomendaciones
-
-#### B. Creación de quest:
-1. Usuario define objetivo en QuestDesigner
-2. IA analiza y genera plan estructurado
-3. Usuario revisa y confirma quest
-4. Sistema genera cartas iniciales
-5. Quest se activa en dashboard
-
-#### C. Generación de cartas:
-1. Sistema analiza contexto diario (energía, tiempo, humor)
-2. IA genera 3-5 cartas apropiadas
-3. Usuario puede regenerar o aceptar sugerencias
-4. Cartas se agregan al inventario
-
-### 10. PERSISTENCIA
-
-Mantener localStorage con nuevas keys:
-- `innerlevel_cards` - Inventario de cartas
-- `innerlevel_quests` - Quests activas y completadas
-- `innerlevel_energy` - Estado de energía
-- `innerlevel_recommendations` - Recomendaciones del día
-
-### INSTRUCCIONES ESPECÍFICAS:
-
-1. **Mantener toda la funcionalidad existente** de InnerLevel como base
-2. **Integrar gradualmente** las nuevas características sin romper lo existente
-3. **Reutilizar componentes** cuando sea posible (Dashboard, Analytics)
-4. **Implementar tema RPG épico** con paleta oscura, dorados y efectos mágicos
-5. **Crear datos de ejemplo** funcionales para testing inmediato
-6. **Preparar integración** con Claude API pero con fallback local
-7. **Implementar sistema de migración** para convertir datos existentes
-
-La aplicación debe ser **completamente funcional** con datos de ejemplo, **visualmente épica** con auténtico estilo RPG/Fantasy, y **lista para integración** con Claude API cuando esté disponible.
+---

@@ -1,10 +1,19 @@
 export type PageType = 
-  | 'dashboard'
+  | 'character-hub'
+  | 'card-deck'
+  | 'ai-card-generator'
+  | 'training-ground'
+  | 'character-sheet'
+  | 'guild-settings'
+  | 'personality-test'
+  | 'class-reveal'
   | 'log-activity'
   | 'habits'
-  | 'todo'
   | 'goals'
   | 'rewards'
   | 'wellbeing'
   | 'analytics'
   | 'profile';
+
+// Re-export from index for convenience
+export type { CharacterClass } from './types/index';

@@ -1,12 +1,25 @@
-import { Quest, Card } from '../types';
+import { Quest, Card, Character, CharacterClass } from '../types';
+import { classDescriptions } from '../data/personalityTest';
+import { getAvailableCards } from '../data/baseCards';
 
 interface UserContext {
+  character: Character;
   energy: number;
   availableTime: number; // hours
   currentMood: string;
   recentActivity: string[];
   activeQuests: Quest[];
   preferences: string[];
+}
+
+interface AICardRecommendation {
+  cards: Card[];
+  reasoning: string;
+  energyForecast: {
+    totalCost: number;
+    remainingAfter: number;
+    regenerationTime: number;
+  };
 }
 
 export class AIService {
@@ -34,17 +47,56 @@ export class AIService {
   }
 
   /**
-   * Generate daily cards based on user context
+   * Generate daily cards based on character class and context
    */
-  static async generateDailyCards(userContext: UserContext): Promise<Card[]> {
+  static async generateDailyCards(userContext: UserContext): Promise<AICardRecommendation> {
     const prompt = this.buildDailyCardsPrompt(userContext);
+    
+    try {
+      const response = await this.callClaude(prompt);
+      const cards = this.parseCardsResponse(response);
+      return this.buildRecommendation(cards, userContext);
+    } catch (error) {
+      console.error('Failed to generate cards with AI:', error);
+      return this.generateFallbackRecommendation(userContext);
+    }
+  }
+
+  /**
+   * Generate class-specific card recommendations
+   */
+  static async generateClassSpecificCards(
+    character: Character,
+    situation: string = 'general'
+  ): Promise<AICardRecommendation> {
+    const prompt = this.buildClassSpecificPrompt(character, situation);
+    
+    try {
+      const response = await this.callClaude(prompt);
+      const cards = this.parseCardsResponse(response);
+      return this.buildRecommendation(cards, { character, energy: character.energy.current, availableTime: 4, currentMood: 'neutral', recentActivity: [], activeQuests: [], preferences: [] });
+    } catch (error) {
+      console.error('Failed to generate class-specific cards:', error);
+      return this.generateClassFallbackRecommendation(character, situation);
+    }
+  }
+
+  /**
+   * Generate goal-oriented card sequence
+   */
+  static async generateGoalCards(
+    character: Character,
+    goalDescription: string,
+    timeframe: number
+  ): Promise<Card[]> {
+    const prompt = this.buildGoalCardsPrompt(character, goalDescription, timeframe);
     
     try {
       const response = await this.callClaude(prompt);
       return this.parseCardsResponse(response);
     } catch (error) {
-      console.error('Failed to generate cards with AI:', error);
-      return this.generateFallbackCards(userContext);
+      console.error('Failed to generate goal cards:', error);
+      return this.generateGoalFallbackCards(character, goalDescription);
     }
   }
 
@@ -121,46 +173,132 @@ Make it engaging, realistic, and achievable within the given timeline.
   }
 
   /**
-   * Build daily cards generation prompt
+   * Build daily cards generation prompt with character class context
    */
   private static buildDailyCardsPrompt(userContext: UserContext): string {
+    const { character } = userContext;
+    const classInfo = classDescriptions[character.class];
+    
     return `
-Generate 3-5 personalized activity cards for today based on this context:
+You are generating personalized activity cards for a ${classInfo.name} in the LifeQuest RPG system.
 
-Current energy: ${userContext.energy}%
-Available time: ${userContext.availableTime} hours
-Current mood: ${userContext.currentMood}
-Recent activities: ${userContext.recentActivity.join(', ')}
-Active quests: ${userContext.activeQuests.map(q => q.name).join(', ')}
-Preferences: ${userContext.preferences.join(', ')}
+CHARACTER PROFILE:
+- Class: ${classInfo.name} - "${classInfo.tagline}"
+- Level: ${character.level}
+- Primary Skills: ${classInfo.primarySkills.join(', ')}
+- Energy Type: ${classInfo.energyType}
+- Current Energy: ${character.energy.current}/${character.energy.maximum}
+- Available Time: ${userContext.availableTime} hours
+- Current Mood: ${userContext.currentMood}
 
-Generate a JSON array of cards:
-[
-  {
-    "name": "Card name",
-    "description": "Specific actionable description",
-    "type": "action|power|recovery|event|equipment",
-    "rarity": "common|uncommon|rare|epic|legendary",
-    "energyCost": 15,
-    "duration": 1,
-    "impact": 20,
-    "cooldown": 0,
-    "conditions": {
-      "requiredEnergyLevel": "> 50%",
-      "timeRequired": "morning|afternoon|evening"
-    },
-    "effects": [
-      {
-        "type": "energy|multiplier|unlock|bonus",
-        "target": "energy",
-        "value": 10
-      }
-    ],
-    "tags": ["productivity", "morning", "energy"]
+CLASS CHARACTERISTICS:
+- Traits: ${classInfo.traits.join(', ')}
+- Ideal For: ${classInfo.idealFor.join(', ')}
+- Description: ${classInfo.description}
+
+CONTEXT:
+- Recent Activities: ${userContext.recentActivity.join(', ')}
+- Active Quests: ${userContext.activeQuests.map(q => q.name).join(', ')}
+- Daily Progress: ${character.dailyProgress.cardsCompleted} cards completed today
+
+Generate 3-4 cards specifically optimized for this ${character.class} character:
+
+JSON Response Format:
+{
+  "recommendations": [
+    {
+      "name": "Class-appropriate card name",
+      "description": "Detailed, actionable description that aligns with ${character.class} strengths",
+      "type": "action|power|recovery|event|equipment",
+      "rarity": "common|uncommon|rare|epic|legendary",
+      "classTypes": ["${character.class}"],
+      "energyCost": 25,
+      "duration": 1.5,
+      "impact": 30,
+      "skillBonus": [
+        {
+          "skillName": "${classInfo.primarySkills[0]}",
+          "xpBonus": 20
+        }
+      ],
+      "requirements": {
+        "level": ${character.level}
+      },
+      "conditions": {
+        "energyLevel": "> 30%",
+        "timeRequired": "2+ hours available"
+      },
+      "tags": ["${character.class}", "skill-building"]
+    }
+  ],
+  "reasoning": "Why these cards are perfect for this ${character.class} today"
+}
+
+Focus on cards that:
+1. Leverage ${character.class} natural strengths
+2. Build their primary skills: ${classInfo.primarySkills.join(', ')}
+3. Match their current energy level and available time
+4. Create meaningful progression for their character
+    `;
   }
-]
 
-Make cards relevant to their current situation and energy level.
+  /**
+   * Build class-specific card generation prompt
+   */
+  private static buildClassSpecificPrompt(character: Character, situation: string): string {
+    const classInfo = classDescriptions[character.class];
+    
+    return `
+Generate 4-5 advanced cards for a Level ${character.level} ${classInfo.name} in situation: "${situation}"
+
+CHARACTER MASTERY FOCUS:
+- Core Identity: ${classInfo.description}
+- Master Skills: ${classInfo.primarySkills.join(', ')}
+- Energy System: ${classInfo.energyType} (${character.energy.current}/${character.energy.maximum})
+
+CREATE CARDS THAT:
+1. Push the boundaries of ${character.class} abilities
+2. Offer meaningful skill advancement
+3. Include some challenge appropriate for Level ${character.level}
+4. Provide clear progression toward mastery
+
+JSON Format (same as daily cards but with higher impact and skill focus):
+{
+  "recommendations": [...],
+  "reasoning": "Strategic explanation for ${character.class} advancement"
+}
+
+Emphasize cards that transform them into a true ${classInfo.name} master.
+    `;
+  }
+
+  /**
+   * Build goal-oriented cards prompt
+   */
+  private static buildGoalCardsPrompt(
+    character: Character,
+    goalDescription: string,
+    timeframe: number
+  ): string {
+    const classInfo = classDescriptions[character.class];
+    
+    return `
+Create a strategic card sequence for a ${classInfo.name} to achieve: "${goalDescription}"
+
+Timeframe: ${timeframe} days
+Character Level: ${character.level}
+Class Strengths: ${classInfo.traits.join(', ')}
+Primary Skills: ${classInfo.primarySkills.join(', ')}
+
+Generate 5-7 cards that form a logical progression toward the goal, leveraging ${character.class} natural abilities.
+
+Include:
+- Early momentum cards (common/uncommon)
+- Skill-building cards (rare)
+- Breakthrough cards (epic)
+- Goal completion card (legendary)
+
+Same JSON format as before, but focus on goal achievement through ${character.class} methodology.
     `;
   }
 
@@ -185,19 +323,44 @@ Focus on practical, immediately actionable activities.
   }
 
   /**
-   * Call Claude API (mock implementation - replace with actual API call)
+   * Call Claude API with proper error handling
    */
   private static async callClaude(prompt: string): Promise<string> {
-    // Mock implementation - replace with actual Claude API integration
-    if (!this.API_KEY) {
-      throw new Error('Claude API key not configured');
+    if (!this.API_KEY || !this.API_ENDPOINT) {
+      throw new Error('Claude API not configured - using fallback recommendations');
     }
 
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Return mock response for development
-    throw new Error('Claude API not implemented - using fallback');
+    try {
+      const response = await fetch(this.API_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.API_KEY}`,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: 'claude-3-sonnet-20240229',
+          max_tokens: 1500,
+          temperature: 0.7,
+          messages: [
+            {
+              role: 'user',
+              content: prompt
+            }
+          ]
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Claude API responded with status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.content[0].text;
+    } catch (error) {
+      console.error('Claude API call failed:', error);
+      throw error;
+    }
   }
 
   /**
@@ -225,23 +388,27 @@ Focus on practical, immediately actionable activities.
   }
 
   /**
-   * Parse cards response from Claude
+   * Parse cards response from Claude (enhanced for LifeQuest)
    */
   private static parseCardsResponse(response: string): Card[] {
     try {
       const parsed = JSON.parse(response);
-      return parsed.map((cardData: any) => ({
-        id: `card-${Date.now()}-${Math.random()}`,
+      const cardsArray = parsed.recommendations || parsed;
+      
+      return cardsArray.map((cardData: any) => ({
+        id: `ai-card-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         name: cardData.name,
         description: cardData.description,
         type: cardData.type || 'action',
         rarity: cardData.rarity || 'common',
+        classTypes: cardData.classTypes || ['strategist', 'warrior', 'creator', 'connector', 'sage'],
         energyCost: cardData.energyCost || 20,
         duration: cardData.duration || 1,
         impact: cardData.impact || 10,
         cooldown: cardData.cooldown || undefined,
-        conditions: cardData.conditions,
-        effects: cardData.effects,
+        skillBonus: cardData.skillBonus || [],
+        requirements: cardData.requirements || {},
+        conditions: cardData.conditions || {},
         tags: cardData.tags || [],
         createdAt: new Date(),
         aiGenerated: true,
@@ -249,6 +416,7 @@ Focus on practical, immediately actionable activities.
         isOnCooldown: false
       }));
     } catch (error) {
+      console.error('Failed to parse AI response:', error);
       return this.generateBasicCards();
     }
   }
@@ -299,72 +467,245 @@ Focus on practical, immediately actionable activities.
   }
 
   /**
-   * Generate fallback cards when AI is unavailable
+   * Build recommendation with energy forecast
    */
-  private static generateFallbackCards(userContext: UserContext): Card[] {
-    const baseCards = this.generateBasicCards();
+  private static buildRecommendation(cards: Card[], userContext: UserContext): AICardRecommendation {
+    const totalCost = cards.reduce((sum, card) => sum + card.energyCost, 0);
+    const remainingAfter = userContext.character.energy.current - totalCost;
+    const regenerationTime = Math.max(0, -remainingAfter / userContext.character.energy.regenerationRate);
     
-    // Filter based on energy level
-    return baseCards.filter(card => card.energyCost <= userContext.energy);
+    return {
+      cards,
+      reasoning: `Optimized for ${userContext.character.class} with ${userContext.availableTime}h available`,
+      energyForecast: {
+        totalCost,
+        remainingAfter,
+        regenerationTime
+      }
+    };
   }
 
   /**
-   * Generate basic starter cards
+   * Generate intelligent fallback recommendation
+   */
+  private static generateFallbackRecommendation(userContext: UserContext): AICardRecommendation {
+    const { character } = userContext;
+    const availableCards = getAvailableCards(character.class, character.level);
+    
+    // Smart filtering based on character state
+    const energyBudget = character.energy.current;
+    const filteredCards = availableCards.filter(card => {
+      // Energy check
+      if (card.energyCost > energyBudget) return false;
+      
+      // Time check
+      if (card.duration > userContext.availableTime) return false;
+      
+      // Class preference (prioritize class-specific cards)
+      if (card.classTypes.includes(character.class)) return true;
+      
+      // Universal cards are secondary choice
+      return card.classTypes.length === 5;
+    });
+    
+    // Sort by relevance and take top 3-4
+    const sortedCards = filteredCards
+      .sort((a, b) => {
+        // Prioritize class-specific cards
+        const aClassSpecific = a.classTypes.includes(character.class) ? 1 : 0;
+        const bClassSpecific = b.classTypes.includes(character.class) ? 1 : 0;
+        if (aClassSpecific !== bClassSpecific) return bClassSpecific - aClassSpecific;
+        
+        // Then by impact per energy ratio
+        const aEfficiency = a.impact / a.energyCost;
+        const bEfficiency = b.impact / b.energyCost;
+        return bEfficiency - aEfficiency;
+      })
+      .slice(0, 4);
+    
+    return this.buildRecommendation(sortedCards, userContext);
+  }
+
+  /**
+   * Generate class-specific fallback
+   */
+  private static generateClassFallbackRecommendation(
+    character: Character,
+    situation: string
+  ): AICardRecommendation {
+    const classCards = getAvailableCards(character.class, character.level)
+      .filter(card => card.classTypes.includes(character.class))
+      .slice(0, 3);
+    
+    const userContext = {
+      character,
+      energy: character.energy.current,
+      availableTime: 4,
+      currentMood: 'neutral',
+      recentActivity: [],
+      activeQuests: [],
+      preferences: []
+    };
+    
+    return {
+      cards: classCards,
+      reasoning: `Fallback ${character.class} cards for ${situation}`,
+      energyForecast: {
+        totalCost: classCards.reduce((sum, card) => sum + card.energyCost, 0),
+        remainingAfter: character.energy.current - classCards.reduce((sum, card) => sum + card.energyCost, 0),
+        regenerationTime: 0
+      }
+    };
+  }
+
+  /**
+   * Generate goal-oriented fallback cards
+   */
+  private static generateGoalFallbackCards(character: Character, goalDescription: string): Card[] {
+    const classCards = getAvailableCards(character.class, character.level)
+      .filter(card => card.classTypes.includes(character.class))
+      .slice(0, 5);
+    
+    return classCards;
+  }
+
+  /**
+   * Generate enhanced basic cards with LifeQuest structure
    */
   private static generateBasicCards(): Card[] {
     return [
       {
-        id: 'card-focus-session',
+        id: 'ai-card-focus-session',
         name: 'Deep Focus Session',
-        description: 'Engage in 25 minutes of focused work on your most important task',
+        description: 'Enter a state of complete concentration for 25 minutes on your most critical task',
         type: 'action',
         rarity: 'common',
+        classTypes: ['strategist', 'warrior', 'creator', 'connector', 'sage'],
         energyCost: 25,
-        duration: 1,
-        impact: 20,
-        tags: ['productivity', 'focus'],
+        duration: 0.5,
+        impact: 30,
+        skillBonus: [
+          { skillName: 'Focus', xpBonus: 15 }
+        ],
+        requirements: { level: 1 },
+        conditions: {
+          energyLevel: '> 25%',
+          timeRequired: '30+ minutes available'
+        },
+        tags: ['productivity', 'focus', 'universal'],
         createdAt: new Date(),
-        aiGenerated: false,
+        aiGenerated: true,
         usageCount: 0,
         isOnCooldown: false
       },
       {
-        id: 'card-energy-boost',
-        name: 'Energy Restoration',
-        description: 'Take a 10-minute mindful break to recharge your energy',
+        id: 'ai-card-energy-restoration',
+        name: 'Mindful Energy Reset',
+        description: 'Practice deep breathing and mindfulness to restore mental clarity and energy',
         type: 'recovery',
         rarity: 'uncommon',
-        energyCost: 5,
-        duration: 0.5,
-        impact: 10,
-        effects: [
-          {
-            type: 'energy',
-            target: 'current',
-            value: 15
-          }
+        classTypes: ['sage', 'creator'],
+        energyCost: -15, // Restores energy
+        duration: 0.25,
+        impact: 20,
+        skillBonus: [
+          { skillName: 'Mindfulness', xpBonus: 10 },
+          { skillName: 'Balance', xpBonus: 8 }
         ],
-        tags: ['recovery', 'mindfulness'],
+        requirements: { level: 1 },
+        conditions: {
+          energyLevel: '< 60%',
+          timeRequired: '15+ minutes of quiet'
+        },
+        tags: ['recovery', 'mindfulness', 'energy'],
         createdAt: new Date(),
-        aiGenerated: false,
+        aiGenerated: true,
         usageCount: 0,
         isOnCooldown: false
       },
       {
-        id: 'card-skill-practice',
-        name: 'Skill Practice',
-        description: 'Dedicate 30 minutes to practicing a specific skill',
+        id: 'ai-card-adaptive-learning',
+        name: 'Adaptive Skill Building',
+        description: 'Identify and practice the skill most relevant to your current goals',
         type: 'action',
-        rarity: 'common',
-        energyCost: 30,
+        rarity: 'rare',
+        classTypes: ['strategist', 'creator'],
+        energyCost: 35,
         duration: 1,
-        impact: 25,
-        tags: ['learning', 'skills'],
+        impact: 40,
+        skillBonus: [
+          { skillName: 'Intelligence', xpBonus: 20 },
+          { skillName: 'Innovation', xpBonus: 15 }
+        ],
+        requirements: { level: 3 },
+        conditions: {
+          energyLevel: '> 40%',
+          timeRequired: '1+ hour focused time'
+        },
+        tags: ['learning', 'skills', 'adaptive'],
         createdAt: new Date(),
-        aiGenerated: false,
+        aiGenerated: true,
         usageCount: 0,
         isOnCooldown: false
       }
     ];
+  }
+
+  /**
+   * Get smart recommendations based on character and context
+   */
+  static async getSmartRecommendations(character: Character): Promise<AICardRecommendation> {
+    const timeOfDay = new Date().getHours();
+    const energyPercentage = (character.energy.current / character.energy.maximum) * 100;
+    
+    // Build context
+    const userContext: UserContext = {
+      character,
+      energy: character.energy.current,
+      availableTime: this.estimateAvailableTime(timeOfDay),
+      currentMood: this.estimateMood(energyPercentage, character.dailyProgress),
+      recentActivity: [], // Could be populated from recent card usage
+      activeQuests: character.currentGoals,
+      preferences: this.inferPreferences(character)
+    };
+
+    return this.generateDailyCards(userContext);
+  }
+
+  /**
+   * Estimate available time based on time of day
+   */
+  private static estimateAvailableTime(hour: number): number {
+    if (hour >= 6 && hour < 9) return 2; // Morning
+    if (hour >= 9 && hour < 12) return 3; // Late morning
+    if (hour >= 12 && hour < 14) return 1; // Lunch
+    if (hour >= 14 && hour < 18) return 4; // Afternoon
+    if (hour >= 18 && hour < 21) return 3; // Evening
+    return 1; // Night/early morning
+  }
+
+  /**
+   * Estimate mood based on energy and progress
+   */
+  private static estimateMood(energyPercentage: number, dailyProgress: any): string {
+    if (energyPercentage > 75 && dailyProgress.cardsCompleted > 2) return 'excellent';
+    if (energyPercentage > 50 && dailyProgress.cardsCompleted > 0) return 'good';
+    if (energyPercentage > 25) return 'neutral';
+    return 'low-energy';
+  }
+
+  /**
+   * Infer preferences from character class
+   */
+  private static inferPreferences(character: Character): string[] {
+    const classPrefs = {
+      strategist: ['data-driven', 'analytical', 'optimization'],
+      warrior: ['discipline', 'consistency', 'challenges'],
+      creator: ['creative', 'innovative', 'experimental'],
+      connector: ['social', 'collaborative', 'networking'],
+      sage: ['mindful', 'balanced', 'reflective']
+    };
+    
+    return classPrefs[character.class] || [];
   }
 }

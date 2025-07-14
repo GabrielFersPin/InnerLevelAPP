@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { AppData, Task, Habit, Todo, Reward, RedeemedReward, EmotionalLog, Goal, Card, Quest, CardResult } from '../types/index';
+import { AppData, Task, Habit, Todo, Reward, RedeemedReward, EmotionalLog, Goal, Card, Quest, CardResult, Character, CharacterClass, PersonalityTestResult } from '../types/index';
+import { createNewCharacter } from '../data/characterClasses';
 
 interface AppState extends AppData {}
 
@@ -16,6 +17,13 @@ type AppAction =
   | { type: 'ADD_GOAL'; payload: Goal }
   | { type: 'UPDATE_GOAL'; payload: { goalId: number; updates: Partial<Goal> } }
   | { type: 'DELETE_GOAL'; payload: number }
+  // Character Actions
+  | { type: 'CREATE_CHARACTER'; payload: { name: string; characterClass: CharacterClass; personalityResult?: PersonalityTestResult } }
+  | { type: 'UPDATE_CHARACTER'; payload: Partial<Character> }
+  | { type: 'GAIN_EXPERIENCE'; payload: number }
+  | { type: 'LEVEL_UP' }
+  | { type: 'UPDATE_SKILL'; payload: { skillName: string; xp: number } }
+  | { type: 'COMPLETE_ONBOARDING' }
   // LifeQuest Cards Actions
   | { type: 'ADD_CARD'; payload: Card }
   | { type: 'EXECUTE_CARD'; payload: { cardId: string; result: CardResult } }
@@ -54,6 +62,8 @@ const initialState: AppState = {
   redeemedRewards: [],
   emotionalLogs: [],
   goals: [],
+  // LifeQuest RPG Character System  
+  character: createNewCharacter("Player", "strategist"), // Default character
   // LifeQuest Cards initial state
   cards: {
     inventory: [],
@@ -129,6 +139,67 @@ function appReducer(state: AppState, action: AppAction): AppState {
       };
     case 'DELETE_GOAL':
       return { ...state, goals: state.goals.filter(g => g.id !== action.payload) };
+    
+    // Character Reducers
+    case 'CREATE_CHARACTER':
+      return {
+        ...state,
+        character: createNewCharacter(
+          action.payload.name, 
+          action.payload.characterClass, 
+          action.payload.personalityResult
+        )
+      };
+    
+    case 'UPDATE_CHARACTER':
+      return {
+        ...state,
+        character: { ...state.character, ...action.payload }
+      };
+    
+    case 'GAIN_EXPERIENCE': {
+      const newExp = state.character.experience + action.payload;
+      const currentLevel = state.character.level;
+      const newLevel = Math.min(50, Math.floor(Math.sqrt(newExp / 100)) + 1);
+      
+      return {
+        ...state,
+        character: {
+          ...state.character,
+          experience: newExp,
+          level: newLevel,
+          skillPoints: state.character.skillPoints + (newLevel > currentLevel ? newLevel - currentLevel : 0)
+        }
+      };
+    }
+    
+    case 'UPDATE_SKILL': {
+      const { skillName, xp } = action.payload;
+      const currentSkill = state.character.skills[skillName];
+      const newXP = currentSkill.totalXP + xp;
+      const newLevel = Math.min(50, Math.floor(newXP / 100) + 1);
+      
+      return {
+        ...state,
+        character: {
+          ...state.character,
+          skills: {
+            ...state.character.skills,
+            [skillName]: {
+              level: newLevel,
+              experience: newXP % 100,
+              totalXP: newXP
+            }
+          }
+        }
+      };
+    }
+    
+    case 'COMPLETE_ONBOARDING':
+      return {
+        ...state,
+        character: { ...state.character, isOnboarded: true }
+      };
     
     // LifeQuest Cards Reducers
     case 'ADD_CARD':
@@ -316,6 +387,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         redeemedRewards: JSON.parse(localStorage.getItem('innerlevel_redeemed') || '[]'),
         emotionalLogs: JSON.parse(localStorage.getItem('innerlevel_emotional') || '[]'),
         goals: JSON.parse(localStorage.getItem('innerlevel_goals') || '[]'),
+        // LifeQuest Character data
+        character: JSON.parse(localStorage.getItem('innerlevel_character') || 'null'),
         // LifeQuest Cards data
         cards: JSON.parse(localStorage.getItem('innerlevel_cards') || 'null'),
         quests: JSON.parse(localStorage.getItem('innerlevel_quests') || 'null'),
@@ -324,13 +397,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       };
 
       // Only load if we have existing data, otherwise keep initial state
-      if (savedData.tasks.length > 0 || savedData.todos.length > 0 || savedData.redeemedRewards.length > 0 || savedData.goals.length > 0 || savedData.cards) {
+      if (savedData.tasks.length > 0 || savedData.todos.length > 0 || savedData.redeemedRewards.length > 0 || savedData.goals.length > 0 || savedData.cards || savedData.character) {
         dispatch({
           type: 'LOAD_DATA',
           payload: {
             ...savedData,
             habits: savedData.habits || initialState.habits,
             rewards: savedData.rewards || initialState.rewards,
+            character: savedData.character || initialState.character,
             cards: savedData.cards || initialState.cards,
             quests: savedData.quests || initialState.quests,
             energy: savedData.energy || initialState.energy,
@@ -355,6 +429,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('innerlevel_redeemed', JSON.stringify(state.redeemedRewards));
       localStorage.setItem('innerlevel_emotional', JSON.stringify(state.emotionalLogs));
       localStorage.setItem('innerlevel_goals', JSON.stringify(state.goals));
+      // LifeQuest Character localStorage
+      localStorage.setItem('innerlevel_character', JSON.stringify(state.character));
       // LifeQuest Cards localStorage
       localStorage.setItem('innerlevel_cards', JSON.stringify(state.cards));
       localStorage.setItem('innerlevel_quests', JSON.stringify(state.quests));

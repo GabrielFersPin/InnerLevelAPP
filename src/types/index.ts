@@ -62,6 +62,8 @@ export interface AppData {
   redeemedRewards: RedeemedReward[];
   emotionalLogs: EmotionalLog[];
   goals: Goal[];
+  // LifeQuest RPG Character System
+  character: Character;
   // LifeQuest Cards data
   cards: {
     inventory: Card[];
@@ -116,22 +118,26 @@ export interface Card {
   description: string;
   type: 'action' | 'power' | 'recovery' | 'event' | 'equipment';
   rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+  classTypes: CharacterClass[]; // Which classes can use this card
   energyCost: number;
-  duration: number; // horas
-  impact: number; // puntos hacia quest
-  cooldown?: number; // horas
-  conditions?: {
-    requiredEnergyLevel?: string; // "> 75%"
-    timeRequired?: string;
-    mentalState?: string[];
+  duration: number; // hours
+  impact: number; // XP gained
+  cooldown?: number; // hours
+  skillBonus: {
+    skillName: string;
+    xpBonus: number;
+    temporaryBoost?: number;
+  }[];
+  requirements: {
+    level?: number;
+    skills?: Record<string, number>;
     prerequisiteCards?: string[];
   };
-  effects?: {
-    type: 'energy' | 'multiplier' | 'unlock' | 'bonus';
-    target: string;
-    value: number;
-    duration?: number;
-  }[];
+  conditions: {
+    energyLevel?: string; // "> 75%"
+    timeRequired?: string;
+    mentalState?: string[];
+  };
   tags: string[];
   createdAt: Date;
   aiGenerated: boolean;
@@ -197,4 +203,103 @@ export interface EnergyForecast {
   recommendations: string[];
 }
 
-export type PageType = 'dashboard' | 'log-activity' | 'habits' | 'todo' | 'goals' | 'rewards' | 'wellbeing' | 'analytics' | 'profile' | 'card-inventory' | 'quest-designer' | 'card-generator';
+// Character Classes for LifeQuest RPG
+export type CharacterClass = 'strategist' | 'warrior' | 'creator' | 'connector' | 'sage';
+
+export interface Character {
+  id: string;
+  name: string;
+  class: CharacterClass;
+  level: number; // 1-50
+  experience: number;
+  skillPoints: number;
+  avatar: string;
+  
+  // Energy specific by class
+  energy: {
+    current: number;
+    maximum: number;
+    regenerationRate: number;
+    lastUpdate: Date;
+  };
+  
+  // Skills specific by class
+  skills: Record<string, {
+    level: number;
+    experience: number;
+    totalXP: number;
+  }>;
+  
+  // Inventory and progress
+  deck: Card[];
+  activeDeck: string[]; // IDs of equipped cards
+  completedCards: CardCompletion[];
+  achievements: Achievement[];
+  
+  // Game state
+  currentGoals: Goal[];
+  dailyProgress: DailyProgress;
+  streak: number;
+  prestigeLevel: number;
+  
+  // Character creation
+  isOnboarded: boolean;
+  personalityTestResults?: PersonalityTestResult;
+}
+
+export interface PersonalityTestResult {
+  scores: Record<CharacterClass, number>;
+  dominantClass: CharacterClass;
+  secondaryClass: CharacterClass;
+  testDate: Date;
+}
+
+export interface PersonalityQuestion {
+  id: number;
+  question: string;
+  options: {
+    text: string;
+    class: CharacterClass;
+    weight: number;
+  }[];
+}
+
+export interface Achievement {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+  unlockedAt?: Date;
+  requirements: {
+    type: 'level' | 'cards_completed' | 'streak' | 'skill_level' | 'quest_completed';
+    value: number;
+    skillName?: string;
+  }[];
+  rewards: {
+    experience?: number;
+    cards?: string[];
+    title?: string;
+  };
+}
+
+export interface CardCompletion {
+  cardId: string;
+  completedAt: Date;
+  feedback: string;
+  satisfaction: number; // 1-5
+  energyUsed: number;
+  xpGained: number;
+}
+
+export interface DailyProgress {
+  date: string;
+  cardsCompleted: number;
+  energyUsed: number;
+  xpGained: number;
+  goalsAdvanced: string[];
+  mood: 'excellent' | 'good' | 'neutral' | 'poor' | 'terrible';
+  notes: string;
+}
+
+export type PageType = 'character-hub' | 'card-deck' | 'training-ground' | 'character-sheet' | 'guild-settings' | 'personality-test' | 'class-reveal';
