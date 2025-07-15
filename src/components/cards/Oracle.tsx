@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../../context/AppContext';
-import { ArcaneEngine } from "../../services/arcaneService";
+import { ArcaneEngine } from "../../services/arcaneEngine";
 import { getClassTheme } from '../../data/characterClasses';
 import { Brain, Sparkles, RefreshCw, Clock, Target, Zap, Plus } from 'lucide-react';
 import type { Card } from '../../types/index';
