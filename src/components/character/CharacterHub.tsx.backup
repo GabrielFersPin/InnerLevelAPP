@@ -3,14 +3,14 @@ import { useAppContext } from '../../context/AppContext';
 import { classDescriptions } from '../../data/personalityTest';
 import { getClassTheme, calculateLevelFromXP, getXPRequiredForNextLevel } from '../../data/characterClasses';
 import { getAvailableCards } from '../../data/baseCards';
-import { ArcaneEngine } from "../../services/arcaneService";
+import { AIService } from '../../services/aiService';
 import { Crown, Zap, Target, Star, TrendingUp, Calendar, Sparkles, Brain, RefreshCw } from 'lucide-react';
 import type { Card } from '../../types/index';
 
 export function CharacterHub() {
   const { state, dispatch } = useAppContext();
   const { character } = state;
-  const [oracleGuidance, setAiRecommendations] = useState<Card[]>([]);
+  const [aiRecommendations, setAiRecommendations] = useState<Card[]>([]);
   const [isLoadingAI, setIsLoadingAI] = useState(false);
   const [aiInsight, setAiInsight] = useState<string>('');
   const [showAICards, setShowAICards] = useState(false);
@@ -36,7 +36,7 @@ export function CharacterHub() {
   const loadAIRecommendations = async () => {
     setIsLoadingAI(true);
     try {
-      const recommendation = await ArcaneEngine.getSmartRecommendations(character);
+      const recommendation = await AIService.getSmartRecommendations(character);
       setAiRecommendations(recommendation.cards);
       setAiInsight(recommendation.reasoning);
     } catch (error) {
@@ -58,7 +58,7 @@ export function CharacterHub() {
     // Could also directly execute the card here
   };
 
-  const displayedRecommendations = showAICards ? oracleGuidance : availableCards.slice(0, 3);
+  const displayedRecommendations = showAICards ? aiRecommendations : availableCards.slice(0, 3);
 
   return (
     <div className="space-y-8">
@@ -319,7 +319,7 @@ export function CharacterHub() {
                       <span className="text-lg font-medium text-slate-200">{card.name}</span>
                       <div className="flex items-center space-x-2">
                         <span className="text-2xl">{typeIcon}</span>
-                        {showAICards && card.forged && (
+                        {showAICards && card.aiGenerated && (
                           <span className="text-xs bg-purple-600 text-white px-2 py-1 rounded-full">AI</span>
                         )}
                       </div>

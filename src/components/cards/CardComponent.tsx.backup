@@ -178,7 +178,7 @@ export function CardComponent({
       )}
 
       {/* AI Generated Badge */}
-      {card.forged && showDetails && (
+      {card.aiGenerated && showDetails && (
         <div className="absolute top-2 left-2 bg-purple-600/80 text-purple-100 text-xs px-2 py-1 rounded-full font-semibold">
           AI
         </div>

@@ -14,57 +14,57 @@ const path = require('path');
 const TRANSFORMATIONS = {
   // Nombres de archivos y carpetas
   fileRenames: {
-    'MysticForge.tsx': 'MysticForge.tsx',
-    'MysticForge.js': 'MysticForge.js',
+    'AICardGenerator.tsx': 'MysticForge.tsx',
+    'AICardGenerator.js': 'MysticForge.js',
     'aiService.ts': 'arcaneEngine.ts',
     'aiService.js': 'arcaneEngine.js',
     'useAIRecommendations.ts': 'useOracleGuidance.ts',
     'useAIRecommendations.js': 'useOracleGuidance.js',
     'aiHelpers.ts': 'mysticHelpers.ts',
     'aiHelpers.js': 'mysticHelpers.js',
-    'SageWisdom.tsx': 'SageWisdom.tsx',
-    'SageWisdom.js': 'SageWisdom.js'
+    'AIAnalysis.tsx': 'SageWisdom.tsx',
+    'AIAnalysis.js': 'SageWisdom.js'
   },
 
   // Transformaciones de texto (orden importa para evitar conflictos)
   textReplacements: [
     // Componentes y Clases
-    { from: /MysticForge/g, to: 'MysticForge' },
-    { from: /Mystic Forge/g, to: 'Mystic Forge' },
-    { from: /ArcaneEngine/g, to: 'ArcaneEngine' },
-    { from: /Arcane Engine/g, to: 'Arcane Engine' },
-    { from: /SageWisdom/g, to: 'SageWisdom' },
-    { from: /Sage Wisdom/g, to: 'Sage Wisdom' },
+    { from: /AICardGenerator/g, to: 'MysticForge' },
+    { from: /AI Card Generator/g, to: 'Mystic Forge' },
+    { from: /AIService/g, to: 'ArcaneEngine' },
+    { from: /AI Service/g, to: 'Arcane Engine' },
+    { from: /AIAnalysis/g, to: 'SageWisdom' },
+    { from: /AI Analysis/g, to: 'Sage Wisdom' },
     
     // Variables y funciones
-    { from: /forgeMysticCards/g, to: 'forgeMysticCards' },
-    { from: /seekOracleGuidance/g, to: 'seekOracleGuidance' },
-    { from: /decipherAncientScroll/g, to: 'decipherAncientScroll' },
-    { from: /consultSageWisdom/g, to: 'consultSageWisdom' },
-    { from: /callArcaneEngine/g, to: 'invokeArcaneEngine' },
-    { from: /forging/g, to: 'forging' },
-    { from: /forged/g, to: 'forged' },
-    { from: /oracleGuidance/g, to: 'oracleGuidance' },
-    { from: /ancientScroll/g, to: 'ancientScroll' },
-    { from: /sageWisdom/g, to: 'sageWisdom' },
-    { from: /forgedCards/g, to: 'forgedCards' },
-    { from: /incantation/g, to: 'incantation' },
-    { from: /mysticDisruption/g, to: 'mysticDisruption' },
+    { from: /generateAICards/g, to: 'forgeMysticCards' },
+    { from: /getAIRecommendations/g, to: 'seekOracleGuidance' },
+    { from: /processAIResponse/g, to: 'decipherAncientScroll' },
+    { from: /analyzeWithAI/g, to: 'consultSageWisdom' },
+    { from: /callAIService/g, to: 'invokeArcaneEngine' },
+    { from: /aiGenerating/g, to: 'forging' },
+    { from: /aiGenerated/g, to: 'forged' },
+    { from: /aiRecommendations/g, to: 'oracleGuidance' },
+    { from: /aiResponse/g, to: 'ancientScroll' },
+    { from: /aiAnalysis/g, to: 'sageWisdom' },
+    { from: /aiCards/g, to: 'forgedCards' },
+    { from: /aiPrompt/g, to: 'incantation' },
+    { from: /aiError/g, to: 'mysticDisruption' },
 
     // Textos de interfaz - Títulos y Headers
-    { from: /"Forge Legendary Cards"/g, to: '"Forge Legendary Cards"' },
-    { from: /"Mystic Forge"/g, to: '"🔮 Mystic Forge"' },
-    { from: /"🧙‍♂️ Oracle's Guidance"/g, to: '"🧙‍♂️ Oracle\'s Guidance"' },
-    { from: /"Sage Wisdom"/g, to: '"📜 Sage\'s Wisdom"' },
-    { from: /"🗡️ Guild Master"/g, to: '"🗡️ Guild Master"' },
-    { from: /"🌟 Mystic Guidance"/g, to: '"🌟 Mystic Guidance"' },
+    { from: /"Generate Cards with AI"/g, to: '"Forge Legendary Cards"' },
+    { from: /"AI Card Generator"/g, to: '"🔮 Mystic Forge"' },
+    { from: /"AI Recommendations"/g, to: '"🧙‍♂️ Oracle\'s Guidance"' },
+    { from: /"AI Analysis"/g, to: '"📜 Sage\'s Wisdom"' },
+    { from: /"AI Assistant"/g, to: '"🗡️ Guild Master"' },
+    { from: /"AI Suggestions"/g, to: '"🌟 Mystic Guidance"' },
 
     // Botones y acciones
-    { from: /"⚡ Forge New Cards"/g, to: '"⚡ Forge New Cards"' },
-    { from: /"🧙‍♂️ Seek Oracle's Wisdom"/g, to: '"🧙‍♂️ Seek Oracle\'s Wisdom"' },
-    { from: /"📜 Consult the Sages"/g, to: '"📜 Consult the Sages"' },
-    { from: /"🌟 Receive Mystic Guidance"/g, to: '"🌟 Receive Mystic Guidance"' },
-    { from: /"⚡ Arcane Powered"/g, to: '"⚡ Arcane Powered"' },
+    { from: /"Generate AI Cards"/g, to: '"⚡ Forge New Cards"' },
+    { from: /"Ask AI for Help"/g, to: '"🧙‍♂️ Seek Oracle\'s Wisdom"' },
+    { from: /"Analyze with AI"/g, to: '"📜 Consult the Sages"' },
+    { from: /"Get AI Suggestions"/g, to: '"🌟 Receive Mystic Guidance"' },
+    { from: /"AI Powered"/g, to: '"⚡ Arcane Powered"' },
 
     // Estados de carga
     { from: /"AI is generating cards\.\.\."/g, to: '"🔮 The forge burns bright, crafting your cards..."' },
@@ -75,28 +75,28 @@ const TRANSFORMATIONS = {
     { from: /"Generating with AI\.\.\."/g, to: '"✨ Channeling mystical energies..."' },
 
     // Mensajes de error
-    { from: /"🌙 The mystical energies are dormant. Try again later..."/g, to: '"🌙 The mystical energies are dormant. Try again later..."' },
-    { from: /"⚡ The arcane forge needs time to recharge its power..."/g, to: '"⚡ The arcane forge needs time to recharge its power..."' },
-    { from: /"🔮 The connection to the mystical realm is unstable..."/g, to: '"🔮 The connection to the mystical realm is unstable..."' },
-    { from: /"🧙‍♂️ The Oracle is consulting the cosmic winds..."/g, to: '"🧙‍♂️ The Oracle is consulting the cosmic winds..."' },
-    { from: /"⏳ The mystical ritual requires more time to complete..."/g, to: '"⏳ The mystical ritual requires more time to complete..."' },
+    { from: /"AI service unavailable"/g, to: '"🌙 The mystical energies are dormant. Try again later..."' },
+    { from: /"AI generation failed"/g, to: '"⚡ The arcane forge needs time to recharge its power..."' },
+    { from: /"AI API error"/g, to: '"🔮 The connection to the mystical realm is unstable..."' },
+    { from: /"AI not responding"/g, to: '"🧙‍♂️ The Oracle is consulting the cosmic winds..."' },
+    { from: /"AI request timeout"/g, to: '"⏳ The mystical ritual requires more time to complete..."' },
 
     // Descripciones y textos explicativos
-    { from: /"Channel ancient energies to craft legendary cards"/g, to: '"Channel ancient energies to craft legendary cards"' },
-    { from: /"The Sages will divine wisdom from your journey"/g, to: '"The Sages will divine wisdom from your journey"' },
-    { from: /"Oracle-guided mystical counsel"/g, to: '"Oracle-guided mystical counsel"' },
-    { from: /"Deep arcane wisdom synthesis"/g, to: '"Deep arcane wisdom synthesis"' },
-    { from: /"The mystical forces attune to your essence"/g, to: '"The mystical forces attune to your essence"' },
+    { from: /"Let AI create personalized cards"/g, to: '"Channel ancient energies to craft legendary cards"' },
+    { from: /"AI will analyze your progress"/g, to: '"The Sages will divine wisdom from your journey"' },
+    { from: /"AI-powered recommendations"/g, to: '"Oracle-guided mystical counsel"' },
+    { from: /"Advanced AI analysis"/g, to: '"Deep arcane wisdom synthesis"' },
+    { from: /"AI learns from your patterns"/g, to: '"The mystical forces attune to your essence"' },
 
     // Términos técnicos generales
-    { from: /Mystic Learning/g, to: 'Mystic Learning' },
-    { from: /mystic learning/g, to: 'mystic learning' },
-    { from: /Battle Strategy/g, to: 'Battle Strategy' },
-    { from: /battle strategy/g, to: 'battle strategy' },
-    { from: /Alchemical Transmutation/g, to: 'Alchemical Transmutation' },
-    { from: /alchemical transmutation/g, to: 'alchemical transmutation' },
-    { from: /Arcane Network/g, to: 'Arcane Network' },
-    { from: /arcane network/g, to: 'arcane network' },
+    { from: /Machine Learning/g, to: 'Mystic Learning' },
+    { from: /machine learning/g, to: 'mystic learning' },
+    { from: /Algorithm/g, to: 'Battle Strategy' },
+    { from: /algorithm/g, to: 'battle strategy' },
+    { from: /Data Processing/g, to: 'Alchemical Transmutation' },
+    { from: /data processing/g, to: 'alchemical transmutation' },
+    { from: /Neural Network/g, to: 'Arcane Network' },
+    { from: /neural network/g, to: 'arcane network' },
 
     // Comentarios en código
     { from: /\/\/ AI related/g, to: '// Mystical forces related' },
@@ -111,8 +111,8 @@ const TRANSFORMATIONS = {
 
     // Imports y exports
     { from: /from ['"](.*\/)ai([^'"]*)['"]/g, to: 'from "$1arcane$2"' },
-    { from: /import.*arcaneEngine/g, to: (match) => match.replace('aiService', 'arcaneEngine') },
-    { from: /export.*arcaneEngine/g, to: (match) => match.replace('aiService', 'arcaneEngine') },
+    { from: /import.*aiService/g, to: (match) => match.replace('aiService', 'arcaneEngine') },
+    { from: /export.*aiService/g, to: (match) => match.replace('aiService', 'arcaneEngine') },
   ]
 };
 

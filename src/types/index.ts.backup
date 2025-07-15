@@ -140,7 +140,7 @@ export interface Card {
   };
   tags: string[];
   createdAt: Date;
-  forged: boolean;
+  aiGenerated: boolean;
   usageCount: number;
   lastUsed?: Date;
   isOnCooldown: boolean;

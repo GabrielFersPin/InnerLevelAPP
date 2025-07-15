@@ -10,7 +10,7 @@ import Goals from './components/Goals';
 import { Profile } from './components/Profile';
 import { CharacterHub } from './components/character/CharacterHub';
 import { CardDeck } from './components/cards/CardDeck';
-import { MysticForge } from './components/cards/MysticForge';
+import { AICardGenerator } from './components/cards/AICardGenerator';
 import { PersonalityTest } from './components/onboarding/PersonalityTest';
 import { ClassReveal } from './components/onboarding/ClassReveal';
 import { AuthModal } from './components/Auth/AuthModal';
@@ -119,7 +119,7 @@ function App() {
       case 'card-deck':
         return <CardDeck onNavigateToAI={() => setCurrentPage('ai-card-generator')} />;
       case 'ai-card-generator':
-        return <MysticForge />;
+        return <AICardGenerator />;
       case 'training-ground':
         return <div className="text-amber-200">Training Ground - Coming Soon</div>;
       case 'character-sheet':

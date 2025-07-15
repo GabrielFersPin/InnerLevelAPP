@@ -25,7 +25,7 @@ export const sampleCards: Card[] = [
     ],
     tags: ['morning', 'mindfulness', 'productivity'],
     createdAt: new Date(),
-    forged: false,
+    aiGenerated: false,
     usageCount: 0,
     isOnCooldown: false
   },
@@ -41,7 +41,7 @@ export const sampleCards: Card[] = [
     cooldown: 2,
     tags: ['productivity', 'focus', 'work'],
     createdAt: new Date(),
-    forged: false,
+    aiGenerated: false,
     usageCount: 0,
     isOnCooldown: false
   },
@@ -56,7 +56,7 @@ export const sampleCards: Card[] = [
     impact: 25,
     tags: ['learning', 'skills', 'growth'],
     createdAt: new Date(),
-    forged: false,
+    aiGenerated: false,
     usageCount: 0,
     isOnCooldown: false
   },
@@ -80,7 +80,7 @@ export const sampleCards: Card[] = [
     ],
     tags: ['recovery', 'meditation', 'energy'],
     createdAt: new Date(),
-    forged: false,
+    aiGenerated: false,
     usageCount: 0,
     isOnCooldown: false
   },
@@ -98,7 +98,7 @@ export const sampleCards: Card[] = [
     },
     tags: ['networking', 'career', 'professional'],
     createdAt: new Date(),
-    forged: false,
+    aiGenerated: false,
     usageCount: 0,
     isOnCooldown: false
   },
@@ -121,7 +121,7 @@ export const sampleCards: Card[] = [
     ],
     tags: ['creativity', 'passion', 'art'],
     createdAt: new Date(),
-    forged: false,
+    aiGenerated: false,
     usageCount: 0,
     isOnCooldown: false
   },
@@ -150,7 +150,7 @@ export const sampleCards: Card[] = [
     ],
     tags: ['productivity', 'focus', 'deep work'],
     createdAt: new Date(),
-    forged: false,
+    aiGenerated: false,
     usageCount: 0,
     isOnCooldown: false
   },
@@ -172,7 +172,7 @@ export const sampleCards: Card[] = [
     ],
     tags: ['learning', 'wisdom', 'knowledge'],
     createdAt: new Date(),
-    forged: false,
+    aiGenerated: false,
     usageCount: 0,
     isOnCooldown: false
   },
@@ -206,7 +206,7 @@ export const sampleCards: Card[] = [
     ],
     tags: ['transformation', 'planning', 'major change'],
     createdAt: new Date(),
-    forged: false,
+    aiGenerated: false,
     usageCount: 0,
     isOnCooldown: false
   },
@@ -240,7 +240,7 @@ export const sampleCards: Card[] = [
     ],
     tags: ['legendary', 'breakthrough', 'life-changing'],
     createdAt: new Date(),
-    forged: false,
+    aiGenerated: false,
     usageCount: 0,
     isOnCooldown: false
   }
