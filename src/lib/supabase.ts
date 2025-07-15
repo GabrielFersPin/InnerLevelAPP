@@ -52,6 +52,9 @@ export type Database = {
           redeemed_rewards: any;
           emotional_logs: any;
           goals: any;
+          // Character data
+          character: any;
+          is_onboarded: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -65,6 +68,9 @@ export type Database = {
           redeemed_rewards?: any;
           emotional_logs?: any;
           goals?: any;
+          // Character data
+          character?: any;
+          is_onboarded?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -78,6 +84,9 @@ export type Database = {
           redeemed_rewards?: any;
           emotional_logs?: any;
           goals?: any;
+          // Character data
+          character?: any;
+          is_onboarded?: boolean;
           created_at?: string;
           updated_at?: string;
         };

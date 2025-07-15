@@ -19,6 +19,7 @@ type AppAction =
   | { type: 'DELETE_GOAL'; payload: number }
   // Character Actions
   | { type: 'CREATE_CHARACTER'; payload: { name: string; characterClass: CharacterClass; personalityResult?: PersonalityTestResult } }
+  | { type: 'LOAD_CHARACTER'; payload: Character }
   | { type: 'UPDATE_CHARACTER'; payload: Partial<Character> }
   | { type: 'GAIN_EXPERIENCE'; payload: number }
   | { type: 'LEVEL_UP' }
@@ -149,6 +150,12 @@ function appReducer(state: AppState, action: AppAction): AppState {
           action.payload.characterClass, 
           action.payload.personalityResult
         )
+      };
+    
+    case 'LOAD_CHARACTER':
+      return {
+        ...state,
+        character: action.payload
       };
     
     case 'UPDATE_CHARACTER':

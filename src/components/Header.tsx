@@ -1,22 +1,22 @@
 import React, { useState } from 'react';
-// import { useAuth } from '../hooks/useAuth';
-// import { AuthModal } from './Auth/AuthModal';
-// import { UserProfile } from './Auth/UserProfile';
-import { User, LogIn, Home } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
+import { AuthModal } from './Auth/AuthModal';
+import { UserProfile } from './Auth/UserProfile';
+import { User, LogIn, Home, LogOut } from 'lucide-react';
 
 interface HeaderProps {
   onNavigateHome?: () => void;
 }
 
 export function Header({ onNavigateHome }: HeaderProps) {
-  // const { user, profile, loading } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
 
-  // Temporarily disable auth functionality
-  const user = null;
-  const profile = null;
-  const loading = false;
+  const handleSignOut = async () => {
+    await signOut();
+    setShowProfileModal(false);
+  };
 
   return (
     <>
@@ -24,40 +24,48 @@ export function Header({ onNavigateHome }: HeaderProps) {
         {/* Home Button - Always visible */}
         <button
           onClick={onNavigateHome}
-          className="flex items-center gap-2 bg-white/95 backdrop-blur-lg px-4 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-purple-300"
-          title="Go to Dashboard"
+          className="flex items-center gap-2 bg-slate-800/90 backdrop-blur-lg px-4 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-amber-500/30 hover:border-amber-400"
+          title="Go to Character Hub"
         >
-          <Home className="w-4 h-4 text-gray-600" />
-          <span className="text-sm font-medium text-gray-700">Dashboard</span>
+          <Home className="w-4 h-4 text-amber-400" />
+          <span className="text-sm font-medium text-slate-200">Hub</span>
         </button>
 
         {/* User Profile or Sign In Button */}
         {user && profile ? (
-          <button
-            onClick={() => setShowProfileModal(true)}
-            className="flex items-center gap-3 bg-white/95 backdrop-blur-lg px-4 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-purple-200"
-          >
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-purple-700 rounded-full flex items-center justify-center">
-              <User className="w-4 h-4 text-white" />
-            </div>
-            <div className="text-left">
-              <div className="text-sm font-semibold text-gray-800">{profile.username}</div>
-              <div className="text-xs text-gray-600">{profile.email}</div>
-            </div>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowProfileModal(true)}
+              className="flex items-center gap-3 bg-slate-800/90 backdrop-blur-lg px-4 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-amber-500/30"
+            >
+              <div className="w-8 h-8 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center">
+                <User className="w-4 h-4 text-slate-900" />
+              </div>
+              <div className="text-left">
+                <div className="text-sm font-semibold text-amber-200">{profile.username}</div>
+                <div className="text-xs text-slate-300">{profile.email}</div>
+              </div>
+            </button>
+            <button
+              onClick={handleSignOut}
+              className="flex items-center gap-2 bg-slate-700/90 backdrop-blur-lg px-3 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-red-500/30 hover:border-red-400 text-red-400 hover:text-red-300"
+              title="Sign Out"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
         ) : (
           <button
             onClick={() => setShowAuthModal(true)}
-            className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white px-6 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:from-purple-700 hover:to-purple-800"
+            className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-900 px-6 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:from-amber-400 hover:to-amber-500 font-bold"
           >
             <LogIn className="w-4 h-4" />
-            <span className="font-medium">Sign In</span>
+            <span className="font-medium">Enter Realm</span>
           </button>
         )}
       </div>
 
-      {/* Temporarily disabled auth modals */}
-      {/* <AuthModal 
+      <AuthModal 
         isOpen={showAuthModal} 
         onClose={() => setShowAuthModal(false)} 
       />
@@ -65,7 +73,7 @@ export function Header({ onNavigateHome }: HeaderProps) {
       <UserProfile 
         isOpen={showProfileModal} 
         onClose={() => setShowProfileModal(false)} 
-      /> */}
+      />
     </>
   );
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { LogActivity } from './components/LogActivity';
@@ -13,18 +13,33 @@ import { CardDeck } from './components/cards/CardDeck';
 import { AICardGenerator } from './components/cards/AICardGenerator';
 import { PersonalityTest } from './components/onboarding/PersonalityTest';
 import { ClassReveal } from './components/onboarding/ClassReveal';
+import { AuthModal } from './components/Auth/AuthModal';
 import { PageType } from './types';
 import { useAppContext } from './context/AppContext';
+import { useAuth } from './hooks/useAuth';
+import { useAuthenticatedCharacter } from './hooks/useAuthenticatedCharacter';
 // import { useUserData } from './hooks/useUserData';
 
 function App() {
-  const { state, dispatch } = useAppContext();
+  const { state } = useAppContext();
+  const { user, loading: authLoading } = useAuth();
+  const { createCharacterInDatabase } = useAuthenticatedCharacter();
   const [currentPage, setCurrentPage] = useState<PageType>('character-hub');
   const [onboardingStep, setOnboardingStep] = useState<'test' | 'reveal' | 'complete'>('test');
   const [personalityResult, setPersonalityResult] = useState<any>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   
   // Initialize user data hook - temporarily disabled
   // useUserData();
+
+  // Show auth modal if user is not authenticated and not loading
+  useEffect(() => {
+    if (!authLoading && !user) {
+      setShowAuthModal(true);
+    } else if (user) {
+      setShowAuthModal(false);
+    }
+  }, [user, authLoading]);
   
   // Check if character needs onboarding
   const needsOnboarding = !state.character?.isOnboarded;
@@ -34,24 +49,38 @@ function App() {
     setOnboardingStep('reveal');
   };
   
-  const handleClassRevealAccept = () => {
-    if (personalityResult) {
-      dispatch({
-        type: 'CREATE_CHARACTER',
-        payload: {
-          name: 'Hero', // Could be customizable
-          characterClass: personalityResult.dominantClass,
-          personalityResult
-        }
-      });
-      dispatch({ type: 'COMPLETE_ONBOARDING' });
+  const handleClassRevealAccept = async () => {
+    if (personalityResult && user) {
+      const characterData = {
+        name: user.email?.split('@')[0] || 'Hero', // Use email username or default
+        characterClass: personalityResult.dominantClass,
+        personalityResult,
+        isOnboarded: true
+      };
+      
+      await createCharacterInDatabase(characterData);
       setOnboardingStep('complete');
       setCurrentPage('character-hub');
     }
   };
   
-  // Show onboarding if character hasn't completed it
-  if (needsOnboarding) {
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg animate-pulse">
+            <div className="w-8 h-8 bg-slate-900 rounded-full"></div>
+          </div>
+          <h2 className="text-xl font-bold text-amber-200 mb-2">Entering the Realm...</h2>
+          <p className="text-slate-300">Preparing your adventure</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show onboarding if user is authenticated but character hasn't completed it
+  if (user && needsOnboarding) {
     if (onboardingStep === 'test') {
       return <PersonalityTest onComplete={handlePersonalityTestComplete} />;
     }
@@ -66,6 +95,21 @@ function App() {
         />
       );
     }
+  }
+
+  // Don't render main app if user is not authenticated
+  if (!user) {
+    return (
+      <>
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-amber-200 mb-4">LifeQuest RPG</h1>
+            <p className="text-slate-300 text-lg">Transform your life into an epic adventure</p>
+          </div>
+        </div>
+        <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+      </>
+    );
   }
 
   const renderCurrentPage = () => {
@@ -103,18 +147,21 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900">
-      <Header onNavigateHome={() => setCurrentPage('character-hub')} />
-      <div className="container mx-auto flex min-h-screen max-w-7xl">
-        <Sidebar currentPage={currentPage} onPageChange={setCurrentPage} />
-        
-        <main className="flex-1 ml-80 p-8 bg-slate-800/90 backdrop-blur-lg border border-amber-500/30 rounded-l-3xl mt-5 mb-5 mr-5 shadow-2xl overflow-y-auto max-h-[calc(100vh-40px)]">
-          <div className="animate-fadeIn">
-            {renderCurrentPage()}
-          </div>
-        </main>
+    <>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900">
+        <Header onNavigateHome={() => setCurrentPage('character-hub')} />
+        <div className="container mx-auto flex min-h-screen max-w-7xl">
+          <Sidebar currentPage={currentPage} onPageChange={setCurrentPage} />
+          
+          <main className="flex-1 ml-80 p-8 bg-slate-800/90 backdrop-blur-lg border border-amber-500/30 rounded-l-3xl mt-5 mb-5 mr-5 shadow-2xl overflow-y-auto max-h-[calc(100vh-40px)]">
+            <div className="animate-fadeIn">
+              {renderCurrentPage()}
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+    </>
   );
 }
 

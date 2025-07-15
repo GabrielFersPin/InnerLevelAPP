@@ -98,6 +98,8 @@ export function useAuth() {
             redeemed_rewards: [],
             emotional_logs: [],
             goals: [],
+            character: null,
+            is_onboarded: false,
           });
 
         if (dataError) throw dataError;
@@ -150,6 +152,46 @@ export function useAuth() {
     }
   };
 
+  const updateUserData = async (updates: any) => {
+    if (!user) return { error: new Error('No user logged in') };
+
+    try {
+      const { data, error } = await supabase
+        .from('user_data')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return { data, error: null };
+    } catch (error) {
+      return { data: null, error };
+    }
+  };
+
+  const getUserData = async () => {
+    if (!user) return { data: null, error: new Error('No user logged in') };
+
+    try {
+      const { data, error } = await supabase
+        .from('user_data')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) throw error;
+
+      return { data, error: null };
+    } catch (error) {
+      return { data: null, error };
+    }
+  };
+
   return {
     user,
     profile,
@@ -160,5 +202,7 @@ export function useAuth() {
     signOut,
     updateProfile,
     fetchProfile,
+    updateUserData,
+    getUserData,
   };
 }

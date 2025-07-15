@@ -79,34 +79,34 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
-      <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
+    <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[60] p-4">
+      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900 rounded-2xl p-8 max-w-md w-full shadow-2xl border border-amber-500/30">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-purple-700 rounded-full flex items-center justify-center mx-auto mb-4">
-            <User className="w-8 h-8 text-white" />
+          <div className="w-16 h-16 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <User className="w-8 h-8 text-slate-900" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-800">
-            {isSignUp ? 'Create Account' : 'Welcome Back'}
+          <h2 className="text-2xl font-bold text-amber-200">
+            {isSignUp ? 'Begin Your Quest' : 'Welcome Back, Hero'}
           </h2>
-          <p className="text-gray-600 mt-2">
-            {isSignUp ? 'Join InnerLevel and start your journey' : 'Sign in to continue your progress'}
+          <p className="text-slate-300 mt-2">
+            {isSignUp ? 'Join LifeQuest RPG and discover your character class' : 'Continue your legendary journey'}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {isSignUp && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Username
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Hero Name
               </label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-amber-400" />
                 <input
                   type="text"
                   value={formData.username}
                   onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                  placeholder="Choose a username"
+                  className="w-full pl-10 pr-4 py-3 bg-slate-700/50 border border-amber-500/30 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all text-slate-200 placeholder-slate-400"
+                  placeholder="Choose your hero name"
                   required
                 />
               </div>
@@ -114,16 +114,16 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-slate-300 mb-2">
               Email
             </label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-amber-400" />
               <input
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                className="w-full pl-10 pr-4 py-3 bg-slate-700/50 border border-amber-500/30 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all text-slate-200 placeholder-slate-400"
                 placeholder="Enter your email"
                 required
               />
@@ -131,23 +131,23 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-slate-300 mb-2">
               Password
             </label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-amber-400" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={formData.password}
                 onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                className="w-full pl-10 pr-12 py-3 bg-slate-700/50 border border-amber-500/30 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all text-slate-200 placeholder-slate-400"
                 placeholder="Enter your password"
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-amber-400 hover:text-amber-300"
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -156,16 +156,16 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
           {isSignUp && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-slate-300 mb-2">
                 Confirm Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-amber-400" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                  className="w-full pl-10 pr-4 py-3 bg-slate-700/50 border border-amber-500/30 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all text-slate-200 placeholder-slate-400"
                   placeholder="Confirm your password"
                   required
                 />
@@ -176,15 +176,15 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-3 px-6 rounded-xl hover:from-purple-700 hover:to-purple-800 transition-all duration-300 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-gradient-to-r from-amber-500 to-amber-600 text-slate-900 py-3 px-6 rounded-xl hover:from-amber-400 hover:to-amber-500 transition-all duration-300 font-bold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                {isSignUp ? 'Creating Account...' : 'Signing In...'}
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-slate-900 mr-2"></div>
+                {isSignUp ? 'Forging Character...' : 'Entering Realm...'}
               </div>
             ) : (
-              isSignUp ? 'Create Account' : 'Sign In'
+              isSignUp ? 'Begin Quest' : 'Enter Realm'
             )}
           </button>
         </form>
@@ -192,15 +192,15 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         <div className="mt-6 text-center">
           <button
             onClick={switchMode}
-            className="text-purple-600 hover:text-purple-700 font-medium"
+            className="text-amber-400 hover:text-amber-300 font-medium"
           >
-            {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
+            {isSignUp ? 'Already a hero? Enter realm' : "New adventurer? Begin quest"}
           </button>
         </div>
 
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+          className="absolute top-4 right-4 text-slate-400 hover:text-slate-300 w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-700/50 transition-colors"
         >
           ✕
         </button>
