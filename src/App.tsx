@@ -10,7 +10,7 @@ import Goals from './components/Goals';
 import { Profile } from './components/Profile';
 import { CharacterHub } from './components/character/CharacterHub';
 import { CardDeck } from './components/cards/CardDeck';
-import { MysticForge } from './components/cards/MysticForge';
+import { MysticForge } from './components/cards/Oracle';
 import { PersonalityTest } from './components/onboarding/PersonalityTest';
 import { ClassReveal } from './components/onboarding/ClassReveal';
 import { AuthModal } from './components/Auth/AuthModal';
