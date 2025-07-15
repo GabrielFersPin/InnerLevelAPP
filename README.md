@@ -1,47 +1,186 @@
-InnerLevelAPP
+# LifeQuest RPG: Personal Development Game
 
-# InnerLevel App
+Transform your life into an epic adventure where you become the hero of your own story. LifeQuest RPG gamifies personal development through character classes, skill progression, and strategic card-based actions.
 
-A comprehensive personal productivity and wellness tracking application built with React, TypeScript, and Tailwind CSS. Track your habits, manage goals, monitor wellbeing, and gamify your personal development journey.
+## 🎮 Core Concept
 
-## Features
+LifeQuest RPG turns real-life activities into an engaging RPG experience. Complete your personality assessment to discover your character class, then use specialized cards to train skills, build habits, and achieve your goals while gaining experience and leveling up.
 
-### 🎯 **Goal Management**
-- Create and track personal and professional goals
-- Set target dates and monitor progress
-- Categorize goals by type (Professional, Personal, Health, etc.)
+## 🧙‍♂️ Character Classes System
 
-### 📊 **Habit Tracking**
-- Track daily habits across different categories
-- Earn points for completing habits
-- Built-in habits for professional development, self-care, and wellness
+### The Five Archetypal Classes
 
-### ✅ **Task Management**
-- Create and manage todo lists
-- Complete tasks to earn points
-- Track task completion history
+#### 🔮 **The Strategist**
+*"Planifica cada movimiento, optimiza cada resultado"*
+- **Personality**: Analytical, methodical, data-oriented
+- **Primary Stats**: Intelligence, Focus, Analytics, Strategy
+- **Energy Type**: Mana (120 max, 8/hour regeneration)
+- **Visual Theme**: Blue crystal, futuristic HUD interfaces
+- **Ideal For**: Tech professionals, analysts, optimization enthusiasts
 
-### 🏆 **Gamification System**
-- Earn points for completing habits and tasks
-- Redeem points for custom rewards
-- Track your progress streaks
-- Weekly and total point summaries
+#### ⚔️ **The Warrior** 
+*"Disciplina férrea, acción constante"*
+- **Personality**: Disciplined, perseverant, action-oriented
+- **Primary Stats**: Discipline, Stamina, Resilience, Consistency
+- **Energy Type**: Stamina (150 max, 10/hour regeneration)
+- **Visual Theme**: Red/gold, medieval forge aesthetics
+- **Ideal For**: Fitness enthusiasts, habit builders, discipline seekers
 
-### 💚 **Wellbeing Monitoring**
-- Log emotional states and moods
-- Track wellness metrics over time
-- Monitor mental health patterns
+#### 🎨 **The Creator**
+*"Innovación y expresión son tu fuerza"*
+- **Personality**: Creative, experimental, project-oriented
+- **Primary Stats**: Creativity, Innovation, Execution, Vision
+- **Energy Type**: Inspiration (100 max, variable regeneration)
+- **Visual Theme**: Multicolor, artistic studio environment
+- **Ideal For**: Artists, entrepreneurs, innovators
 
-### 📈 **Analytics Dashboard**
-- Visual charts showing progress over time
-- Streak tracking and statistics
-- Point accumulation analysis
-- Habit completion trends
+#### 🤝 **The Connector**
+*"Tu fuerza está en las relaciones que construyes"*
+- **Personality**: Social, empathetic, relationship-oriented
+- **Primary Stats**: Charisma, Network, Empathy, Leadership
+- **Energy Type**: Social Energy (110 max, 12/hour during interactions)
+- **Visual Theme**: Green/gold, guild hall atmosphere
+- **Ideal For**: Leaders, networkers, relationship builders
 
-### 🎁 **Rewards System**
-- Create custom rewards to redeem with earned points
-- Track redeemed rewards history
-- Motivate yourself with personalized incentives
+#### 🧘‍♂️ **The Sage**
+*"El crecimiento interior guía el éxito exterior"*
+- **Personality**: Reflective, spiritual, growth-oriented
+- **Primary Stats**: Mindfulness, Wisdom, Balance, Intuition
+- **Energy Type**: Inner Peace (130 max, 15/hour during rest)
+- **Visual Theme**: Purple/white, zen temple aesthetic
+- **Ideal For**: Mindfulness practitioners, spiritual seekers, well-being focused
+
+## 🎴 Card System
+
+### Card Mechanics
+- **Energy Cost**: Each card requires specific energy to execute
+- **Duration**: Cards take time to complete (1-8 hours)
+- **Impact**: XP gained and skill bonuses upon completion
+- **Cooldowns**: Some cards have cooldown periods to prevent overuse
+- **Prerequisites**: Advanced cards may require certain levels or completed cards
+
+### Card Distribution
+- **Base Cards (20%)**: Universal cards usable by all classes
+- **Class-Specific Cards (60%)**: Specialized cards for each archetype
+- **Hybrid Cards (20%)**: Cross-class cards unlocked through progression
+
+### Card Rarities
+- **Common**: Basic daily activities and foundational skills
+- **Uncommon**: Focused skill-building activities
+- **Rare**: Intensive training and specialized projects
+- **Epic**: Major undertakings and significant challenges
+- **Legendary**: Masterwork projects and life-changing activities
+
+### Example Cards by Class
+
+#### Strategist Cards
+- 📊 **"Data Analysis Sprint"** (Common, 30 energy, 2h)
+- 🔬 **"Research Deep Dive"** (Rare, 60 energy, 4h)
+- 🧠 **"Strategic Mastery Synthesis"** (Legendary, 100 energy, 8h)
+
+#### Warrior Cards
+- ⚔️ **"Daily Discipline Strike"** (Common, 25 energy, 1h)
+- 🏃‍♂️ **"Endurance Training"** (Uncommon, 40 energy, 2h)
+- 🛡️ **"Unbreakable Fortress"** (Epic, 80 energy, 3h)
+
+## 🏠 Main Application Features
+
+### 1. **Character Hub** (Dashboard)
+- **Avatar Display**: Class-specific character with level and XP bar
+- **Energy Meter**: Real-time energy tracking with regeneration
+- **Skills Overview**: Progress bars for all primary skills
+- **Daily Recommendations**: AI-suggested cards based on your profile
+- **Active Goals**: Visual progress tracking for current objectives
+- **Quick Stats**: Streak counters, daily progress, level-up countdown
+
+### 2. **Card Deck** (Inventory Management)
+- **Card Library**: Browse all available cards with filtering
+- **Active Deck**: Equipped cards ready for daily use
+- **Card Details**: Comprehensive stats, requirements, and descriptions
+- **Rarity Filtering**: Sort by card rarity and energy cost
+- **Daily Draw**: Obtain new cards based on progression
+
+### 3. **Training Ground** (Card Execution)
+- **Card Selector**: Choose cards from your active deck
+- **Execution Interface**: Timer, instructions, and progress tracking
+- **Real-time Feedback**: Live updates during card completion
+- **Completion Rewards**: XP gained, level-ups, and achievement unlocks
+- **Energy Forecasting**: Preview energy costs and regeneration
+
+### 4. **Character Sheet** (Progression Tracking)
+- **Detailed Statistics**: Comprehensive skill breakdowns with charts
+- **Achievement Gallery**: Unlocked titles and accomplishments
+- **Progression Tree**: Visual roadmap of upcoming unlockables
+- **Historical Data**: Progress graphs and timeline analytics
+- **Class Insights**: Deep dive into your archetype's strengths
+
+### 5. **Guild Settings** (Configuration)
+- **Goal Management**: Set and modify primary objectives
+- **Notification Preferences**: Customize alerts and reminders
+- **Avatar Customization**: Unlock new appearances through progression
+- **Data Management**: Export/import options and cloud sync
+- **Class Evolution**: Optional class changes (with penalties)
+
+## 🧠 AI-Powered Features
+
+### Smart Recommendations Engine
+- **Contextual Analysis**: Time of day, energy levels, recent activity
+- **Class Optimization**: Cards that maximize your archetype's strengths
+- **Progressive Difficulty**: Automatically scaled challenges based on level
+- **Goal Alignment**: Prioritizes cards relevant to your objectives
+
+### Dynamic Card Generation
+- **Personalized Content**: Custom cards created for specific goals
+- **Adaptive Challenges**: Difficulty adjusts to your skill progression
+- **Seasonal Content**: Time-sensitive cards and special events
+- **Learning Patterns**: AI learns from your preferences and success rates
+
+## 📊 Progression Systems
+
+### Experience & Leveling
+- **Character Levels**: 1-50 with exponential XP requirements
+- **Skill Points**: Earned through level-ups for ability enhancement
+- **Prestige System**: Reset with permanent bonuses at max level
+
+### Skill Development
+- **Individual Skills**: Each archetype has 4 primary skills
+- **Skill Levels**: 1-50 per skill with specialized unlocks
+- **Cross-Training**: Learn skills from other classes at higher levels
+- **Mastery Bonuses**: Special effects and efficiency improvements
+
+### Achievement System
+- **Category Achievements**: Progress, consistency, exploration, mastery
+- **Hidden Achievements**: Secret unlocks for dedicated players
+- **Title System**: Prestigious titles displayed with your character
+- **Milestone Rewards**: Special cards and abilities for major accomplishments
+
+## 🎨 Visual Design
+
+### Epic RPG Aesthetic
+- **Color Palette**: Slate-900/indigo-900 backgrounds with golden accents
+- **Typography**: Bold, heroic fonts with magical glow effects
+- **Animations**: Smooth transitions, particle effects, level-up celebrations
+- **Class Themes**: Unique visual identity for each character archetype
+
+### Card Visual System
+- **Rarity Indicators**: Color-coded borders and glow effects
+- **Energy Visualization**: Clear cost indicators and availability status
+- **Progress Feedback**: Visual completion states and cooldown timers
+- **Class Branding**: Archetype-specific iconography and styling
+
+## 🔐 Authentication & Data Management
+
+### User Account System
+- **Secure Authentication**: Email/password with Supabase backend
+- **Profile Management**: Customizable user profiles and preferences
+- **Data Persistence**: Cloud-based character and progress storage
+- **Cross-Device Sync**: Access your character from any device
+
+### Privacy & Security
+- **Data Encryption**: Secure storage of personal information
+- **Local Fallbacks**: Offline functionality with local storage
+- **Export Options**: Download your data anytime
+- **Account Recovery**: Secure password reset and account restoration
 
 ## Tech Stack
 
