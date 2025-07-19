@@ -1,24 +1,19 @@
 import { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
-import { LogActivity } from './components/LogActivity';
-import { Habits } from './components/Habits';
-import { Rewards } from './components/Rewards';
-import { Wellbeing } from './components/Wellbeing';
-import { Analytics } from './components/Analytics';
-import Goals from './components/Goals';
-import { Profile } from './components/Profile';
 import { CharacterHub } from './components/character/CharacterHub';
+import { CharacterSheet } from './components/character/CharacterSheet';
 import { CardDeck } from './components/cards/CardDeck';
 import { MysticForge } from './components/cards/MysticForge';
-import { PersonalityTest } from './components/onboarding/PersonalityTest';
 import { ClassReveal } from './components/onboarding/ClassReveal';
 import { AuthModal } from './components/Auth/AuthModal';
 import { PageType } from './types';
+import { CharacterClass } from './types';
 import { useAppContext } from './context/AppContext';
 import { useAuth } from './hooks/useAuth';
 import { useAuthenticatedCharacter } from './hooks/useAuthenticatedCharacter';
 import { TrainingGround } from './components/TrainingGround';
+import Inventory from './components/Inventory';
 // import { useUserData } from './hooks/useUserData';
 
 function App() {
@@ -26,12 +21,8 @@ function App() {
   const { user, loading: authLoading } = useAuth();
   const { createCharacterInDatabase } = useAuthenticatedCharacter();
   const [currentPage, setCurrentPage] = useState<PageType>('character-hub');
-  const [onboardingStep, setOnboardingStep] = useState<'test' | 'reveal' | 'complete'>('test');
-  const [personalityResult, setPersonalityResult] = useState<any>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  
-  // Initialize user data hook - temporarily disabled
-  // useUserData();
+  // Remove onboardingStep and personalityResult
 
   // Show auth modal if user is not authenticated and not loading
   useEffect(() => {
@@ -41,30 +32,23 @@ function App() {
       setShowAuthModal(false);
     }
   }, [user, authLoading]);
-  
+
   // Check if character needs onboarding
   const needsOnboarding = !state.character?.isOnboarded;
-  
-  const handlePersonalityTestComplete = (result: any) => {
-    setPersonalityResult(result);
-    setOnboardingStep('reveal');
-  };
-  
-  const handleClassRevealAccept = async () => {
-    if (personalityResult && user) {
+
+  // Handle class selection and character creation
+  const handleClassSelect = async (selectedClass: CharacterClass) => {
+    if (user) {
       const characterData = {
-        name: user.email?.split('@')[0] || 'Hero', // Use email username or default
-        characterClass: personalityResult.dominantClass,
-        personalityResult,
+        name: user.email?.split('@')[0] || 'Hero',
+        characterClass: selectedClass,
         isOnboarded: true
       };
-      
       await createCharacterInDatabase(characterData);
-      setOnboardingStep('complete');
       setCurrentPage('character-hub');
     }
   };
-  
+
   // Show loading while checking authentication
   if (authLoading) {
     return (
@@ -75,8 +59,6 @@ function App() {
           </div>
           <h2 className="text-xl font-bold text-amber-200 mb-2">Entering the Realm...</h2>
           <p className="text-slate-300">Preparing your adventure</p>
-          
-          {/* Emergency bypass button */}
           <button
             onClick={() => window.location.reload()}
             className="mt-6 px-4 py-2 bg-amber-600 text-slate-900 rounded-lg hover:bg-amber-500 transition-colors"
@@ -90,20 +72,7 @@ function App() {
 
   // Show onboarding if user is authenticated but character hasn't completed it
   if (user && needsOnboarding) {
-    if (onboardingStep === 'test') {
-      return <PersonalityTest onComplete={handlePersonalityTestComplete} />;
-    }
-    
-    if (onboardingStep === 'reveal' && personalityResult) {
-      return (
-        <ClassReveal
-          dominantClass={personalityResult.dominantClass}
-          secondaryClass={personalityResult.secondaryClass}
-          scores={personalityResult.scores}
-          onAccept={handleClassRevealAccept}
-        />
-      );
-    }
+    return <ClassReveal onAccept={handleClassSelect} />;
   }
 
   // Don't render main app if user is not authenticated
@@ -132,24 +101,24 @@ function App() {
       case 'training-ground':
         return <TrainingGround />;
       case 'character-sheet':
-        return <div className="text-amber-200">Character Sheet - Coming Soon</div>;
+        return <CharacterSheet />;
       case 'guild-settings':
         return <div className="text-amber-200">Guild Settings - Coming Soon</div>;
       // Legacy pages (for migration)
       case 'log-activity':
-        return <LogActivity />;
+        return <div className="text-amber-200">Log Activity - Coming Soon</div>;
       case 'habits':
-        return <Habits />;
+        return <div className="text-amber-200">Habits - Coming Soon</div>;
       case 'goals':
-        return <Goals />;
+        return <div className="text-amber-200">Goals - Coming Soon</div>;
       case 'rewards':
-        return <Rewards />;
+        return <Inventory />;
       case 'wellbeing':
-        return <Wellbeing />;
+        return <div className="text-amber-200">Wellbeing - Coming Soon</div>;
       case 'analytics':
-        return <Analytics />;
+        return <div className="text-amber-200">Analytics - Coming Soon</div>;
       case 'profile':
-        return <Profile />;
+        return <div className="text-amber-200">Profile - Coming Soon</div>;
       default:
         return <CharacterHub />;
     }
@@ -161,7 +130,6 @@ function App() {
         <Header onNavigateHome={() => setCurrentPage('character-hub')} />
         <div className="container mx-auto flex min-h-screen max-w-7xl">
           <Sidebar currentPage={currentPage} onPageChange={setCurrentPage} />
-          
           <main className="flex-1 ml-80 p-8 bg-slate-800/90 backdrop-blur-lg border border-amber-500/30 rounded-l-3xl mt-5 mb-5 mr-5 shadow-2xl overflow-y-auto max-h-[calc(100vh-40px)]">
             <div className="animate-fadeIn">
               {renderCurrentPage()}

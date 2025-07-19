@@ -1,6 +1,5 @@
 import { Quest, Card, Character, CharacterClass } from '../types';
 import { classDescriptions } from '../data/personalityTest';
-import { getAvailableCards } from '../data/baseCards';
 
 interface UserContext {
   character: Character;
@@ -199,7 +198,6 @@ Make it engaging, realistic, and achievable within the given timeline.
   private static buildDailyCardsPrompt(userContext: UserContext): string {
     const { character } = userContext;
     const classInfo = classDescriptions[character.class];
-    
     return `
 You are generating personalized activity cards for a ${classInfo.name} in the LifeQuest RPG system.
 
@@ -222,7 +220,11 @@ CONTEXT:
 - Active Quests: ${userContext.activeQuests.map(q => q.name).join(', ')}
 - Daily Progress: ${character.dailyProgress.cardsCompleted} cards completed today
 
-Generate 3-4 cards specifically optimized for this ${character.class} character:
+Generate 3-4 cards specifically optimized for this ${character.class} character. Ensure the cards:
+- Have a variety of types (action, power, recovery, event, equipment)
+- Vary in rarity (common, uncommon, rare, epic, legendary)
+- Have different energy costs and XP rewards appropriate to their effect and rarity
+- Are each relevant to the user's current context and offer different strategies or approaches
 
 JSON Response Format:
 {
@@ -233,13 +235,13 @@ JSON Response Format:
       "type": "action|power|recovery|event|equipment",
       "rarity": "common|uncommon|rare|epic|legendary",
       "classTypes": ["${character.class}"],
-      "energyCost": 25,
-      "duration": 1.5,
-      "impact": 30,
+      "energyCost": 10-50,
+      "duration": 0.5-3,
+      "impact": 10-100,
       "skillBonus": [
         {
           "skillName": "${classInfo.primarySkills[0]}",
-          "xpBonus": 20
+          "xpBonus": 10-50
         }
       ],
       "requirements": {
@@ -260,6 +262,7 @@ Focus on cards that:
 2. Build their primary skills: ${classInfo.primarySkills.join(', ')}
 3. Match their current energy level and available time
 4. Create meaningful progression for their character
+5. Are diverse in type, rarity, and effect
     `;
   }
 
@@ -282,6 +285,7 @@ CREATE CARDS THAT:
 2. Offer meaningful skill advancement
 3. Include some challenge appropriate for Level ${character.level}
 4. Provide clear progression toward mastery
+5. Are varied in type (action, power, recovery, event, equipment), rarity, energy cost, and XP
 
 JSON Format (same as daily cards but with higher impact and skill focus):
 {
@@ -289,7 +293,7 @@ JSON Format (same as daily cards but with higher impact and skill focus):
   "reasoning": "Strategic explanation for ${character.class} advancement"
 }
 
-Emphasize cards that transform them into a true ${classInfo.name} master.
+Emphasize cards that transform them into a true ${classInfo.name} master, and ensure each card is unique in type, rarity, and effect.
     `;
   }
 
@@ -314,12 +318,13 @@ Primary Skills: ${classInfo.primarySkills.join(', ')}
 Generate 5-7 cards that form a logical progression toward the goal, leveraging ${character.class} natural abilities.
 
 Include:
-- Early momentum cards (common/uncommon)
-- Skill-building cards (rare)
-- Breakthrough cards (epic)
-- Goal completion card (legendary)
+- Early momentum cards (common/uncommon, lower energy/XP)
+- Skill-building cards (rare, moderate energy/XP)
+- Breakthrough cards (epic, higher energy/XP)
+- Goal completion card (legendary, highest energy/XP)
+- Vary card types (action, power, recovery, event, equipment) and effects
 
-Same JSON format as before, but focus on goal achievement through ${character.class} methodology.
+Same JSON format as before, but focus on goal achievement through ${character.class} methodology and ensure each card is unique in type, rarity, and effect.
     `;
   }
 
@@ -398,7 +403,7 @@ Focus on practical, immediately actionable activities.
       return cardsArray.map((cardData: any) => ({
         id: `ai-card-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         name: cardData.name,
-        description: cardData.description,
+        description: cardData.description || cardData.desc || cardData.details || 'No description provided.',
         type: cardData.type || 'action',
         rarity: cardData.rarity || 'common',
         classTypes: cardData.classTypes || ['strategist', 'warrior', 'creator', 'connector', 'sage'],
@@ -489,41 +494,8 @@ Focus on practical, immediately actionable activities.
    * Generate intelligent fallback recommendation
    */
   private static generateFallbackRecommendation(userContext: UserContext): AICardRecommendation {
-    const { character } = userContext;
-    const availableCards = getAvailableCards(character.class, character.level);
-    
-    // Smart filtering based on character state
-    const energyBudget = character.energy.current;
-    const filteredCards = availableCards.filter(card => {
-      // Energy check
-      if (card.energyCost > energyBudget) return false;
-      
-      // Time check
-      if (card.duration > userContext.availableTime) return false;
-      
-      // Class preference (prioritize class-specific cards)
-      if (card.classTypes.includes(character.class)) return true;
-      
-      // Universal cards are secondary choice
-      return card.classTypes.length === 5;
-    });
-    
-    // Sort by relevance and take top 3-4
-    const sortedCards = filteredCards
-      .sort((a, b) => {
-        // Prioritize class-specific cards
-        const aClassSpecific = a.classTypes.includes(character.class) ? 1 : 0;
-        const bClassSpecific = b.classTypes.includes(character.class) ? 1 : 0;
-        if (aClassSpecific !== bClassSpecific) return bClassSpecific - aClassSpecific;
-        
-        // Then by impact per energy ratio
-        const aEfficiency = a.impact / a.energyCost;
-        const bEfficiency = b.impact / b.energyCost;
-        return bEfficiency - aEfficiency;
-      })
-      .slice(0, 4);
-    
-    return this.buildRecommendation(sortedCards, userContext);
+    // Fallback: return empty array or minimal cards
+    return this.buildRecommendation([], userContext);
   }
 
   /**
@@ -533,10 +505,8 @@ Focus on practical, immediately actionable activities.
     character: Character,
     situation: string
   ): AICardRecommendation {
-    const classCards = getAvailableCards(character.class, character.level)
-      .filter(card => card.classTypes.includes(character.class))
-      .slice(0, 3);
-    
+    // Fallback: return empty array or minimal cards
+    const classCards: Card[] = [];
     const userContext = {
       character,
       energy: character.energy.current,
@@ -546,13 +516,12 @@ Focus on practical, immediately actionable activities.
       activeQuests: [],
       preferences: []
     };
-    
     return {
       cards: classCards,
       reasoning: `Fallback ${character.class} cards for ${situation}`,
       energyForecast: {
-        totalCost: classCards.reduce((sum, card) => sum + card.energyCost, 0),
-        remainingAfter: character.energy.current - classCards.reduce((sum, card) => sum + card.energyCost, 0),
+        totalCost: 0,
+        remainingAfter: character.energy.current,
         regenerationTime: 0
       }
     };
@@ -562,93 +531,16 @@ Focus on practical, immediately actionable activities.
    * Generate goal-oriented fallback cards
    */
   private static generateGoalFallbackCards(character: Character, goalDescription: string): Card[] {
-    const classCards = getAvailableCards(character.class, character.level)
-      .filter(card => card.classTypes.includes(character.class))
-      .slice(0, 5);
-    
-    return classCards;
+    // Fallback: return empty array or minimal cards
+    return [];
   }
 
   /**
    * Generate enhanced basic cards with LifeQuest structure
    */
   private static generateBasicCards(): Card[] {
-    return [
-      {
-        id: 'ai-card-focus-session',
-        name: 'Deep Focus Session',
-        description: 'Enter a state of complete concentration for 25 minutes on your most critical task',
-        type: 'action',
-        rarity: 'common',
-        classTypes: ['strategist', 'warrior', 'creator', 'connector', 'sage'],
-        energyCost: 25,
-        duration: 0.5,
-        impact: 30,
-        skillBonus: [
-          { skillName: 'Focus', xpBonus: 15 }
-        ],
-        requirements: { level: 1 },
-        conditions: {
-          energyLevel: '> 25%',
-          timeRequired: '30+ minutes available'
-        },
-        tags: ['productivity', 'focus', 'universal'],
-        createdAt: new Date(),
-        forged: true,
-        usageCount: 0,
-        isOnCooldown: false
-      },
-      {
-        id: 'ai-card-energy-restoration',
-        name: 'Mindful Energy Reset',
-        description: 'Practice deep breathing and mindfulness to restore mental clarity and energy',
-        type: 'recovery',
-        rarity: 'uncommon',
-        classTypes: ['sage', 'creator'],
-        energyCost: -15, // Restores energy
-        duration: 0.25,
-        impact: 20,
-        skillBonus: [
-          { skillName: 'Mindfulness', xpBonus: 10 },
-          { skillName: 'Balance', xpBonus: 8 }
-        ],
-        requirements: { level: 1 },
-        conditions: {
-          energyLevel: '< 60%',
-          timeRequired: '15+ minutes of quiet'
-        },
-        tags: ['recovery', 'mindfulness', 'energy'],
-        createdAt: new Date(),
-        forged: true,
-        usageCount: 0,
-        isOnCooldown: false
-      },
-      {
-        id: 'ai-card-adaptive-learning',
-        name: 'Adaptive Skill Building',
-        description: 'Identify and practice the skill most relevant to your current goals',
-        type: 'action',
-        rarity: 'rare',
-        classTypes: ['strategist', 'creator'],
-        energyCost: 35,
-        duration: 1,
-        impact: 40,
-        skillBonus: [
-          { skillName: 'Intelligence', xpBonus: 20 },
-          { skillName: 'Innovation', xpBonus: 15 }
-        ],
-        requirements: { level: 3 },
-        conditions: {
-          energyLevel: '> 40%',
-          timeRequired: '1+ hour focused time'
-        },
-        tags: ['learning', 'skills', 'adaptive'],
-        createdAt: new Date(),
-        forged: true,
-        usageCount: 0,
-        isOnCooldown: false
-      }
-    ];
+    // Fallback: return empty array or minimal cards
+    return [];
   }
 
   /**

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../../context/AppContext';
 import { classDescriptions } from '../../data/personalityTest';
 import { getClassTheme, calculateLevelFromXP, getXPRequiredForNextLevel } from '../../data/characterClasses';
-import { getAvailableCards } from '../../data/baseCards';
 import { ArcaneEngine } from "../../services/arcaneEngine";
 import { Crown, Zap, Target, Star, TrendingUp, Calendar, Sparkles, Brain, RefreshCw } from 'lucide-react';
 import type { Card } from '../../types/index';
@@ -25,7 +24,7 @@ export function CharacterHub() {
   const xpNeeded = xpForNextLevel - getXPRequiredForNextLevel(currentLevel - 1);
   const progressPercent = Math.min(100, (xpProgress / xpNeeded) * 100);
   
-  const availableCards = getAvailableCards(character.class, character.level);
+  const availableCards = state.cards?.inventory || [];
   const energyPercent = (character.energy.current / character.energy.maximum) * 100;
 
   // Load AI recommendations on component mount

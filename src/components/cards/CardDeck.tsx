@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../../context/AppContext';
-import { getAvailableCards, rarityColors, typeIcons } from '../../data/baseCards';
 import { getClassTheme } from '../../data/characterClasses';
 import { Filter, Search, Zap, Clock, Star, Sparkles, Brain } from 'lucide-react';
 import { Card } from '../../types/index';
@@ -16,15 +15,15 @@ export function CardDeck({ onNavigateToAI }: CardDeckProps = {}) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRarity, setFilterRarity] = useState<string>('all');
   const [filterType, setFilterType] = useState<string>('all');
-  const [editCard, setEditCard] = useState(null);
+  const [editCard, setEditCard] = useState<Card | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
 
-  const handleEditCard = (card) => {
+  const handleEditCard = (card: Card) => {
     setEditCard(card);
     setIsEditOpen(true);
   };
 
-  const handleSaveEdit = (updatedCard) => {
+  const handleSaveEdit = (updatedCard: Card) => {
     dispatch({ type: 'UPDATE_CARD', payload: updatedCard });
   };
   
@@ -45,6 +44,21 @@ export function CardDeck({ onNavigateToAI }: CardDeckProps = {}) {
 
   const handleAddToInventory = (card: Card) => {
     dispatch({ type: 'ADD_CARD', payload: card });
+  };
+
+  const rarityColors: any = {
+    common: 'border-slate-500',
+    uncommon: 'border-green-500',
+    rare: 'border-blue-500',
+    epic: 'border-purple-500',
+    legendary: 'border-amber-500',
+  };
+  const typeIcons: any = {
+    action: '🎯',
+    power: '⚡',
+    recovery: '💤',
+    event: '🎲',
+    equipment: '🛡️',
   };
 
   const CardComponent = ({ card }: { card: Card }) => {
@@ -159,18 +173,15 @@ export function CardDeck({ onNavigateToAI }: CardDeckProps = {}) {
           Discover and collect powerful cards for your {character.class} journey
         </p>
         
-        {/* AI Generator CTA */}
+        {/* Mystic Forge Button */}
         <div className="mb-6">
           <button
             onClick={onNavigateToAI}
             className="px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg"
           >
             <Brain className="w-5 h-5 mr-2 inline" />
-            Generate AI-Powered Cards
+            Open Mystic Forge
           </button>
-          <p className="text-sm text-slate-400 mt-2">
-            Create personalized cards using AI based on your goals and situation
-          </p>
         </div>
       </div>
 

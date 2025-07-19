@@ -8,7 +8,9 @@ interface CardComponentProps {
   isSelected?: boolean;
   isDisabled?: boolean;
   showDetails?: boolean;
-  size?: 'small' | 'medium' | 'large';
+  size?: 'small' | 'medium' | 'large' | 'minimal';
+  draggable?: boolean;
+  onDragStart?: (e: React.DragEvent<HTMLDivElement>) => void;
 }
 
 export function CardComponent({ 
@@ -17,7 +19,9 @@ export function CardComponent({
   isSelected = false, 
   isDisabled = false, 
   showDetails = true,
-  size = 'medium'
+  size = 'medium',
+  draggable = false,
+  onDragStart
 }: CardComponentProps) {
   const getRarityClass = (rarity: Card['rarity']) => {
     switch (rarity) {
@@ -68,6 +72,22 @@ export function CardComponent({
     medium: 'text-base',
     large: 'text-lg'
   };
+
+  if (size === 'minimal') {
+    return (
+      <div
+        className={`bg-slate-800 border-2 border-amber-400 rounded-lg px-3 py-2 flex items-center gap-3 cursor-pointer min-w-[220px] min-h-[48px] shadow-md hover:bg-slate-700 transition-all ${isSelected ? 'ring-2 ring-amber-400 scale-105' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+        onClick={isDisabled ? undefined : onClick}
+        draggable={draggable}
+        onDragStart={onDragStart}
+      >
+        <span className="mr-1">{getTypeIcon(card.type)}</span>
+        <span className="font-bold text-amber-200 text-sm flex-1">{card.name}</span>
+        <span className="text-emerald-300 font-bold ml-2">+{card.impact} XP</span>
+        <span className="text-blue-300 font-bold ml-2">⚡{card.energyCost}</span>
+      </div>
+    );
+  }
 
   return (
     <div

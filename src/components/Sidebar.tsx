@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, BookOpen, User, Settings, Sword, Brain } from 'lucide-react';
+import { Home, BookOpen, User, Settings, Sword, Brain, Gift as GiftIcon } from 'lucide-react';
 import { PageType } from '../types';
 
 interface SidebarProps {
@@ -13,6 +13,7 @@ const navigation = [
   { id: 'card-deck' as PageType, icon: BookOpen, label: '🎴 Card Deck', description: 'Your Card Collection' },
   { id: 'ai-card-generator' as PageType, icon: Brain, label: '🔮 Mystic Forge', description: 'Create Smart Cards' },
   { id: 'training-ground' as PageType, icon: Sword, label: '⚔️ Training Ground', description: 'Execute Cards' },
+  { id: 'rewards' as PageType, icon: GiftIcon, label: '🎁 Inventory', description: 'Your Rewards & Gifts' },
   { id: 'character-sheet' as PageType, icon: User, label: '🏆 Character Sheet', description: 'Stats & Progress' },
   { id: 'guild-settings' as PageType, icon: Settings, label: '⚙️ Guild Settings', description: 'Configuration' },
 ];

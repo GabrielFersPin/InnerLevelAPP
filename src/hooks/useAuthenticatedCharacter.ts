@@ -54,15 +54,17 @@ export function useAuthenticatedCharacter() {
 
   const createCharacterInDatabase = async (characterData: any) => {
     try {
+      // Ensure isOnboarded is true in the character object
+      const characterWithOnboarded = { ...characterData, isOnboarded: true };
       const payload = {
-        character: characterData,
+        character: characterWithOnboarded,
         is_onboarded: true
       };
       console.log('[createCharacterInDatabase] saving to Supabase:', payload);
       await updateUserData(payload);
       dispatch({
         type: 'CREATE_CHARACTER',
-        payload: characterData
+        payload: characterWithOnboarded
       });
       dispatch({ type: 'COMPLETE_ONBOARDING' });
     } catch (error) {

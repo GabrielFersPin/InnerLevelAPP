@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.50.5",
+    "canvas-confetti": "^1.9.3",
     "chart.js": "^4.5.0",
     "cors": "^2.8.5",
     "date-fns": "^4.1.0",
@@ -26,6 +27,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
+    "@types/canvas-confetti": "^1.9.0",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",

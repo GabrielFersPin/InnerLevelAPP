@@ -4,7 +4,6 @@ import { ArcaneEngine } from "../../services/arcaneEngine";
 import { getClassTheme } from '../../data/characterClasses';
 import { Brain, Sparkles, RefreshCw, Clock, Target, Zap, Plus } from 'lucide-react';
 import type { Card } from '../../types/index';
-import { UpgradeModal } from '../UpgradeModal';
 
 export function MysticForge() {
   const { state, dispatch } = useAppContext();
@@ -28,11 +27,23 @@ export function MysticForge() {
     setIsGenerating(true);
     try {
       let cards: Card[] = [];
-      
+      const currentGoals = character.currentGoals || [];
+      const goalTitles = currentGoals.map(g => g.title || '').filter(Boolean);
+      const goalDescriptions = currentGoals.map(g => g.description || '').filter(Boolean);
       switch (generationType) {
         case 'daily':
-          const dailyRec = await ArcaneEngine.getSmartRecommendations(character);
-          cards = dailyRec.cards;
+          if (goalTitles.length > 0) {
+            // Use goals as context for daily cards
+            cards = await ArcaneEngine.generateContextualCards(
+              'Daily Focus',
+              goalTitles,
+              []
+            );
+          } else {
+            // Fallback to character-based daily
+            const dailyRec = await ArcaneEngine.getSmartRecommendations(character);
+            cards = dailyRec.cards;
+          }
           break;
         case 'goal':
           if (goalDescription.trim()) {
@@ -41,12 +52,15 @@ export function MysticForge() {
           break;
         case 'situation':
           if (situation.trim()) {
-            const situationRec = await ArcaneEngine.generateClassSpecificCards(character, situation);
-            cards = situationRec.cards;
+            // Use goals as context for situational cards
+            cards = await ArcaneEngine.generateContextualCards(
+              situation,
+              goalTitles,
+              []
+            );
           }
           break;
       }
-      
       setGeneratedCards(cards);
     } catch (error) {
       console.error('Failed to generate cards:', error);
@@ -85,11 +99,6 @@ export function MysticForge() {
           </div>
         </div>
       )}
-      <UpgradeModal
-        isOpen={showUpgradeModal}
-        onClose={() => setShowUpgradeModal(false)}
-        onUpgrade={() => { setShowUpgradeModal(false); alert('Upgrade/payment flow coming soon!'); }}
-      />
       {/* Header */}
       <div className="text-center">
         <h1 className="text-4xl font-bold text-amber-200 mb-2">
@@ -311,7 +320,7 @@ export function MysticForge() {
 
       {/* How It Works */}
       <div className={`${theme.panel} rounded-2xl p-8 shadow-2xl`}>
-        <h3 className="text-xl font-bold text-amber-200 mb-4">How AI Generation Works</h3>
+        <h3 className="text-xl font-bold text-amber-200 mb-4">How Mystic Forge Works</h3>
         <div className="grid md:grid-cols-3 gap-6 text-sm text-slate-300">
           <div>
             <div className="text-purple-400 font-semibold mb-2">🧠 Character Analysis</div>
