@@ -221,8 +221,19 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'EXECUTE_CARD': {
       const { cardId, result } = action.payload;
       const executedCard = state.cards.inventory.find(c => c.id === cardId);
+      // Add XP/points to character
+      const newExp = state.character.experience + (result.progressGained || 0);
+      const currentLevel = state.character.level;
+      const newLevel = Math.min(50, Math.floor(Math.sqrt(newExp / 100)) + 1);
+
       return {
         ...state,
+        character: {
+          ...state.character,
+          experience: newExp,
+          level: newLevel,
+          skillPoints: state.character.skillPoints + (newLevel > currentLevel ? newLevel - currentLevel : 0)
+        },
         cards: {
           ...state.cards,
           inventory: state.cards.inventory.map(card =>

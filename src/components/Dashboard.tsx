@@ -6,6 +6,7 @@ import { EnergyMeter } from './EnergyMeter';
 import { CardComponent } from './cards/CardComponent';
 import { CardExecutor } from './cards/CardExecutor';
 import { sampleCards, getDailyRecommendations } from '../data/sampleData';
+import { showAlert } from '../utils/notifications';
 
 interface DashboardProps {
   onPageChange: (page: PageType) => void;
@@ -69,7 +70,14 @@ export function Dashboard({ onPageChange }: DashboardProps) {
   const handleCardExecute = (result: any) => {
     dispatch({ type: 'EXECUTE_CARD', payload: { cardId: selectedCard.id, result } });
     dispatch({ type: 'CONSUME_ENERGY', payload: result.energyConsumed });
-    
+
+    // Show notification for XP/points gained
+    if (result.progressGained) {
+      showAlert(`+${result.progressGained} XP gained!`, 'success');
+    } else {
+      showAlert('Card executed!', 'success');
+    }
+
     // Update quest progress if applicable
     state.quests.active.forEach(quest => {
       if (selectedCard.tags.some((tag: string) => tag === quest.type)) {
