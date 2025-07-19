@@ -18,6 +18,7 @@ import { PageType } from './types';
 import { useAppContext } from './context/AppContext';
 import { useAuth } from './hooks/useAuth';
 import { useAuthenticatedCharacter } from './hooks/useAuthenticatedCharacter';
+import { TrainingGround } from './components/TrainingGround';
 // import { useUserData } from './hooks/useUserData';
 
 function App() {
@@ -129,7 +130,7 @@ function App() {
       case 'ai-card-generator':
         return <MysticForge />;
       case 'training-ground':
-        return <div className="text-amber-200">Training Ground - Coming Soon</div>;
+        return <TrainingGround />;
       case 'character-sheet':
         return <div className="text-amber-200">Character Sheet - Coming Soon</div>;
       case 'guild-settings':

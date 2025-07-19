@@ -23,8 +23,8 @@ export function CardDeck({ onNavigateToAI }: CardDeckProps = {}) {
   
   // Filter cards based on search and filters
   const filteredCards = availableCards.filter(card => {
-    const matchesSearch = card.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         card.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (card.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+                         (card.description?.toLowerCase() || '').includes(searchTerm.toLowerCase());
     const matchesRarity = filterRarity === 'all' || card.rarity === filterRarity;
     const matchesType = filterType === 'all' || card.type === filterType;
     
