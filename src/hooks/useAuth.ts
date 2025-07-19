@@ -24,13 +24,19 @@ export function useAuth() {
   const [user, setUser] = useState<User | MockUser | null>(null);
   const [profile, setProfile] = useState<UserProfile | MockProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [useLocalAuth] = useState(!isSupabaseConfigured());
 
   // Log which authentication system is being used
   useEffect(() => {
     if (useLocalAuth) {
       console.log('🔮 Using Local Authentication for development (no Supabase config found)');
+      // For local auth, immediately set loading to false and set up mock user
+      const mockUser = localAuth.getCurrentUser();
+      const mockProfile = localAuth.getUserProfile();
+      setUser(mockUser);
+      setProfile(mockProfile);
+      setLoading(false);
     } else {
       console.log('⚡ Using Supabase Authentication');
     }
@@ -38,14 +44,6 @@ export function useAuth() {
 
   useEffect(() => {
     if (useLocalAuth) {
-      // Use local authentication for development
-      const user = localAuth.getCurrentUser();
-      const profile = localAuth.getUserProfile();
-      
-      setUser(user);
-      setProfile(profile);
-      setLoading(false);
-
       // Listen for local auth changes
       const { data: { subscription } } = localAuth.onAuthStateChange(
         async (event, session) => {
@@ -63,14 +61,16 @@ export function useAuth() {
 
       return () => subscription.unsubscribe();
     } else {
+      setLoading(true);
       // Use Supabase authentication
       supabase.auth.getSession().then(({ data: { session } }) => {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
           fetchProfile(session.user.id);
+        } else {
+          setLoading(false);
         }
-        setLoading(false);
       });
 
       // Listen for auth changes
@@ -83,8 +83,8 @@ export function useAuth() {
             await fetchProfile(session.user.id);
           } else {
             setProfile(null);
+            setLoading(false);
           }
-          setLoading(false);
         }
       );
 
@@ -107,6 +107,8 @@ export function useAuth() {
       setProfile(data);
     } catch (error) {
       console.error('Error fetching profile:', error);
+    } finally {
+      setLoading(false);
     }
   };
 

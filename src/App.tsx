@@ -74,6 +74,14 @@ function App() {
           </div>
           <h2 className="text-xl font-bold text-amber-200 mb-2">Entering the Realm...</h2>
           <p className="text-slate-300">Preparing your adventure</p>
+          
+          {/* Emergency bypass button */}
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-6 px-4 py-2 bg-amber-600 text-slate-900 rounded-lg hover:bg-amber-500 transition-colors"
+          >
+            Reload App
+          </button>
         </div>
       </div>
     );
