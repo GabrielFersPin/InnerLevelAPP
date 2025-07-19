@@ -1,32 +1,38 @@
 const express = require('express');
-const fetch = require('node-fetch');
-const cors = require('cors');
+const { OpenAI } = require('openai');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
-
-app.use(cors());
 app.use(express.json());
 
-app.post('/api/claude', async (req, res) => {
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+app.post('/api/openai', async (req, res) => {
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.VITE_CLAUDE_API_KEY}`,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify(req.body)
+    const { model, messages, ...rest } = req.body;
+    const completion = await openai.chat.completions.create({
+      model: model || "gpt-4o-mini",
+      messages,
+      ...rest // allow temperature, max_tokens, etc.
     });
-    const data = await response.json();
-    res.status(response.status).json(data);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.json(completion);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Claude proxy server running on http://localhost:${PORT}`);
-}); 
+// Diagnostic endpoint to verify fetch works (optional)
+app.get('/api/fetch-test', async (req, res) => {
+  try {
+    const response = await fetch('https://jsonplaceholder.typicode.com/todos/1');
+    const data = await response.json();
+    res.json({ success: true, data });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => console.log(`Proxy running on port ${PORT}`)); 

@@ -8,7 +8,7 @@ export function useAuthenticatedCharacter() {
 
   // Load character data from database when user logs in
   useEffect(() => {
-    if (user && !state.character) {
+    if (user) {
       loadCharacterFromDatabase();
     }
   }, [user]);

@@ -18,7 +18,7 @@ export function CardDeck({ onNavigateToAI }: CardDeckProps = {}) {
   
   if (!character) return null;
 
-  const availableCards = getAvailableCards(character.class, character.level);
+  const availableCards = state.cards.inventory;
   const theme = getClassTheme(character.class);
   
   // Filter cards based on search and filters

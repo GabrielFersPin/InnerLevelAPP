@@ -31,11 +31,11 @@ export function useAuth() {
   useEffect(() => {
     if (useLocalAuth) {
       console.log('🔮 Using Local Authentication for development (no Supabase config found)');
-      // For local auth, immediately set loading to false and set up mock user
+      // For local auth, only set user if one exists in localStorage
       const mockUser = localAuth.getCurrentUser();
       const mockProfile = localAuth.getUserProfile();
-      setUser(mockUser);
-      setProfile(mockProfile);
+      setUser(mockUser || null);
+      setProfile(mockProfile || null);
       setLoading(false);
     } else {
       console.log('⚡ Using Supabase Authentication');

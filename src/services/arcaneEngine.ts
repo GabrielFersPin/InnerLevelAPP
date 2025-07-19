@@ -22,10 +22,31 @@ interface AICardRecommendation {
   };
 }
 
-export class ArcaneEngine {
-  private static readonly API_ENDPOINT = import.meta.env.VITE_CLAUDE_API_ENDPOINT;
-  private static readonly API_KEY = import.meta.env.VITE_CLAUDE_API_KEY;
+// Replace Anthropic/Claude logic with OpenAI logic
 
+/**
+ * Call OpenAI API via backend proxy
+ */
+async function callOpenAI(prompt: string, options: any = {}): Promise<string> {
+  const response = await fetch('/api/openai', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: options.model || 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: options.systemPrompt || 'You are a helpful AI assistant for a gamified productivity RPG.' },
+        { role: 'user', content: prompt }
+      ],
+      temperature: options.temperature || 0.7,
+      max_tokens: options.max_tokens || 1500
+    })
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error?.message || 'OpenAI API error');
+  return data.choices[0].message.content;
+}
+
+export class ArcaneEngine {
   /**
    * Generate a structured quest plan based on user objective
    */
@@ -38,7 +59,7 @@ export class ArcaneEngine {
     const prompt = this.buildQuestPrompt(objective, timeline, availability, userPreferences);
     
     try {
-      const response = await this.callClaude(prompt);
+      const response = await callOpenAI(prompt);
       return this.parseQuestResponse(response, objective);
     } catch (error) {
       console.error('Failed to generate quest with AI:', error);
@@ -53,7 +74,7 @@ export class ArcaneEngine {
     const prompt = this.buildDailyCardsPrompt(userContext);
     
     try {
-      const response = await this.callClaude(prompt);
+      const response = await callOpenAI(prompt);
       const cards = this.parseCardsResponse(response);
       return this.buildRecommendation(cards, userContext);
     } catch (error) {
@@ -72,7 +93,7 @@ export class ArcaneEngine {
     const prompt = this.buildClassSpecificPrompt(character, situation);
     
     try {
-      const response = await this.callClaude(prompt);
+      const response = await callOpenAI(prompt);
       const cards = this.parseCardsResponse(response);
       return this.buildRecommendation(cards, { character, energy: character.energy.current, availableTime: 4, currentMood: 'neutral', recentActivity: [], activeQuests: [], preferences: [] });
     } catch (error) {
@@ -92,7 +113,7 @@ export class ArcaneEngine {
     const prompt = this.buildGoalCardsPrompt(character, goalDescription, timeframe);
     
     try {
-      const response = await this.callClaude(prompt);
+      const response = await callOpenAI(prompt);
       return this.parseCardsResponse(response);
     } catch (error) {
       console.error('Failed to generate goal cards:', error);
@@ -111,7 +132,7 @@ export class ArcaneEngine {
     const prompt = this.buildContextualCardsPrompt(situation, goals, constraints);
     
     try {
-      const response = await this.callClaude(prompt);
+      const response = await callOpenAI(prompt);
       return this.parseCardsResponse(response);
     } catch (error) {
       console.error('Failed to generate contextual cards:', error);
@@ -323,53 +344,6 @@ Focus on practical, immediately actionable activities.
   }
 
   /**
-   * Call Claude API with proper error handling
-   */
-  private static async callClaude(prompt: string): Promise<string> {
-    if (!this.API_KEY) {
-      throw new Error('Claude API key not configured');
-    }
-
-    try {
-      console.log('Making Claude API call to:', this.API_ENDPOINT);
-      
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': this.API_KEY,
-          'anthropic-version': '2023-06-01'
-        },
-        body: JSON.stringify({
-          model: 'claude-3-sonnet-20240229',
-          max_tokens: 1500,
-          temperature: 0.7,
-          messages: [
-            {
-              role: 'user',
-              content: prompt
-            }
-          ]
-        })
-      });
-
-      console.log('Response status:', response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Claude API Error:', errorText);
-        throw new Error(`Claude API responded with status: ${response.status} - ${errorText}`);
-      }
-
-      const data = await response.json();
-      return data.content[0].text;
-    } catch (error) {
-      console.error('Claude API call failed:', error);
-      throw error;
-    }
-  }
-
-  /**
    * Parse quest response from Claude
    */
   private static parseQuestResponse(response: string, objective: string): Quest {
@@ -398,9 +372,29 @@ Focus on practical, immediately actionable activities.
    */
   private static parseCardsResponse(response: string): Card[] {
     try {
-      const parsed = JSON.parse(response);
-      const cardsArray = parsed.recommendations || parsed;
-      
+      let jsonString = response.trim();
+      if (jsonString.startsWith('```')) {
+        const lines = jsonString.split('\n');
+        if (lines[0].startsWith('```')) lines.shift();
+        const endIdx = lines.findIndex(line => line.startsWith('```'));
+        if (endIdx !== -1) lines.length = endIdx;
+        jsonString = lines.join('\n').trim();
+      }
+      // Extract only the first JSON object
+      const firstCurly = jsonString.indexOf('{');
+      const lastCurly = jsonString.lastIndexOf('}');
+      if (firstCurly !== -1 && lastCurly !== -1 && lastCurly > firstCurly) {
+        jsonString = jsonString.substring(firstCurly, lastCurly + 1);
+      }
+      const parsed = JSON.parse(jsonString);
+      let cardsArray = parsed.recommendations || parsed.cards || parsed.card_sequence || parsed;
+      if (cardsArray && typeof cardsArray === 'object' && !Array.isArray(cardsArray)) {
+        cardsArray = Object.values(cardsArray);
+      }
+      if (!Array.isArray(cardsArray)) {
+        console.error('Expected an array in the AI response, but received:', cardsArray);
+        return this.generateBasicCards();
+      }
       return cardsArray.map((cardData: any) => ({
         id: `ai-card-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         name: cardData.name,
@@ -718,7 +712,7 @@ Focus on practical, immediately actionable activities.
   static async testConnection(): Promise<void> {
     try {
       console.log('Testing Claude API connection...');
-      const result = await this.callClaude('Hello, respond with just "API working"');
+      const result = await callOpenAI('Hello, respond with just "API working"');
       console.log('✅ Claude API test successful:', result);
     } catch (error) {
       console.error('❌ Claude API test failed:', error);

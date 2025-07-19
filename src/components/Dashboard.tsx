@@ -81,6 +81,9 @@ export function Dashboard({ onPageChange }: DashboardProps) {
     });
   };
 
+  // Show user's actual card inventory in the dashboard
+  const inventoryCards = state.cards.inventory;
+
   return (
     <div className="space-y-8">
       {/* Epic Hero Section */}
@@ -252,6 +255,34 @@ export function Dashboard({ onPageChange }: DashboardProps) {
             <span>Chronicles</span>
           </button>
         </div>
+      </div>
+
+      {/* Your Card Inventory */}
+      <div className="rpg-panel p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-rpg-title text-xl font-bold">🃏 Your Card Inventory</h3>
+        </div>
+        {inventoryCards.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {inventoryCards.map((card) => (
+              <CardComponent
+                key={card.id}
+                card={card}
+                size="small"
+                onClick={() => {
+                  setSelectedCard(card);
+                  setIsCardExecutorOpen(true);
+                }}
+                isDisabled={state.energy.current < card.energyCost}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-slate-400">
+            <Sparkles className="w-12 h-12 mx-auto mb-3 text-slate-500" />
+            <p>No cards in your inventory yet. Generate or add some!</p>
+          </div>
+        )}
       </div>
 
       {/* Card Executor Modal */}
