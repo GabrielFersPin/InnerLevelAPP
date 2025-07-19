@@ -124,33 +124,6 @@ npm run deploy
 - `npm run lint` - Run ESLint
 - `npm run preview` - Preview production build
 
-### Project Structure
-```
-src/
-├── components/
-│   ├── Auth/                # Authentication components
-│   ├── character/           # Character system (Hub, progression)
-│   ├── cards/               # Card system (Deck, execution, AI generation)
-│   ├── onboarding/          # Personality test & class reveal
-│   └── ui/                  # Reusable UI components
-├── context/
-│   └── AppContext.tsx       # Global state management
-├── data/
-│   ├── characterClasses.ts  # Class definitions & progression
-│   ├── baseCards.ts         # Card library
-│   └── personalityTest.ts   # Assessment questions
-├── hooks/
-│   ├── useAuth.ts           # Authentication logic
-│   └── useAuthenticatedCharacter.ts # Character data sync
-├── services/
-│   ├── aiService.ts         # AI recommendations & generation
-│   └── energyManager.ts     # Energy system
-├── types/                   # TypeScript definitions
-└── utils/                   # Helper functions
-```
-
----
-
 ## 🤝 Contributing
 
 We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details on how to submit pull requests, report issues, and suggest improvements.
