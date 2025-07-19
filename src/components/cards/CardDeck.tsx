@@ -4,6 +4,7 @@ import { getAvailableCards, rarityColors, typeIcons } from '../../data/baseCards
 import { getClassTheme } from '../../data/characterClasses';
 import { Filter, Search, Zap, Clock, Star, Sparkles, Brain } from 'lucide-react';
 import { Card } from '../../types/index';
+import { EditCardModal } from './EditCardModal';
 
 interface CardDeckProps {
   onNavigateToAI?: () => void;
@@ -15,6 +16,17 @@ export function CardDeck({ onNavigateToAI }: CardDeckProps = {}) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRarity, setFilterRarity] = useState<string>('all');
   const [filterType, setFilterType] = useState<string>('all');
+  const [editCard, setEditCard] = useState(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+
+  const handleEditCard = (card) => {
+    setEditCard(card);
+    setIsEditOpen(true);
+  };
+
+  const handleSaveEdit = (updatedCard) => {
+    dispatch({ type: 'UPDATE_CARD', payload: updatedCard });
+  };
   
   if (!character) return null;
 
@@ -119,17 +131,10 @@ export function CardDeck({ onNavigateToAI }: CardDeckProps = {}) {
 
         {/* Action Button */}
         <button
-          onClick={() => handleAddToInventory(card)}
-          disabled={!canAfford || isOnCooldown}
-          className={`w-full py-2 px-4 rounded-lg font-medium transition-all ${
-            !canAfford || isOnCooldown
-              ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
-              : 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white hover:from-indigo-700 hover:to-blue-700 shadow-lg'
-          }`}
+          onClick={() => handleEditCard(card)}
+          className="w-full py-2 px-4 rounded-lg font-medium bg-gradient-to-r from-indigo-600 to-blue-600 text-white hover:from-indigo-700 hover:to-blue-700 shadow-lg"
         >
-          {isOnCooldown ? 'On Cooldown' : 
-           !canAfford ? 'Not Enough Energy' : 
-           'Add to Deck'}
+          Edit Card
         </button>
 
         {/* Cooldown indicator */}
@@ -303,6 +308,12 @@ export function CardDeck({ onNavigateToAI }: CardDeckProps = {}) {
           </div>
         </div>
       </div>
+      <EditCardModal
+        card={editCard}
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        onSave={handleSaveEdit}
+      />
     </div>
   );
 }

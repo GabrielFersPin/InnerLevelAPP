@@ -38,7 +38,8 @@ type AppAction =
   | { type: 'CONSUME_ENERGY'; payload: number }
   | { type: 'GENERATE_RECOMMENDATIONS'; payload: Card[] }
   | { type: 'UPDATE_ENERGY_FROM_TIME' }
-  | { type: 'LOAD_DATA'; payload: AppData };
+  | { type: 'LOAD_DATA'; payload: AppData }
+  | { type: 'UPDATE_CARD'; payload: Card };
 
 const initialState: AppState = {
   tasks: [],
@@ -375,6 +376,17 @@ function appReducer(state: AppState, action: AppAction): AppState {
         }
       };
     }
+    
+    case 'UPDATE_CARD':
+      return {
+        ...state,
+        cards: {
+          ...state.cards,
+          inventory: state.cards.inventory.map(card =>
+            card.id === action.payload.id ? { ...card, ...action.payload } : card
+          )
+        }
+      };
     
     default:
       return state;

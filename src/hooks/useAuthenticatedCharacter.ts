@@ -22,7 +22,9 @@ export function useAuthenticatedCharacter() {
 
   const loadCharacterFromDatabase = async () => {
     try {
+      console.log('[loadCharacterFromDatabase] called');
       const { data } = await getUserData();
+      console.log('[loadCharacterFromDatabase] data from Supabase:', data);
       if (data?.character) {
         dispatch({
           type: 'LOAD_CHARACTER',
@@ -39,10 +41,12 @@ export function useAuthenticatedCharacter() {
 
   const saveCharacterToDatabase = async () => {
     try {
-      await updateUserData({
+      const payload = {
         character: state.character,
         is_onboarded: state.character?.isOnboarded || false
-      });
+      };
+      console.log('[saveCharacterToDatabase] saving to Supabase:', payload);
+      await updateUserData(payload);
     } catch (error) {
       console.error('Error saving character to database:', error);
     }
@@ -50,10 +54,12 @@ export function useAuthenticatedCharacter() {
 
   const createCharacterInDatabase = async (characterData: any) => {
     try {
-      await updateUserData({
+      const payload = {
         character: characterData,
         is_onboarded: true
-      });
+      };
+      console.log('[createCharacterInDatabase] saving to Supabase:', payload);
+      await updateUserData(payload);
       dispatch({
         type: 'CREATE_CHARACTER',
         payload: characterData
