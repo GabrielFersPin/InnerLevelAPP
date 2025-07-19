@@ -4,6 +4,7 @@ import { ArcaneEngine } from "../../services/arcaneEngine";
 import { getClassTheme } from '../../data/characterClasses';
 import { Brain, Sparkles, RefreshCw, Clock, Target, Zap, Plus } from 'lucide-react';
 import type { Card } from '../../types/index';
+import { UpgradeModal } from '../UpgradeModal';
 
 export function MysticForge() {
   const { state, dispatch } = useAppContext();
@@ -14,6 +15,10 @@ export function MysticForge() {
   const [goalDescription, setGoalDescription] = useState('');
   const [timeframe, setTimeframe] = useState(7);
   const [generationType, setGenerationType] = useState<'daily' | 'goal' | 'situation'>('daily');
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
+  // Demo mode detection
+  const isDemoMode = !import.meta.env.VITE_CLAUDE_API_KEY || !import.meta.env.VITE_CLAUDE_API_ENDPOINT;
 
   if (!character) return null;
 
@@ -65,6 +70,26 @@ export function MysticForge() {
 
   return (
     <div className="space-y-8">
+      {/* Demo Mode Banner */}
+      {isDemoMode && (
+        <div className="bg-gradient-to-r from-amber-600 to-amber-400 text-slate-900 font-bold px-6 py-3 rounded-xl shadow-lg text-center mb-4 border-2 border-amber-300 animate-pulse">
+          Demo Mode: AI-powered card generation is limited. <br />
+          <span className="font-normal">Upgrade to unlock personalized AI cards and advanced features!</span>
+          <div className="mt-3 flex justify-center">
+            <button
+              className="bg-purple-700 hover:bg-purple-800 text-white font-bold py-2 px-6 rounded-xl shadow-lg transition-all duration-300"
+              onClick={() => setShowUpgradeModal(true)}
+            >
+              Upgrade to Premium
+            </button>
+          </div>
+        </div>
+      )}
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        onUpgrade={() => { setShowUpgradeModal(false); alert('Upgrade/payment flow coming soon!'); }}
+      />
       {/* Header */}
       <div className="text-center">
         <h1 className="text-4xl font-bold text-amber-200 mb-2">
@@ -79,7 +104,7 @@ export function MysticForge() {
       <div className={`${theme.panel} rounded-2xl p-8 shadow-2xl`}>
         <h3 className="text-2xl font-bold text-amber-200 mb-6 flex items-center">
           <Brain className="w-6 h-6 mr-2" />
-          AI Generation Settings
+          Spellcrafting Options
         </h3>
 
         {/* Generation Type Selector */}

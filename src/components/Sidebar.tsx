@@ -11,7 +11,7 @@ const navigation = [
   // Core LifeQuest Pages
   { id: 'character-hub' as PageType, icon: Home, label: '🏠 Character Hub', description: 'Dashboard & Overview' },
   { id: 'card-deck' as PageType, icon: BookOpen, label: '🎴 Card Deck', description: 'Your Card Collection' },
-  { id: 'ai-card-generator' as PageType, icon: Brain, label: '🧠 AI Generator', description: 'Create Smart Cards' },
+  { id: 'ai-card-generator' as PageType, icon: Brain, label: '🔮 Mystic Forge', description: 'Create Smart Cards' },
   { id: 'training-ground' as PageType, icon: Sword, label: '⚔️ Training Ground', description: 'Execute Cards' },
   { id: 'character-sheet' as PageType, icon: User, label: '🏆 Character Sheet', description: 'Stats & Progress' },
   { id: 'guild-settings' as PageType, icon: Settings, label: '⚙️ Guild Settings', description: 'Configuration' },

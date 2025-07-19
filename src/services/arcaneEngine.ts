@@ -326,16 +326,18 @@ Focus on practical, immediately actionable activities.
    * Call Claude API with proper error handling
    */
   private static async callClaude(prompt: string): Promise<string> {
-    if (!this.API_KEY || !this.API_ENDPOINT) {
-      throw new Error('Claude API not configured - using fallback recommendations');
+    if (!this.API_KEY) {
+      throw new Error('Claude API key not configured');
     }
 
     try {
-      const response = await fetch(this.API_ENDPOINT, {
+      console.log('Making Claude API call to:', this.API_ENDPOINT);
+      
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.API_KEY}`,
+          'x-api-key': this.API_KEY,
           'anthropic-version': '2023-06-01'
         },
         body: JSON.stringify({
@@ -351,8 +353,12 @@ Focus on practical, immediately actionable activities.
         })
       });
 
+      console.log('Response status:', response.status);
+
       if (!response.ok) {
-        throw new Error(`Claude API responded with status: ${response.status}`);
+        const errorText = await response.text();
+        console.error('Claude API Error:', errorText);
+        throw new Error(`Claude API responded with status: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
@@ -707,5 +713,15 @@ Focus on practical, immediately actionable activities.
     };
     
     return classPrefs[character.class] || [];
+  }
+
+  static async testConnection(): Promise<void> {
+    try {
+      console.log('Testing Claude API connection...');
+      const result = await this.callClaude('Hello, respond with just "API working"');
+      console.log('✅ Claude API test successful:', result);
+    } catch (error) {
+      console.error('❌ Claude API test failed:', error);
+    }
   }
 }
