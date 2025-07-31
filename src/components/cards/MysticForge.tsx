@@ -15,6 +15,7 @@ export function MysticForge() {
   const [timeframe, setTimeframe] = useState(7);
   const [generationType, setGenerationType] = useState<'daily' | 'goal' | 'situation'>('daily');
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [hasCreatedGoalOriented, setHasCreatedGoalOriented] = useState(false);
 
   // Demo mode detection
   const isDemoMode = !import.meta.env.VITE_CLAUDE_API_KEY || !import.meta.env.VITE_CLAUDE_API_ENDPOINT;
@@ -80,6 +81,15 @@ export function MysticForge() {
       dispatch({ type: 'ADD_CARD', payload: card });
     });
     setGeneratedCards([]);
+  };
+
+  const handleCreateCard = (type: string) => {
+    if (type === "Goal-Oriented") {
+      setHasCreatedGoalOriented(true);
+    }
+
+    // Lógica para crear la carta
+    console.log(`Created card of type: ${type}`);
   };
 
   return (
@@ -335,6 +345,38 @@ export function MysticForge() {
             <p>Creates cards optimized for your character type with appropriate difficulty, energy cost, and skill bonuses.</p>
           </div>
         </div>
+      </div>
+
+      {/* Create Card Buttons */}
+      <div>
+        <button
+          onClick={() => handleCreateCard("Goal-Oriented")}
+          className="btn-primary"
+        >
+          Create Goal-Oriented
+        </button>
+
+        <button
+          onClick={() => handleCreateCard("Daily Optimized")}
+          className="btn-secondary"
+          disabled={!hasCreatedGoalOriented} // Deshabilitado hasta que se cree un "Goal-Oriented"
+        >
+          Create Daily Optimized
+        </button>
+
+        <button
+          onClick={() => handleCreateCard("Situational")}
+          className="btn-secondary"
+          disabled={!hasCreatedGoalOriented} // Deshabilitado hasta que se cree un "Goal-Oriented"
+        >
+          Create Situational
+        </button>
+
+        {!hasCreatedGoalOriented && (
+          <p className="text-sm text-gray-500">
+            You must create a "Goal-Oriented" card first to unlock other types.
+          </p>
+        )}
       </div>
     </div>
   );
