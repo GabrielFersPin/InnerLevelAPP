@@ -27,9 +27,27 @@ export function CardDeck({ onNavigateToAI }: CardDeckProps = {}) {
     dispatch({ type: 'UPDATE_CARD', payload: updatedCard });
   };
   
-  if (!character) return null;
+  // ✅ ARREGLO: Verificar que character y cards existan antes de continuar
+  if (!character || !state.cards || !state.cards.inventory) {
+    return (
+      <div className="space-y-8">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-amber-200 mb-2">
+            🎴 Card Deck
+          </h1>
+          <p className="text-xl text-slate-300 mb-4">
+            Loading your cards...
+          </p>
+          <div className="w-16 h-16 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg animate-pulse">
+            <div className="w-8 h-8 bg-slate-900 rounded-full"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  const availableCards = state.cards.inventory;
+  // ✅ ARREGLO: Usar optional chaining y fallback
+  const availableCards = state.cards?.inventory || [];
   const theme = getClassTheme(character.class);
   
   // Filter cards based on search and filters
@@ -115,7 +133,7 @@ export function CardDeck({ onNavigateToAI }: CardDeckProps = {}) {
         </div>
 
         {/* Skill Bonuses */}
-        {card.skillBonus.length > 0 && (
+        {card.skillBonus && card.skillBonus.length > 0 && (
           <div className="mb-4">
             <h4 className="text-xs font-medium text-slate-300 mb-2">Skill Bonuses:</h4>
             <div className="space-y-1">
@@ -129,7 +147,7 @@ export function CardDeck({ onNavigateToAI }: CardDeckProps = {}) {
         )}
 
         {/* Requirements */}
-        {(card.requirements.level || card.requirements.skills) && (
+        {(card.requirements?.level || card.requirements?.skills) && (
           <div className="mb-4">
             <h4 className="text-xs font-medium text-slate-300 mb-2">Requirements:</h4>
             <div className="text-xs text-slate-400 space-y-1">
@@ -319,6 +337,8 @@ export function CardDeck({ onNavigateToAI }: CardDeckProps = {}) {
           </div>
         </div>
       </div>
+      
+      {/* Edit Card Modal */}
       <EditCardModal
         card={editCard}
         isOpen={isEditOpen}

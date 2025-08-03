@@ -94,7 +94,20 @@ const initialState: AppState = {
 function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
     case 'LOAD_DATA':
-      return action.payload;
+      // ✅ ARREGLO: Asegurar que todos los arrays existan
+      const loadedData = {
+        ...action.payload,
+        cards: {
+          inventory: Array.isArray(action.payload.cards?.inventory) ? action.payload.cards.inventory : [],
+          activeCards: Array.isArray(action.payload.cards?.activeCards) ? action.payload.cards.activeCards : [],
+          cooldowns: action.payload.cards?.cooldowns || {}
+        },
+        quests: {
+          active: Array.isArray(action.payload.quests?.active) ? action.payload.quests.active : [],
+          completed: Array.isArray(action.payload.quests?.completed) ? action.payload.quests.completed : []
+        }
+      };
+      return loadedData;
       
     case 'ADD_TASK':
       return { ...state, tasks: [...state.tasks, action.payload] };
@@ -228,13 +241,18 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ...state,
         cards: {
           ...state.cards,
-          inventory: [...state.cards.inventory, action.payload]
+          inventory: [
+            ...(state.cards?.inventory || []), // ✅ ARREGLO: usar fallback si inventory no existe
+            action.payload
+          ]
         }
       };
     
     case 'EXECUTE_CARD': {
       const { cardId, result } = action.payload;
-      const executedCard = state.cards.inventory.find(c => c.id === cardId);
+      const inventory = Array.isArray(state.cards?.inventory) ? state.cards.inventory : [];
+      const executedCard = inventory.find(c => c.id === cardId);
+      
       // Add XP/points to character
       const newExp = state.character.experience + (result.progressGained || 0);
       const currentLevel = state.character.level;
@@ -250,7 +268,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         },
         cards: {
           ...state.cards,
-          inventory: state.cards.inventory.map(card =>
+          inventory: inventory.map(card =>
             card.id === cardId 
               ? { 
                   ...card, 
@@ -283,7 +301,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
             ...state.cards.cooldowns,
             [action.payload.cardId]: action.payload.cooldownUntil
           },
-          inventory: state.cards.inventory.map(card =>
+          inventory: (Array.isArray(state.cards?.inventory) ? state.cards.inventory : []).map(card =>
             card.id === action.payload.cardId
               ? { ...card, isOnCooldown: action.payload.cooldownUntil > new Date() }
               : card
@@ -296,7 +314,10 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ...state,
         cards: {
           ...state.cards,
-          activeCards: [...state.cards.activeCards, action.payload]
+          activeCards: [
+            ...(Array.isArray(state.cards?.activeCards) ? state.cards.activeCards : []), 
+            action.payload
+          ]
         }
       };
     
@@ -305,7 +326,8 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ...state,
         cards: {
           ...state.cards,
-          activeCards: state.cards.activeCards.filter(id => id !== action.payload)
+          activeCards: (Array.isArray(state.cards?.activeCards) ? state.cards.activeCards : [])
+            .filter(id => id !== action.payload)
         }
       };
     
@@ -395,7 +417,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ...state,
         cards: {
           ...state.cards,
-          inventory: state.cards.inventory.map(card =>
+          inventory: (Array.isArray(state.cards?.inventory) ? state.cards.inventory : []).map(card =>
             card.id === action.payload.id ? { ...card, ...action.payload } : card
           )
         }
