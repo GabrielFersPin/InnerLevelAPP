@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
+import { User } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabase';
 import { AppData, Task, Habit, Todo, Reward, RedeemedReward, EmotionalLog, Goal, Card, Quest, CardResult, Character, CharacterClass, PersonalityTestResult } from '../types/index';
 import { createNewCharacter } from '../data/characterClasses';
 
@@ -52,7 +54,7 @@ const initialState: AppState = {
     {id: 6, name: "Slept well 7 hours", category: "Self-Care", points: 10},
     {id: 7, name: "Screen-free break (20 min)", category: "Self-Care", points: 5},
     {id: 8, name: "Wrote how I felt today", category: "Self-Care", points: 15},
-    {id: 9, name: "Guilt-free rest", category: "Self-Care", points: 20},
+    {id: 9, name: "Guilt-free rest", category: "Self-Care", points: 20},    
     {id: 10, name: "Meditation", category: "Self-Care", points: 10}
   ],
   todos: [],
@@ -93,14 +95,19 @@ function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
     case 'LOAD_DATA':
       return action.payload;
+      
     case 'ADD_TASK':
       return { ...state, tasks: [...state.tasks, action.payload] };
+      
     case 'ADD_HABIT':
       return { ...state, habits: [...state.habits, action.payload] };
+      
     case 'DELETE_HABIT':
       return { ...state, habits: state.habits.filter(h => h.id !== action.payload) };
+      
     case 'ADD_TODO':
       return { ...state, todos: [...state.todos, action.payload] };
+      
     case 'COMPLETE_TODO':
       return {
         ...state,
@@ -111,10 +118,13 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ),
         tasks: [...state.tasks, action.payload.task]
       };
+      
     case 'DELETE_TODO':
       return { ...state, todos: state.todos.filter(t => t.id !== action.payload) };
+      
     case 'ADD_REWARD':
       return { ...state, rewards: [...state.rewards, action.payload] };
+      
     case 'REDEEM_REWARD':
       return {
         ...state,
@@ -125,11 +135,13 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ),
         redeemedRewards: [...state.redeemedRewards, action.payload.redeemedReward]
       };
+      
     case 'ADD_EMOTIONAL_LOG':
       return { ...state, emotionalLogs: [...state.emotionalLogs, action.payload] };
-    // NUEVAS ACCIONES PARA GOALS
+      
     case 'ADD_GOAL':
       return { ...state, goals: [...state.goals, action.payload] };
+      
     case 'UPDATE_GOAL':
       return {
         ...state,
@@ -139,6 +151,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
             : goal
         )
       };
+      
     case 'DELETE_GOAL':
       return { ...state, goals: state.goals.filter(g => g.id !== action.payload) };
     
@@ -397,91 +410,204 @@ interface AppContextType {
   state: AppState;
   dispatch: React.Dispatch<AppAction>;
   generateId: () => number;
+  user: User | null;
+  loading: boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
   
   const generateId = () => Date.now() + Math.random();
 
-  // Load data from localStorage on mount - temporarily disabled
+  // Initialize auth and load user data
   useEffect(() => {
-    try {
-      const savedData = {
-        tasks: JSON.parse(localStorage.getItem('innerlevel_tasks') || '[]'),
-        habits: JSON.parse(localStorage.getItem('innerlevel_habits') || 'null'),
-        todos: JSON.parse(localStorage.getItem('innerlevel_todos') || '[]'),
-        rewards: JSON.parse(localStorage.getItem('innerlevel_rewards') || 'null'),
-        redeemedRewards: JSON.parse(localStorage.getItem('innerlevel_redeemed') || '[]'),
-        emotionalLogs: JSON.parse(localStorage.getItem('innerlevel_emotional') || '[]'),
-        goals: JSON.parse(localStorage.getItem('innerlevel_goals') || '[]'),
-        // LifeQuest Character data
-        character: JSON.parse(localStorage.getItem('innerlevel_character') || 'null'),
-        // LifeQuest Cards data
-        cards: JSON.parse(localStorage.getItem('innerlevel_cards') || 'null'),
-        quests: JSON.parse(localStorage.getItem('innerlevel_quests') || 'null'),
-        energy: JSON.parse(localStorage.getItem('innerlevel_energy') || 'null'),
-        recommendations: JSON.parse(localStorage.getItem('innerlevel_recommendations') || 'null')
-      };
-
-      // Only load if we have existing data, otherwise keep initial state
-      if (savedData.tasks.length > 0 || savedData.todos.length > 0 || savedData.redeemedRewards.length > 0 || savedData.goals.length > 0 || savedData.cards || savedData.character) {
-        dispatch({
-          type: 'LOAD_DATA',
-          payload: {
-            ...savedData,
-            habits: savedData.habits || initialState.habits,
-            rewards: savedData.rewards || initialState.rewards,
-            character: savedData.character || initialState.character,
-            cards: savedData.cards || initialState.cards,
-            quests: savedData.quests || initialState.quests,
-            energy: savedData.energy || initialState.energy,
-            recommendations: savedData.recommendations || initialState.recommendations
+    async function initializeAuth() {
+      try {
+        console.log('🔄 Initializing auth...');
+        
+        // Get current session
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          console.log('✅ User found, loading data...');
+          setUser(session.user);
+          await loadUserData(session.user.id);
+        } else {
+          console.log('❌ No user session found');
+        }
+        
+        // Listen for auth changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            console.log('🔄 Auth state change:', event);
+            
+            if (event === 'SIGNED_IN' && session?.user) {
+              setUser(session.user);
+              await loadUserData(session.user.id);
+            } else if (event === 'SIGNED_OUT') {
+              setUser(null);
+              dispatch({ type: 'LOAD_DATA', payload: initialState });
+            }
           }
-        });
+        );
+
+        setIsInitialized(true);
+        return () => subscription.unsubscribe();
+      } catch (error) {
+        console.error('❌ Error initializing auth:', error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Error loading from localStorage:', error);
-      // Clear corrupted data
-      localStorage.clear();
     }
+
+    initializeAuth();
   }, []);
 
-  // Save data to localStorage whenever state changes - temporarily disabled
-  useEffect(() => {
+  // Load user data from Supabase
+  async function loadUserData(userId: string) {
     try {
-      localStorage.setItem('innerlevel_tasks', JSON.stringify(state.tasks));
-      localStorage.setItem('innerlevel_habits', JSON.stringify(state.habits));
-      localStorage.setItem('innerlevel_todos', JSON.stringify(state.todos));
-      localStorage.setItem('innerlevel_rewards', JSON.stringify(state.rewards));
-      localStorage.setItem('innerlevel_redeemed', JSON.stringify(state.redeemedRewards));
-      localStorage.setItem('innerlevel_emotional', JSON.stringify(state.emotionalLogs));
-      localStorage.setItem('innerlevel_goals', JSON.stringify(state.goals));
-      // LifeQuest Character localStorage
-      localStorage.setItem('innerlevel_character', JSON.stringify(state.character));
-      // LifeQuest Cards localStorage
-      localStorage.setItem('innerlevel_cards', JSON.stringify(state.cards));
-      localStorage.setItem('innerlevel_quests', JSON.stringify(state.quests));
-      localStorage.setItem('innerlevel_energy', JSON.stringify(state.energy));
-      localStorage.setItem('innerlevel_recommendations', JSON.stringify(state.recommendations));
+      console.log('📥 Loading user data for:', userId);
+      
+      const { data: userData, error } = await supabase
+        .from('user_data')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('❌ Error loading user data:', error);
+        throw error;
+      }
+
+      if (userData) {
+        console.log('✅ User data loaded successfully');
+        
+        // Parse dates in energy object and ensure all fields exist
+        const parsedData: AppState = {
+          tasks: userData.tasks || [],
+          habits: userData.habits || initialState.habits,
+          todos: userData.todos || [],
+          rewards: userData.rewards || initialState.rewards,
+          redeemedRewards: userData.redeemed_rewards || [],
+          emotionalLogs: userData.emotional_logs || [],
+          goals: userData.goals || [],
+          character: userData.character || initialState.character,
+          cards: userData.cards || initialState.cards,
+          quests: userData.quests || initialState.quests,
+          energy: userData.energy ? {
+            ...userData.energy,
+            lastUpdate: new Date(userData.energy.lastUpdate || Date.now())
+          } : initialState.energy,
+          recommendations: userData.recommendations || initialState.recommendations
+        };
+
+        dispatch({ type: 'LOAD_DATA', payload: parsedData });
+      } else {
+        console.log('📝 Creating initial user data...');
+        await createInitialUserData(userId);
+      }
     } catch (error) {
-      console.error('Error saving to localStorage:', error);
+      console.error('❌ Error loading user data:', error);
+      // Fallback to initial state if loading fails
+      dispatch({ type: 'LOAD_DATA', payload: initialState });
     }
-  }, [state]);
+  }
 
-  // Update energy from time passage every minute - temporarily disabled
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     dispatch({ type: 'UPDATE_ENERGY_FROM_TIME' });
-  //   }, 60000); // Update every minute
+  // Create initial user data for new users
+  async function createInitialUserData(userId: string) {
+    try {
+      const { error } = await supabase
+        .from('user_data')
+        .insert({
+          user_id: userId,
+          tasks: initialState.tasks,
+          habits: initialState.habits,
+          todos: initialState.todos,
+          rewards: initialState.rewards,
+          redeemed_rewards: initialState.redeemedRewards,
+          emotional_logs: initialState.emotionalLogs,
+          goals: initialState.goals,
+          character: initialState.character,
+          cards: initialState.cards,
+          quests: initialState.quests,
+          energy: initialState.energy,
+          recommendations: initialState.recommendations,
+          is_onboarded: false
+        });
 
-  //   return () => clearInterval(interval);
-  // }, []);
+      if (error) throw error;
+      
+      console.log('✅ Initial user data created');
+      dispatch({ type: 'LOAD_DATA', payload: initialState });
+    } catch (error) {
+      console.error('❌ Error creating initial user data:', error);
+    }
+  }
+
+  // Save data to Supabase with debouncing
+  useEffect(() => {
+    // Don't save if not initialized, no user, or still loading
+    if (!isInitialized || !user || loading) return;
+
+    // Clear existing timeout
+    if (saveTimeout) {
+      clearTimeout(saveTimeout);
+    }
+
+    // Set new timeout for debounced save
+    const newTimeout = setTimeout(async () => {
+      try {
+        console.log('💾 Saving user data...');
+        
+        const { error } = await supabase
+          .from('user_data')
+          .upsert({
+            user_id: user.id,
+            tasks: state.tasks,
+            habits: state.habits,
+            todos: state.todos,
+            rewards: state.rewards,
+            redeemed_rewards: state.redeemedRewards,
+            emotional_logs: state.emotionalLogs,
+            goals: state.goals,
+            character: state.character,
+            cards: state.cards,
+            quests: state.quests,
+            energy: state.energy,
+            recommendations: state.recommendations,
+            is_onboarded: state.character.isOnboarded
+          }, {
+            onConflict: 'user_id'
+          });
+
+        if (error) {
+          console.error('❌ Error saving user data:', error);
+        } else {
+          console.log('✅ User data saved successfully!');
+        }
+      } catch (error) {
+        console.error('❌ Error saving to Supabase:', error);
+      }
+    }, 1000); // 1 second debounce
+
+    setSaveTimeout(newTimeout);
+
+    // Cleanup timeout on unmount
+    return () => {
+      if (newTimeout) {
+        clearTimeout(newTimeout);
+      }
+    };
+  }, [state, user, loading, isInitialized]);
 
   return (
-    <AppContext.Provider value={{ state, dispatch, generateId }}>
+    <AppContext.Provider value={{ state, dispatch, generateId, user, loading }}>
       {children}
     </AppContext.Provider>
   );

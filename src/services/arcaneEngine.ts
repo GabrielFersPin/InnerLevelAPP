@@ -21,24 +21,17 @@ interface AICardRecommendation {
   };
 }
 
-// Replace Anthropic/Claude logic with OpenAI logic
 
 /**
  * Call OpenAI API via backend proxy
  */
 async function callOpenAI(prompt: string, options: any = {}): Promise<string> {
-  const response = await fetch('/api/openai', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: options.model || 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: options.systemPrompt || 'You are a helpful AI assistant for a gamified productivity RPG.' },
-        { role: 'user', content: prompt }
-      ],
-      temperature: options.temperature || 0.7,
-      max_tokens: options.max_tokens || 1500
-    })
+  const response = await fetch("http://localhost:5000/api/openai", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ prompt }),
   });
   const data = await response.json();
   if (!response.ok) throw new Error(data.error?.message || 'OpenAI API error');
