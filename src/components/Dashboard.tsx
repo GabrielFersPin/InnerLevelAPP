@@ -7,6 +7,7 @@ import { CardComponent } from './cards/CardComponent';
 import { CardExecutor } from './cards/CardExecutor';
 import { sampleCards, getDailyRecommendations } from '../data/sampleData';
 import { showAlert } from '../utils/notifications';
+import { GoalRecommendations } from './goals/GoalRecommendations';
 
 interface DashboardProps {
   onPageChange: (page: PageType) => void;
@@ -291,6 +292,22 @@ export function Dashboard({ onPageChange }: DashboardProps) {
             <p>No cards in your inventory yet. Generate or add some!</p>
           </div>
         )}
+      </div>
+
+      {/* Resumen de progreso */}
+      <div className="progress-summary">
+        <h2 className="text-2xl font-bold text-amber-200">Your Progress</h2>
+        {/* ...otros componentes... */}
+      </div>
+
+      {/* Recomendaciones de objetivos */}
+      <div className="goal-recommendations mt-8">
+        <h2 className="text-2xl font-bold text-amber-200 mb-4">Recommended Goals</h2>
+        <GoalRecommendations 
+          character={character}
+          existingGoals={goals}
+          onSelectGoal={(goal) => dispatch({ type: 'ADD_GOAL', payload: goal })}
+        />
       </div>
 
       {/* Card Executor Modal */}

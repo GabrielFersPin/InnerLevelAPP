@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { CharacterHub } from './components/character/CharacterHub';
-import { CharacterSheet } from './components/character/CharacterSheet';
+import CharacterSheet from './components/character/CharacterSheet';
 import { CardDeck } from './components/cards/CardDeck';
 import { MysticForge } from './components/cards/MysticForge';
 import { ClassReveal } from './components/onboarding/ClassReveal';
