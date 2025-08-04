@@ -1,12 +1,7 @@
-<<<<<<< HEAD
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { AppData, Task, Habit, Todo, Reward, RedeemedReward, EmotionalLog, Goal, Card, Quest, CardResult, Character, CharacterClass, PersonalityTestResult, GuildData, Guild, Friend, FriendRequest, PrivacySettings, NotificationSettings } from '../types/index';
-=======
 import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import { AppData, Task, Habit, Todo, Reward, RedeemedReward, EmotionalLog, Goal, Card, Quest, CardResult, Character, CharacterClass, PersonalityTestResult } from '../types/index';
->>>>>>> 3bd382eabfcef0938b01f8482e919ca63603da38
+import { AppData, Task, Habit, Todo, Reward, RedeemedReward, EmotionalLog, Goal, Card, Quest, CardResult, Character, CharacterClass, PersonalityTestResult, GuildData, Guild, Friend, FriendRequest, PrivacySettings, NotificationSettings } from '../types/index';
 import { createNewCharacter } from '../data/characterClasses';
 
 interface AppState extends AppData {}
@@ -583,42 +578,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // Initialize auth and load user data
   useEffect(() => {
-<<<<<<< HEAD
-    try {
-      const savedData = {
-        tasks: JSON.parse(localStorage.getItem('innerlevel_tasks') || '[]'),
-        habits: JSON.parse(localStorage.getItem('innerlevel_habits') || 'null'),
-        todos: JSON.parse(localStorage.getItem('innerlevel_todos') || '[]'),
-        rewards: JSON.parse(localStorage.getItem('innerlevel_rewards') || 'null'),
-        redeemedRewards: JSON.parse(localStorage.getItem('innerlevel_redeemed') || '[]'),
-        emotionalLogs: JSON.parse(localStorage.getItem('innerlevel_emotional') || '[]'),
-        goals: JSON.parse(localStorage.getItem('innerlevel_goals') || '[]'),
-        // LifeQuest Character data
-        character: JSON.parse(localStorage.getItem('innerlevel_character') || 'null'),
-        // LifeQuest Cards data
-        cards: JSON.parse(localStorage.getItem('innerlevel_cards') || 'null'),
-        quests: JSON.parse(localStorage.getItem('innerlevel_quests') || 'null'),
-        energy: JSON.parse(localStorage.getItem('innerlevel_energy') || 'null'),
-        recommendations: JSON.parse(localStorage.getItem('innerlevel_recommendations') || 'null'),
-        // Guild System data
-        guild: JSON.parse(localStorage.getItem('innerlevel_guild') || 'null')
-      };
-
-      // Only load if we have existing data, otherwise keep initial state
-      if (savedData.tasks.length > 0 || savedData.todos.length > 0 || savedData.redeemedRewards.length > 0 || savedData.goals.length > 0 || savedData.cards || savedData.character || savedData.guild) {
-        dispatch({
-          type: 'LOAD_DATA',
-          payload: {
-            ...savedData,
-            habits: savedData.habits || initialState.habits,
-            rewards: savedData.rewards || initialState.rewards,
-            character: savedData.character || initialState.character,
-            cards: savedData.cards || initialState.cards,
-            quests: savedData.quests || initialState.quests,
-            energy: savedData.energy || initialState.energy,
-            recommendations: savedData.recommendations || initialState.recommendations,
-            guild: savedData.guild || initialState.guild
-=======
     async function initializeAuth() {
       try {
         console.log('🔄 Initializing auth...');
@@ -646,7 +605,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               setUser(null);
               dispatch({ type: 'LOAD_DATA', payload: initialState });
             }
->>>>>>> 3bd382eabfcef0938b01f8482e919ca63603da38
           }
         );
 
@@ -665,24 +623,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // Load user data from Supabase
   async function loadUserData(userId: string) {
     try {
-<<<<<<< HEAD
-      localStorage.setItem('innerlevel_tasks', JSON.stringify(state.tasks));
-      localStorage.setItem('innerlevel_habits', JSON.stringify(state.habits));
-      localStorage.setItem('innerlevel_todos', JSON.stringify(state.todos));
-      localStorage.setItem('innerlevel_rewards', JSON.stringify(state.rewards));
-      localStorage.setItem('innerlevel_redeemed', JSON.stringify(state.redeemedRewards));
-      localStorage.setItem('innerlevel_emotional', JSON.stringify(state.emotionalLogs));
-      localStorage.setItem('innerlevel_goals', JSON.stringify(state.goals));
-      // LifeQuest Character localStorage
-      localStorage.setItem('innerlevel_character', JSON.stringify(state.character));
-      // LifeQuest Cards localStorage
-      localStorage.setItem('innerlevel_cards', JSON.stringify(state.cards));
-      localStorage.setItem('innerlevel_quests', JSON.stringify(state.quests));
-      localStorage.setItem('innerlevel_energy', JSON.stringify(state.energy));
-      localStorage.setItem('innerlevel_recommendations', JSON.stringify(state.recommendations));
-      // Guild System localStorage
-      localStorage.setItem('innerlevel_guild', JSON.stringify(state.guild));
-=======
       console.log('📥 Loading user data for:', userId);
       
       const { data: userData, error } = await supabase
@@ -715,7 +655,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             ...userData.energy,
             lastUpdate: new Date(userData.energy.lastUpdate || Date.now())
           } : initialState.energy,
-          recommendations: userData.recommendations || initialState.recommendations
+          recommendations: userData.recommendations || initialState.recommendations,
+          guild: userData.guild || initialState.guild
         };
 
         dispatch({ type: 'LOAD_DATA', payload: parsedData });
@@ -723,7 +664,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         console.log('📝 Creating initial user data...');
         await createInitialUserData(userId);
       }
->>>>>>> 3bd382eabfcef0938b01f8482e919ca63603da38
     } catch (error) {
       console.error('❌ Error loading user data:', error);
       // Fallback to initial state if loading fails
@@ -750,6 +690,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           quests: initialState.quests,
           energy: initialState.energy,
           recommendations: initialState.recommendations,
+          guild: initialState.guild,
           is_onboarded: false
         });
 
@@ -793,6 +734,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             quests: state.quests,
             energy: state.energy,
             recommendations: state.recommendations,
+            guild: state.guild,
             is_onboarded: state.character.isOnboarded
           }, {
             onConflict: 'user_id'

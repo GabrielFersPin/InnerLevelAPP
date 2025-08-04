@@ -15,7 +15,6 @@ import { useAuth } from './hooks/useAuth';
 import { useAuthenticatedCharacter } from './hooks/useAuthenticatedCharacter';
 import { TrainingGround } from './components/TrainingGround';
 import Inventory from './components/Inventory';
-import GuildSettings from './components/GuildSettings';
 
 
 // import { useUserData } from './hooks/useUserData';
