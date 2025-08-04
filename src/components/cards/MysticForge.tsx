@@ -4,10 +4,11 @@ import { ArcaneEngine } from "../../services/arcaneEngine";
 import { getClassTheme } from '../../data/characterClasses';
 import { Brain, Sparkles, RefreshCw, Clock, Target, Zap, Plus } from 'lucide-react';
 import type { Card } from '../../types/index';
+import GoalCreationForm from './GoalCreationForm';
 
 export function MysticForge() {
   const { state, dispatch } = useAppContext();
-  const { character } = state;
+  const { character, goals } = state;
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedCards, setGeneratedCards] = useState<Card[]>([]);
   const [situation, setSituation] = useState('');
@@ -15,6 +16,8 @@ export function MysticForge() {
   const [timeframe, setTimeframe] = useState(7);
   const [generationType, setGenerationType] = useState<'daily' | 'goal' | 'situation'>('daily');
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [hasCreatedGoalOriented, setHasCreatedGoalOriented] = useState(false);
+  const [showGoalForm, setShowGoalForm] = useState(false);
 
   // Demo mode detection
   const isDemoMode = !import.meta.env.VITE_CLAUDE_API_KEY || !import.meta.env.VITE_CLAUDE_API_ENDPOINT;
@@ -80,6 +83,20 @@ export function MysticForge() {
       dispatch({ type: 'ADD_CARD', payload: card });
     });
     setGeneratedCards([]);
+  };
+
+  const handleCreateCard = (type: string) => {
+    if (type === "Goal-Oriented") {
+      setHasCreatedGoalOriented(true);
+    }
+
+    // Lógica para crear la carta
+    console.log(`Created card of type: ${type}`);
+  };
+
+  const handleAddGoal = (newGoal) => {
+    dispatch({ type: 'ADD_GOAL', payload: newGoal });
+    setShowGoalForm(false);
   };
 
   return (
@@ -334,6 +351,70 @@ export function MysticForge() {
             <div className="text-purple-400 font-semibold mb-2">✨ Smart Generation</div>
             <p>Creates cards optimized for your character type with appropriate difficulty, energy cost, and skill bonuses.</p>
           </div>
+        </div>
+      </div>
+
+      {/* Create Card Buttons */}
+      <div>
+        <button
+          onClick={() => handleCreateCard("Goal-Oriented")}
+          className="btn-primary"
+        >
+          Create Goal-Oriented
+        </button>
+
+        <button
+          onClick={() => handleCreateCard("Daily Optimized")}
+          className="btn-secondary"
+          disabled={!hasCreatedGoalOriented} // Deshabilitado hasta que se cree un "Goal-Oriented"
+        >
+          Create Daily Optimized
+        </button>
+
+        <button
+          onClick={() => handleCreateCard("Situational")}
+          className="btn-secondary"
+          disabled={!hasCreatedGoalOriented} // Deshabilitado hasta que se cree un "Goal-Oriented"
+        >
+          Create Situational
+        </button>
+
+        {!hasCreatedGoalOriented && (
+          <p className="text-sm text-gray-500">
+            You must create a "Goal-Oriented" card first to unlock other types.
+          </p>
+        )}
+      </div>
+
+      {/* Goal Management Section */}
+      <div className="space-y-8 p-8 bg-slate-900 min-h-screen">
+        <h1 className="text-4xl font-bold text-amber-200 mb-4">Goal Management</h1>
+
+        {/* Botón para abrir el formulario */}
+        <button 
+          onClick={() => setShowGoalForm(true)} 
+          className="px-4 py-2 bg-amber-500 text-slate-900 rounded-lg hover:bg-amber-600"
+        >
+          Add New Goal
+        </button>
+
+        {/* Formulario de creación de objetivos */}
+        {showGoalForm && (
+          <GoalCreationForm 
+            characterClass={character.class}
+            onSubmit={handleAddGoal}
+            onClose={() => setShowGoalForm(false)}
+          />
+        )}
+
+        {/* Lista de objetivos */}
+        <div className="space-y-4">
+          {goals.map((goal) => (
+            <div key={goal.id} className="bg-slate-800 p-4 rounded-lg">
+              <h3 className="text-xl font-bold text-amber-200">{goal.title}</h3>
+              <p className="text-slate-300">{goal.description}</p>
+            </div>
+          ))}
         </div>
       </div>
     </div>
