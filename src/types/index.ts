@@ -79,6 +79,8 @@ export interface AppData {
     daily: Card[];
     lastGenerated: Date;
   };
+  // Guild System data
+  guild: GuildData;
 }
 
 export interface Goal {
@@ -300,6 +302,64 @@ export interface DailyProgress {
   goalsAdvanced: string[];
   mood: 'excellent' | 'good' | 'neutral' | 'poor' | 'terrible';
   notes: string;
+}
+
+// Guild System Types
+export interface Guild {
+  id: string;
+  name: string;
+  level: number;
+  members: number;
+  rank: string;
+  joinedDate: string;
+}
+
+export interface Friend {
+  id: number;
+  name: string;
+  class: CharacterClass;
+  level: number;
+  status: 'online' | 'offline';
+  streak: number;
+}
+
+export interface FriendRequest {
+  id: number;
+  from: {
+    id: number;
+    name: string;
+    class: CharacterClass;
+    level: number;
+  };
+  message?: string;
+  sentAt: string;
+}
+
+export interface PrivacySettings {
+  profileVisibility: 'public' | 'friends' | 'private';
+  showStreak: boolean;
+  showLevel: boolean;
+  showGoals: 'public' | 'friends' | 'private';
+  showAchievements: boolean;
+  allowFriendRequests: boolean;
+  allowGuildInvites: boolean;
+}
+
+export interface NotificationSettings {
+  friendRequests: boolean;
+  guildInvites: boolean;
+  goalReminders: boolean;
+  achievementUnlocks: boolean;
+  weeklyReport: boolean;
+  friendActivity: boolean;
+}
+
+export interface GuildData {
+  currentGuild: Guild | null;
+  friends: Friend[];
+  friendRequests: FriendRequest[];
+  privacy: PrivacySettings;
+  notifications: NotificationSettings;
 }
 
 export type PageType = 'character-hub' | 'card-deck' | 'training-ground' | 'character-sheet' | 'guild-settings' | 'personality-test' | 'class-reveal';

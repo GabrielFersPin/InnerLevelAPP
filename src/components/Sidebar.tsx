@@ -32,7 +32,7 @@ export function Sidebar({ currentPage, onPageChange }: SidebarProps) {
         {navigation.map((item) => {
           const Icon = item.icon;
           const isActive = currentPage === item.id;
-          const isNewFeature = ['ai-card-generator', 'training-ground', 'character-sheet'].includes(item.id);
+          const isNewFeature = ['ai-card-generator', 'training-ground', 'character-sheet', 'guild-settings'].includes(item.id);
           
           return (
             <button

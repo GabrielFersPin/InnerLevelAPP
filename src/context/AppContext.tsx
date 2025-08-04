@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { AppData, Task, Habit, Todo, Reward, RedeemedReward, EmotionalLog, Goal, Card, Quest, CardResult, Character, CharacterClass, PersonalityTestResult } from '../types/index';
+import { AppData, Task, Habit, Todo, Reward, RedeemedReward, EmotionalLog, Goal, Card, Quest, CardResult, Character, CharacterClass, PersonalityTestResult, GuildData, Guild, Friend, FriendRequest, PrivacySettings, NotificationSettings } from '../types/index';
 import { createNewCharacter } from '../data/characterClasses';
 
 interface AppState extends AppData {}
@@ -39,7 +39,17 @@ type AppAction =
   | { type: 'GENERATE_RECOMMENDATIONS'; payload: Card[] }
   | { type: 'UPDATE_ENERGY_FROM_TIME' }
   | { type: 'LOAD_DATA'; payload: AppData }
-  | { type: 'UPDATE_CARD'; payload: Card };
+  | { type: 'UPDATE_CARD'; payload: Card }
+  // Guild Actions
+  | { type: 'JOIN_GUILD'; payload: Guild }
+  | { type: 'LEAVE_GUILD' }
+  | { type: 'ADD_FRIEND'; payload: Friend }
+  | { type: 'REMOVE_FRIEND'; payload: number }
+  | { type: 'ADD_FRIEND_REQUEST'; payload: FriendRequest }
+  | { type: 'ACCEPT_FRIEND_REQUEST'; payload: number }
+  | { type: 'DECLINE_FRIEND_REQUEST'; payload: number }
+  | { type: 'UPDATE_PRIVACY_SETTINGS'; payload: Partial<PrivacySettings> }
+  | { type: 'UPDATE_NOTIFICATION_SETTINGS'; payload: Partial<NotificationSettings> };
 
 const initialState: AppState = {
   tasks: [],
@@ -86,6 +96,29 @@ const initialState: AppState = {
   recommendations: {
     daily: [],
     lastGenerated: new Date()
+  },
+  // Guild System initial state
+  guild: {
+    currentGuild: null,
+    friends: [],
+    friendRequests: [],
+    privacy: {
+      profileVisibility: 'friends',
+      showStreak: true,
+      showLevel: true,
+      showGoals: 'friends',
+      showAchievements: true,
+      allowFriendRequests: true,
+      allowGuildInvites: true
+    },
+    notifications: {
+      friendRequests: true,
+      guildInvites: true,
+      goalReminders: true,
+      achievementUnlocks: true,
+      weeklyReport: true,
+      friendActivity: false
+    }
   }
 };
 
@@ -388,6 +421,102 @@ function appReducer(state: AppState, action: AppAction): AppState {
         }
       };
     
+    // Guild Reducers
+    case 'JOIN_GUILD':
+      return {
+        ...state,
+        guild: {
+          ...state.guild,
+          currentGuild: action.payload
+        }
+      };
+    
+    case 'LEAVE_GUILD':
+      return {
+        ...state,
+        guild: {
+          ...state.guild,
+          currentGuild: null
+        }
+      };
+    
+    case 'ADD_FRIEND':
+      return {
+        ...state,
+        guild: {
+          ...state.guild,
+          friends: [...state.guild.friends, action.payload]
+        }
+      };
+    
+    case 'REMOVE_FRIEND':
+      return {
+        ...state,
+        guild: {
+          ...state.guild,
+          friends: state.guild.friends.filter(friend => friend.id !== action.payload)
+        }
+      };
+    
+    case 'ADD_FRIEND_REQUEST':
+      return {
+        ...state,
+        guild: {
+          ...state.guild,
+          friendRequests: [...state.guild.friendRequests, action.payload]
+        }
+      };
+    
+    case 'ACCEPT_FRIEND_REQUEST': {
+      const request = state.guild.friendRequests.find(req => req.id === action.payload);
+      if (!request) return state;
+      
+      const newFriend: Friend = {
+        id: request.from.id,
+        name: request.from.name,
+        class: request.from.class,
+        level: request.from.level,
+        status: 'offline',
+        streak: 0
+      };
+      
+      return {
+        ...state,
+        guild: {
+          ...state.guild,
+          friends: [...state.guild.friends, newFriend],
+          friendRequests: state.guild.friendRequests.filter(req => req.id !== action.payload)
+        }
+      };
+    }
+    
+    case 'DECLINE_FRIEND_REQUEST':
+      return {
+        ...state,
+        guild: {
+          ...state.guild,
+          friendRequests: state.guild.friendRequests.filter(req => req.id !== action.payload)
+        }
+      };
+    
+    case 'UPDATE_PRIVACY_SETTINGS':
+      return {
+        ...state,
+        guild: {
+          ...state.guild,
+          privacy: { ...state.guild.privacy, ...action.payload }
+        }
+      };
+    
+    case 'UPDATE_NOTIFICATION_SETTINGS':
+      return {
+        ...state,
+        guild: {
+          ...state.guild,
+          notifications: { ...state.guild.notifications, ...action.payload }
+        }
+      };
+    
     default:
       return state;
   }
@@ -423,11 +552,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         cards: JSON.parse(localStorage.getItem('innerlevel_cards') || 'null'),
         quests: JSON.parse(localStorage.getItem('innerlevel_quests') || 'null'),
         energy: JSON.parse(localStorage.getItem('innerlevel_energy') || 'null'),
-        recommendations: JSON.parse(localStorage.getItem('innerlevel_recommendations') || 'null')
+        recommendations: JSON.parse(localStorage.getItem('innerlevel_recommendations') || 'null'),
+        // Guild System data
+        guild: JSON.parse(localStorage.getItem('innerlevel_guild') || 'null')
       };
 
       // Only load if we have existing data, otherwise keep initial state
-      if (savedData.tasks.length > 0 || savedData.todos.length > 0 || savedData.redeemedRewards.length > 0 || savedData.goals.length > 0 || savedData.cards || savedData.character) {
+      if (savedData.tasks.length > 0 || savedData.todos.length > 0 || savedData.redeemedRewards.length > 0 || savedData.goals.length > 0 || savedData.cards || savedData.character || savedData.guild) {
         dispatch({
           type: 'LOAD_DATA',
           payload: {
@@ -438,7 +569,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             cards: savedData.cards || initialState.cards,
             quests: savedData.quests || initialState.quests,
             energy: savedData.energy || initialState.energy,
-            recommendations: savedData.recommendations || initialState.recommendations
+            recommendations: savedData.recommendations || initialState.recommendations,
+            guild: savedData.guild || initialState.guild
           }
         });
       }
@@ -466,6 +598,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('innerlevel_quests', JSON.stringify(state.quests));
       localStorage.setItem('innerlevel_energy', JSON.stringify(state.energy));
       localStorage.setItem('innerlevel_recommendations', JSON.stringify(state.recommendations));
+      // Guild System localStorage
+      localStorage.setItem('innerlevel_guild', JSON.stringify(state.guild));
     } catch (error) {
       console.error('Error saving to localStorage:', error);
     }

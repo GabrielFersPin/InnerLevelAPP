@@ -1,0 +1,17 @@
+column_name,data_type,is_nullable,column_default
+user_id,uuid,NO,null
+character,jsonb,YES,'{}'::jsonb
+cards,jsonb,YES,'[]'::jsonb
+is_onboarded,boolean,YES,false
+created_at,timestamp with time zone,YES,now()
+updated_at,timestamp with time zone,YES,now()
+quests,jsonb,YES,'{}'::jsonb
+energy,jsonb,YES,'{}'::jsonb
+recommendations,jsonb,YES,'{}'::jsonb
+emotional_logs,jsonb,YES,'[]'::jsonb
+goals,jsonb,YES,'[]'::jsonb
+tasks,jsonb,YES,'[]'::jsonb
+habits,jsonb,YES,'[]'::jsonb
+todos,jsonb,YES,'[]'::jsonb
+rewards,jsonb,YES,'[]'::jsonb
+redeemed_rewards,jsonb,YES,'[]'::jsonb

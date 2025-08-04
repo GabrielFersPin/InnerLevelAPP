@@ -7,6 +7,7 @@ import { CardDeck } from './components/cards/CardDeck';
 import { MysticForge } from './components/cards/MysticForge';
 import { ClassReveal } from './components/onboarding/ClassReveal';
 import { AuthModal } from './components/Auth/AuthModal';
+import { GuildSettings } from './components/GuildSettings';
 import { PageType } from './types';
 import { CharacterClass } from './types';
 import { useAppContext } from './context/AppContext';
@@ -103,7 +104,7 @@ function App() {
       case 'character-sheet':
         return <CharacterSheet />;
       case 'guild-settings':
-        return <div className="text-amber-200">Guild Settings - Coming Soon</div>;
+        return <GuildSettings />;
       // Legacy pages (for migration)
       case 'log-activity':
         return <div className="text-amber-200">Log Activity - Coming Soon</div>;
