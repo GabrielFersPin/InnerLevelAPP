@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAppContext } from '../../context/AppContext';
 import { ArcaneEngine } from "../../services/arcaneEngine";
 import { getClassTheme } from '../../data/characterClasses';
-import { Brain, Sparkles, RefreshCw, Clock, Target, Zap, Plus } from 'lucide-react';
+import { Brain, Sparkles, RefreshCw, Clock, Target, Zap, Plus, CreditCard } from 'lucide-react';
 import type { Card } from '../../types/index';
 import GoalCreationForm from './GoalCreationForm';
 
@@ -11,62 +11,56 @@ export function MysticForge() {
   const { character, goals } = state;
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedCards, setGeneratedCards] = useState<Card[]>([]);
-  const [situation, setSituation] = useState('');
   const [goalDescription, setGoalDescription] = useState('');
   const [timeframe, setTimeframe] = useState(7);
-  const [generationType, setGenerationType] = useState<'daily' | 'goal' | 'situation'>('daily');
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [hasCreatedGoalOriented, setHasCreatedGoalOriented] = useState(false);
   const [showGoalForm, setShowGoalForm] = useState(false);
-
-  // Demo mode detection
-  const isDemoMode = !import.meta.env.VITE_CLAUDE_API_KEY || !import.meta.env.VITE_CLAUDE_API_ENDPOINT;
+  const [usage, setUsage] = useState<{ period: string; generations: { used: number; limit: number }; tokens: { used: number; limit: number } } | null>(null);
+  const paymentUrl = import.meta.env.VITE_PAYMENT_URL || '/pricing';
 
   if (!character) return null;
 
   const theme = getClassTheme(character.class);
 
+  const fetchUsage = async () => {
+    try {
+      const userId = (state as any)?.user?.id || (state as any)?.auth?.user?.id || 'anonymous';
+      const res = await fetch(`http://localhost:5000/api/usage?userId=${encodeURIComponent(userId)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setUsage(data);
+      }
+    } catch (e) {
+      // ignore
+    }
+  };
+
+  const outOfTokens = usage ? usage.tokens.used >= usage.tokens.limit : false;
+  const outOfGenerations = usage ? usage.generations.used >= usage.generations.limit : false;
+
+  useEffect(() => {
+    fetchUsage();
+  }, []);
+
   const handleGenerateCards = async () => {
+    if (outOfTokens || outOfGenerations) {
+      window.open(paymentUrl, '_blank');
+      return;
+    }
     setIsGenerating(true);
     try {
       let cards: Card[] = [];
-      const currentGoals = character.currentGoals || [];
-      const goalTitles = currentGoals.map(g => g.title || '').filter(Boolean);
-      const goalDescriptions = currentGoals.map(g => g.description || '').filter(Boolean);
-      switch (generationType) {
-        case 'daily':
-          if (goalTitles.length > 0) {
-            // Use goals as context for daily cards
-            cards = await ArcaneEngine.generateContextualCards(
-              'Daily Focus',
-              goalTitles,
-              []
-            );
-          } else {
-            // Fallback to character-based daily
-            const dailyRec = await ArcaneEngine.getSmartRecommendations(character);
-            cards = dailyRec.cards;
-          }
-          break;
-        case 'goal':
-          if (goalDescription.trim()) {
-            cards = await ArcaneEngine.generateGoalCards(character, goalDescription, timeframe);
-          }
-          break;
-        case 'situation':
-          if (situation.trim()) {
-            // Use goals as context for situational cards
-            cards = await ArcaneEngine.generateContextualCards(
-              situation,
-              goalTitles,
-              []
-            );
-          }
-          break;
+      if (goalDescription.trim()) {
+        // Use authenticated user id if available
+        const userId = (state as any)?.user?.id || (state as any)?.auth?.user?.id || 'anonymous';
+        cards = await ArcaneEngine.generateGoalCards(character, goalDescription, timeframe, userId);
       }
       setGeneratedCards(cards);
     } catch (error) {
       console.error('Failed to generate cards:', error);
+      alert(typeof error?.message === 'string' && error.message.includes('quota')
+        ? 'Monthly AI generation quota reached. Try again next month.'
+        : 'Failed to generate cards. Please try again.');
       // Show fallback cards
       setGeneratedCards([]);
     } finally {
@@ -85,14 +79,7 @@ export function MysticForge() {
     setGeneratedCards([]);
   };
 
-  const handleCreateCard = (type: string) => {
-    if (type === "Goal-Oriented") {
-      setHasCreatedGoalOriented(true);
-    }
-
-    // Lógica para crear la carta
-    console.log(`Created card of type: ${type}`);
-  };
+  // Removed manual create buttons for non goal-oriented types
 
   const handleAddGoal = (newGoal) => {
     dispatch({ type: 'ADD_GOAL', payload: newGoal });
@@ -101,21 +88,7 @@ export function MysticForge() {
 
   return (
     <div className="space-y-8">
-      {/* Demo Mode Banner */}
-      {isDemoMode && (
-        <div className="bg-gradient-to-r from-amber-600 to-amber-400 text-slate-900 font-bold px-6 py-3 rounded-xl shadow-lg text-center mb-4 border-2 border-amber-300 animate-pulse">
-          Demo Mode: AI-powered card generation is limited. <br />
-          <span className="font-normal">Upgrade to unlock personalized AI cards and advanced features!</span>
-          <div className="mt-3 flex justify-center">
-            <button
-              className="bg-purple-700 hover:bg-purple-800 text-white font-bold py-2 px-6 rounded-xl shadow-lg transition-all duration-300"
-              onClick={() => setShowUpgradeModal(true)}
-            >
-              Upgrade to Premium
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Removed demo/upgrade banner */}
       {/* Header */}
       <div className="text-center">
         <h1 className="text-4xl font-bold text-amber-200 mb-2">
@@ -133,81 +106,41 @@ export function MysticForge() {
           Spellcrafting Options
         </h3>
 
-        {/* Generation Type Selector */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-amber-200 mb-3">
-            Generation Type
-          </label>
-          <div className="grid md:grid-cols-3 gap-4">
-            {[
-              { id: 'daily', label: 'Daily Optimized', desc: 'Cards for today based on your energy and schedule' },
-              { id: 'goal', label: 'Goal-Oriented', desc: 'Cards specifically designed to achieve a goal' },
-              { id: 'situation', label: 'Situational', desc: 'Cards for a specific situation or challenge' }
-            ].map((type) => (
-              <button
-                key={type.id}
-                onClick={() => setGenerationType(type.id as any)}
-                className={`p-4 rounded-xl border-2 transition-all text-left ${
-                  generationType === type.id
-                    ? 'border-purple-500 bg-purple-900/30'
-                    : 'border-slate-600 bg-slate-700/30 hover:border-slate-500'
-                }`}
-              >
-                <h4 className="font-semibold text-slate-200 mb-1">{type.label}</h4>
-                <p className="text-sm text-slate-400">{type.desc}</p>
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* Only goal-oriented generation is supported */}
 
         {/* Conditional Inputs */}
-        {generationType === 'goal' && (
-          <div className="grid md:grid-cols-2 gap-6 mb-6">
-            <div>
-              <label className="block text-sm font-medium text-amber-200 mb-2">
-                Goal Description
-              </label>
-              <textarea
-                value={goalDescription}
-                onChange={(e) => setGoalDescription(e.target.value)}
-                placeholder="e.g., Learn Python programming, Run a 10K, Build a mobile app..."
-                className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 placeholder-slate-400 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 resize-none"
-                rows={3}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-amber-200 mb-2">
-                Timeframe (days)
-              </label>
-              <input
-                type="number"
-                value={timeframe}
-                onChange={(e) => setTimeframe(parseInt(e.target.value) || 7)}
-                min="1"
-                max="365"
-                className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-              />
-              <p className="text-xs text-slate-400 mt-1">
-                Recommended: 7-30 days for most goals
-              </p>
-            </div>
-          </div>
-        )}
-
-        {generationType === 'situation' && (
-          <div className="mb-6">
+        <div className="grid md:grid-cols-2 gap-6 mb-6">
+          <div>
             <label className="block text-sm font-medium text-amber-200 mb-2">
-              Situation Description
+              Goal Description
             </label>
             <textarea
-              value={situation}
-              onChange={(e) => setSituation(e.target.value)}
-              placeholder="e.g., Preparing for a job interview, Dealing with stress, Starting a new project..."
+              value={goalDescription}
+              onChange={(e) => setGoalDescription(e.target.value)}
+              placeholder="e.g., Learn Python programming, Run a 10K, Build a mobile app..."
               className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 placeholder-slate-400 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 resize-none"
               rows={3}
             />
           </div>
-        )}
+          <div>
+            <label className="block text-sm font-medium text-amber-200 mb-2">
+              Timeframe (days)
+            </label>
+            <input
+              type="number"
+              value={timeframe}
+              onChange={(e) => setTimeframe(parseInt(e.target.value) || 7)}
+              min="1"
+              max="365"
+              className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+            />
+            <p className="text-xs text-slate-400 mt-1">
+              Recommended: 7-30 days for most goals
+            </p>
+          </div>
+        </div>
+
+        {/* Goal-oriented only */}
 
         {/* Character Context Display */}
         <div className="mb-6 p-4 bg-slate-700/30 rounded-lg">
@@ -228,10 +161,38 @@ export function MysticForge() {
           </div>
         </div>
 
+        {/* Token Quota Graph + Pay button */}
+        <div className="mb-6 p-4 bg-slate-700/30 rounded-lg">
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-sm font-semibold text-slate-300">Monthly Token Usage</h4>
+            <button onClick={fetchUsage} className="text-xs text-amber-300 hover:text-amber-200">Refresh</button>
+          </div>
+          {usage ? (
+            <div>
+              <div className="text-xs text-slate-400 mb-1">{usage.tokens.used} / {usage.tokens.limit} tokens</div>
+              <div className="w-full h-3 bg-slate-700 rounded-full overflow-hidden">
+                <div
+                  className="h-3 bg-gradient-to-r from-amber-500 to-amber-600"
+                  style={{ width: `${Math.min(100, (usage.tokens.used / Math.max(1, usage.tokens.limit)) * 100)}%` }}
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="text-xs text-slate-500">Click Refresh to load your usage.</div>
+          )}
+          <div className="mt-4 flex justify-end">
+            <a href={paymentUrl} target="_blank" rel="noreferrer"
+               className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg">
+              <CreditCard className="w-4 h-4" />
+              Pay to Generate
+            </a>
+          </div>
+        </div>
+
         {/* Generate Button */}
         <button
           onClick={handleGenerateCards}
-          disabled={isGenerating || (generationType === 'goal' && !goalDescription.trim()) || (generationType === 'situation' && !situation.trim())}
+          disabled={isGenerating || !goalDescription.trim()}
           className="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isGenerating ? (
@@ -242,7 +203,7 @@ export function MysticForge() {
           ) : (
             <span className="flex items-center justify-center">
               <Sparkles className="w-5 h-5 mr-2" />
-              Generate {generationType === 'daily' ? 'Daily' : generationType === 'goal' ? 'Goal' : 'Situational'} Cards
+              {outOfTokens || outOfGenerations ? 'Pay to Generate' : 'Generate Goal-Oriented Cards'}
             </span>
           )}
         </button>
@@ -354,37 +315,7 @@ export function MysticForge() {
         </div>
       </div>
 
-      {/* Create Card Buttons */}
-      <div>
-        <button
-          onClick={() => handleCreateCard("Goal-Oriented")}
-          className="btn-primary"
-        >
-          Create Goal-Oriented
-        </button>
-
-        <button
-          onClick={() => handleCreateCard("Daily Optimized")}
-          className="btn-secondary"
-          disabled={!hasCreatedGoalOriented} // Deshabilitado hasta que se cree un "Goal-Oriented"
-        >
-          Create Daily Optimized
-        </button>
-
-        <button
-          onClick={() => handleCreateCard("Situational")}
-          className="btn-secondary"
-          disabled={!hasCreatedGoalOriented} // Deshabilitado hasta que se cree un "Goal-Oriented"
-        >
-          Create Situational
-        </button>
-
-        {!hasCreatedGoalOriented && (
-          <p className="text-sm text-gray-500">
-            You must create a "Goal-Oriented" card first to unlock other types.
-          </p>
-        )}
-      </div>
+      {/* Goal-oriented only */}
 
       {/* Goal Management Section */}
       <div className="space-y-8 p-8 bg-slate-900 min-h-screen">

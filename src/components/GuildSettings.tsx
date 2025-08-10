@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
-import { Settings, User, Shield, Bell, Palette, Database, Moon, Sun, Volume2, VolumeX } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { Settings, User, Shield, Bell, Palette, Database, Moon, Sun } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 
 export function GuildSettings() {
   const { state, dispatch } = useAppContext();
   const [activeTab, setActiveTab] = useState('general');
-  const [darkMode, setDarkMode] = useState(true);
-  const [soundEnabled, setSoundEnabled] = useState(true);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const tabs = [
     { id: 'general', label: 'General', icon: Settings },
@@ -32,14 +31,20 @@ export function GuildSettings() {
               <p className="text-slate-400 text-sm">Toggle between light and dark themes</p>
             </div>
             <button
-              onClick={() => setDarkMode(!darkMode)}
+              onClick={() => dispatch({ 
+                type: 'UPDATE_PREFERENCES', 
+                payload: { 
+                  darkMode: !state.guild.preferences.darkMode,
+                  theme: !state.guild.preferences.darkMode ? 'dark' : 'light'
+                } 
+              })}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                darkMode ? 'bg-amber-600' : 'bg-slate-600'
+                state.guild.preferences.darkMode ? 'bg-amber-600' : 'bg-slate-600'
               }`}
             >
               <span
                 className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  darkMode ? 'translate-x-6' : 'translate-x-1'
+                  state.guild.preferences.darkMode ? 'translate-x-6' : 'translate-x-1'
                 }`}
               />
             </button>
@@ -51,14 +56,17 @@ export function GuildSettings() {
               <p className="text-slate-400 text-sm">Enable audio feedback for actions</p>
             </div>
             <button
-              onClick={() => setSoundEnabled(!soundEnabled)}
+              onClick={() => dispatch({ 
+                type: 'UPDATE_PREFERENCES', 
+                payload: { soundEnabled: !state.guild.preferences.soundEnabled } 
+              })}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                soundEnabled ? 'bg-amber-600' : 'bg-slate-600'
+                state.guild.preferences.soundEnabled ? 'bg-amber-600' : 'bg-slate-600'
               }`}
             >
               <span
                 className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  soundEnabled ? 'translate-x-6' : 'translate-x-1'
+                  state.guild.preferences.soundEnabled ? 'translate-x-6' : 'translate-x-1'
                 }`}
               />
             </button>
@@ -422,11 +430,17 @@ export function GuildSettings() {
           <div>
             <label className="text-slate-200 font-medium">Theme</label>
             <div className="mt-2 flex gap-2">
-              <button className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-slate-900 rounded-lg">
+              <button
+                onClick={() => dispatch({ type: 'UPDATE_PREFERENCES', payload: { theme: 'dark', darkMode: true } })}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg ${state.guild.preferences.theme === 'dark' ? 'bg-amber-600 text-slate-900' : 'bg-slate-700 text-slate-200 hover:bg-slate-600'}`}
+              >
                 <Moon className="w-4 h-4" />
                 Dark
               </button>
-              <button className="flex items-center gap-2 px-4 py-2 bg-slate-700 text-slate-200 rounded-lg hover:bg-slate-600">
+              <button
+                onClick={() => dispatch({ type: 'UPDATE_PREFERENCES', payload: { theme: 'light', darkMode: false } })}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg ${state.guild.preferences.theme === 'light' ? 'bg-amber-600 text-slate-900' : 'bg-slate-700 text-slate-200 hover:bg-slate-600'}`}
+              >
                 <Sun className="w-4 h-4" />
                 Light
               </button>
@@ -436,13 +450,15 @@ export function GuildSettings() {
           <div>
             <label className="text-slate-200 font-medium">Accent Color</label>
             <div className="mt-2 flex gap-2">
-              {['amber', 'emerald', 'blue', 'purple', 'rose'].map((color) => (
+              {(['amber', 'emerald', 'blue', 'purple', 'rose'] as const).map((color) => (
                 <button
                   key={color}
+                  onClick={() => dispatch({ type: 'UPDATE_PREFERENCES', payload: { accentColor: color } })}
                   className={`w-8 h-8 rounded-full border-2 ${
-                    color === 'amber' ? 'border-white' : 'border-slate-600'
+                    state.guild.preferences.accentColor === color ? 'border-white' : 'border-slate-600'
                   }`}
                   style={{ backgroundColor: `var(--${color}-500)` }}
+                  aria-label={`Select ${color} accent`}
                 />
               ))}
             </div>
@@ -461,15 +477,89 @@ export function GuildSettings() {
         </h3>
         
         <div className="space-y-4">
-          <button className="w-full px-4 py-2 bg-amber-600 text-slate-900 rounded-lg hover:bg-amber-500 transition-colors">
+          <button
+            onClick={() => {
+              const backup = {
+                tasks: state.tasks,
+                habits: state.habits,
+                todos: state.todos,
+                rewards: state.rewards,
+                redeemedRewards: state.redeemedRewards,
+                emotionalLogs: state.emotionalLogs,
+                goals: state.goals,
+                character: state.character,
+                cards: state.cards,
+                quests: state.quests,
+                energy: state.energy,
+                recommendations: state.recommendations,
+                guild: state.guild
+              };
+              const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `LifeQuest_Backup_${new Date().toISOString().slice(0,10)}.json`;
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              URL.revokeObjectURL(url);
+            }}
+            className="w-full px-4 py-2 bg-amber-600 text-slate-900 rounded-lg hover:bg-amber-500 transition-colors"
+          >
             Export Character Data
           </button>
           
-          <button className="w-full px-4 py-2 bg-slate-700 text-slate-200 rounded-lg hover:bg-slate-600 transition-colors">
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full px-4 py-2 bg-slate-700 text-slate-200 rounded-lg hover:bg-slate-600 transition-colors"
+          >
             Import Character Data
           </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/json"
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+                // Basic validation: ensure object
+                if (typeof data !== 'object' || data === null) throw new Error('Invalid file');
+                dispatch({ type: 'LOAD_DATA', payload: {
+                  tasks: data.tasks ?? state.tasks,
+                  habits: data.habits ?? state.habits,
+                  todos: data.todos ?? state.todos,
+                  rewards: data.rewards ?? state.rewards,
+                  redeemedRewards: data.redeemedRewards ?? state.redeemedRewards,
+                  emotionalLogs: data.emotionalLogs ?? state.emotionalLogs,
+                  goals: data.goals ?? state.goals,
+                  character: data.character ?? state.character,
+                  cards: data.cards ?? state.cards,
+                  quests: data.quests ?? state.quests,
+                  energy: data.energy ?? state.energy,
+                  recommendations: data.recommendations ?? state.recommendations,
+                  guild: data.guild ?? state.guild,
+                } });
+              } catch (err) {
+                console.error('Failed to import backup:', err);
+                alert('Failed to import backup file.');
+              } finally {
+                e.currentTarget.value = '';
+              }
+            }}
+          />
           
-          <button className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 transition-colors">
+          <button
+            onClick={() => {
+              if (confirm('Are you sure you want to reset all progress? This cannot be undone.')) {
+                dispatch({ type: 'RESET_ALL_PROGRESS' });
+              }
+            }}
+            className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 transition-colors"
+          >
             Reset All Progress
           </button>
         </div>

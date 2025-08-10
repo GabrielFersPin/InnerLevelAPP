@@ -6,6 +6,14 @@ require('dotenv').config();
 const app = express();
 const port = 5000;
 
+// Simple in-file usage store (can be replaced with DB)
+const { getUserUsage, incrementUserUsage } = require('./usageStore');
+
+// Basic config
+const MONTHLY_GENERATION_LIMIT = parseInt(process.env.MONTHLY_GENERATION_LIMIT || '8', 10); // per user
+const MAX_TOKENS_PER_REQUEST = parseInt(process.env.MAX_TOKENS_PER_REQUEST || '500', 10);
+const MONTHLY_TOKEN_LIMIT = parseInt(process.env.MONTHLY_TOKEN_LIMIT || '100000', 10);
+
 // Middleware
 app.use(express.json());
 app.use(cors());
@@ -17,10 +25,26 @@ const openai = new OpenAI({
 
 // Endpoint for OpenAI Chat Completions (API nueva)
 app.post("/api/openai", async (req, res) => {
-  const { model, messages, temperature, max_tokens } = req.body;
+  const { model, messages, temperature, max_tokens, userId } = req.body;
 
   if (!messages || !Array.isArray(messages)) {
     return res.status(400).json({ error: "Messages array is required" });
+  }
+
+  // Require a userId to enforce per-user quotas
+  if (!userId) {
+    return res.status(400).json({ error: "userId is required" });
+  }
+
+  // Check monthly quota
+  const usage = getUserUsage(userId);
+  if (usage.generations >= MONTHLY_GENERATION_LIMIT) {
+    return res.status(402).json({
+      error: {
+        code: 'quota_exceeded',
+        message: 'Monthly AI generation quota reached. Please wait until next month or upgrade your plan.'
+      }
+    });
   }
 
   try {
@@ -30,15 +54,20 @@ app.post("/api/openai", async (req, res) => {
       model: model || "gpt-4o-mini", // Modelo más económico
       messages: messages,
       temperature: temperature || 0.7,
-      max_tokens: max_tokens || 1500,
+      max_tokens: Math.min(max_tokens || 300, MAX_TOKENS_PER_REQUEST),
     });
 
     console.log('✅ OpenAI API response received');
-    
+    // Record usage (1 generation + tokens)
+    const usedTokens = completion.usage?.total_tokens || 0;
+    const after = incrementUserUsage(userId, { generations: 1, tokens: usedTokens });
+
     res.status(200).json({
       choices: completion.choices,
       usage: completion.usage,
-      model: completion.model
+      model: completion.model,
+      quota: { limit: MONTHLY_GENERATION_LIMIT, used: after.generations, period: after.period },
+      tokenQuota: { limit: MONTHLY_TOKEN_LIMIT, used: after.tokens }
     });
   } catch (error) {
     console.error("❌ Error calling OpenAI API:", error.message);
@@ -49,6 +78,20 @@ app.post("/api/openai", async (req, res) => {
       }
     });
   }
+});
+
+// Usage endpoint
+app.get('/api/usage', (req, res) => {
+  const userId = req.query.userId;
+  if (!userId) {
+    return res.status(400).json({ error: 'userId is required' });
+  }
+  const usage = getUserUsage(userId);
+  res.json({
+    period: usage.period,
+    generations: { used: usage.generations, limit: MONTHLY_GENERATION_LIMIT },
+    tokens: { used: usage.tokens, limit: MONTHLY_TOKEN_LIMIT }
+  });
 });
 
 // Health check endpoint

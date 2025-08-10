@@ -48,16 +48,15 @@ async function callOpenAI(prompt: string, options: any = {}): Promise<string> {
           }
         ],
         temperature: options.temperature || 0.7,
-        max_tokens: options.max_tokens || 1500
+        max_tokens: options.max_tokens || 500,
+        userId: options.userId || 'anonymous'
       })
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error?.message || `Backend error: ${response.status}`);
-    }
-
     const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data?.error?.message || `Backend error: ${response.status}`);
+    }
     console.log('✅ OpenAI response received successfully');
     
     return data.choices[0].message.content;
@@ -150,13 +149,15 @@ export class ArcaneEngine {
   static async generateGoalCards(
     character: Character,
     goalDescription: string,
-    timeframe: number
+    timeframe: number,
+    userId?: string
   ): Promise<Card[]> {
     const prompt = this.buildGoalCardsPrompt(character, goalDescription, timeframe);
     
     try {
       const response = await callOpenAI(prompt, {
         systemPrompt: 'You are a goal achievement strategist for the LifeQuest RPG. Create card sequences that help users achieve their specific goals using their character class strengths.'
+        , userId
       });
       return this.parseCardsResponse(response);
     } catch (error) {

@@ -1,100 +1,7 @@
 import React, { useState } from 'react';
 import { Target, Calendar, Clock, CheckCircle, Award, BarChart3, Trophy, Timer, Briefcase, TrendingUp, Brain, Heart, Users, Sparkles, DollarSign, BookOpen, Compass } from 'lucide-react';
-import GoalRecommendations from './GoalRecommendations';
-
-// Mock data and functions for demo
-const useAppContext = () => ({
-  state: {
-    character: {
-      id: '1',
-      name: 'Hero',
-      class: 'strategist',
-      level: 5,
-      experience: 2500,
-      streak: 7,
-      dailyProgress: { cardsCompleted: 3 },
-      skills: {
-        planning: { level: 3, experience: 75, totalXP: 375 },
-        analysis: { level: 2, experience: 50, totalXP: 250 },
-        leadership: { level: 2, experience: 25, totalXP: 225 }
-      }
-    },
-    goals: [
-      {
-        id: 1,
-        title: "Complete Project Management Certification",
-        description: "Get PMP certified to advance career prospects",
-        domain: 'career',
-        category: 'skill-development',
-        relatedSkills: ['planning', 'analysis', 'leadership'],
-        classAlignment: ['strategist'],
-        timeframe: '3 months',
-        priority: 'High',
-        status: 'Active',
-        createdAt: '2024-01-15',
-        progress: 35,
-        difficulty: 'Hard',
-        weeklyProgress: 12,
-        milestones: [
-          { id: '1', title: 'Complete study materials', targetProgress: 25, completed: true },
-          { id: '2', title: 'Pass practice exams', targetProgress: 50, completed: false },
-          { id: '3', title: 'Schedule and pass exam', targetProgress: 100, completed: false }
-        ]
-      },
-      {
-        id: 2,
-        title: "Build Morning Routine",
-        description: "Establish consistent morning habits for productivity",
-        domain: 'personal-growth',
-        category: 'productivity',
-        relatedSkills: ['discipline', 'planning'],
-        classAlignment: ['strategist', 'warrior'],
-        timeframe: '1 month',
-        priority: 'Medium',
-        status: 'Active',
-        createdAt: '2024-01-20',
-        progress: 60,
-        difficulty: 'Medium',
-        weeklyProgress: 15,
-        milestones: [
-          { id: '1', title: 'Wake up at 6 AM consistently', targetProgress: 33, completed: true },
-          { id: '2', title: 'Add exercise routine', targetProgress: 66, completed: true },
-          { id: '3', title: 'Add meditation practice', targetProgress: 100, completed: false }
-        ]
-      },
-      {
-        id: 3,
-        title: "Learn Spanish",
-        description: "Achieve conversational fluency in Spanish",
-        domain: 'education',
-        category: 'languages',
-        relatedSkills: ['learning', 'communication'],
-        classAlignment: ['sage', 'connector'],
-        timeframe: '6 months',
-        priority: 'Low',
-        status: 'Completed',
-        createdAt: '2023-07-01',
-        completedAt: '2024-01-10',
-        progress: 100,
-        difficulty: 'Hard',
-        weeklyProgress: 0,
-        milestones: []
-      }
-    ],
-    tasks: [
-      { id: 1, date: '2024-01-25', category: 'Professional', task: 'Study PMP Chapter 3', points: 10, comment: 'Focused study session' },
-      { id: 2, date: '2024-01-24', category: 'Personal', task: 'Morning meditation', points: 5 },
-      { id: 3, date: '2024-01-24', category: 'Professional', task: 'LinkedIn networking', points: 8 }
-    ],
-    cards: { inventory: [1, 2, 3] }
-  },
-  // Add dispatch function
-  dispatch: (action) => {
-    console.log('Dispatching action:', action);
-    // Here you would normally update your app state
-    // For now, we'll just log the action
-  }
-});
+// Removed recommendations to show only user-created goals
+import { useAppContext } from '../../context/AppContext';
 
 const classDescriptions = {
   strategist: { name: 'The Strategist', description: 'Master planner and analytical thinker' },
@@ -139,7 +46,7 @@ const getGoalDomainColor = (domain) => {
 };
 
 export default function CharacterSheet() {
-  const { state, dispatch } = useAppContext(); // Added dispatch here
+  const { state, dispatch } = useAppContext();
   const { character, goals, tasks } = state;
   const [activeTab, setActiveTab] = useState('goals');
   
@@ -215,45 +122,14 @@ export default function CharacterSheet() {
     return `${colors[difficulty] || colors['Medium']} px-2 py-0.5 rounded-full text-xs border`;
   };
 
-  // Group goals by domain
+  // Group goals by domain (only real goals from state)
   const goalsByDomain = activeGoals.reduce((acc, goal) => {
     if (!acc[goal.domain]) acc[goal.domain] = [];
     acc[goal.domain].push(goal);
     return acc;
   }, {});
 
-  // Enhanced goal selection handler
-  const handleSelectGoal = (recommendedGoal) => {
-    console.log('Selected goal:', recommendedGoal);
-    
-    // Create a new goal object with the proper structure
-    const newGoal = {
-      id: Date.now(), // Generate a unique ID
-      title: recommendedGoal.title,
-      description: recommendedGoal.description,
-      domain: recommendedGoal.domain || 'personal-growth',
-      category: recommendedGoal.category || 'general',
-      relatedSkills: recommendedGoal.relatedSkills || [],
-      classAlignment: recommendedGoal.classAlignment || [character.class],
-      timeframe: recommendedGoal.timeframe || '1 month',
-      priority: recommendedGoal.priority || 'Medium',
-      status: 'Active',
-      createdAt: new Date().toISOString().split('T')[0],
-      progress: 0,
-      difficulty: recommendedGoal.difficulty || 'Medium',
-      weeklyProgress: 0,
-      milestones: recommendedGoal.milestones || []
-    };
-    
-    // Dispatch the action to add the goal
-    dispatch({ 
-      type: 'ADD_GOAL', 
-      payload: newGoal 
-    });
-    
-    // Show user feedback
-    alert(`Goal "${newGoal.title}" has been added to your active goals!`);
-  };
+  // Removed recommendation-based adding; only show existing goals
 
   return (
     <div className="space-y-8 p-8 bg-slate-900 min-h-screen">
@@ -292,14 +168,7 @@ export default function CharacterSheet() {
       {/* Goals Tab */}
       {activeTab === 'goals' && (
         <div className="space-y-8">
-          {/* Goal Recommendations with proper handler */}
-          <GoalRecommendations 
-            character={character}
-            existingGoals={goals}
-            onSelectGoal={handleSelectGoal} // Use the enhanced handler
-          />
-          
-          {/* Rest of your existing goals content... */}
+          {/* Goals based solely on user-created data */}
           {Object.entries(goalsByDomain).map(([domain, domainGoals]) => {
             const DomainIcon = getDomainIcon(domain);
             return (

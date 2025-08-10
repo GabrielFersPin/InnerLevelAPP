@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import { AppData, Task, Habit, Todo, Reward, RedeemedReward, EmotionalLog, Goal, Card, Quest, CardResult, Character, CharacterClass, PersonalityTestResult, GuildData, Guild, Friend, FriendRequest, PrivacySettings, NotificationSettings } from '../types/index';
+import { AppData, Task, Habit, Todo, Reward, RedeemedReward, EmotionalLog, Goal, Card, Quest, CardResult, Character, CharacterClass, PersonalityTestResult, GuildData, Guild, Friend, FriendRequest, PrivacySettings, NotificationSettings, GuildPreferences } from '../types/index';
 import { createNewCharacter } from '../data/characterClasses';
 
 interface AppState extends AppData {}
@@ -51,7 +51,9 @@ type AppAction =
   | { type: 'ACCEPT_FRIEND_REQUEST'; payload: number }
   | { type: 'DECLINE_FRIEND_REQUEST'; payload: number }
   | { type: 'UPDATE_PRIVACY_SETTINGS'; payload: Partial<PrivacySettings> }
-  | { type: 'UPDATE_NOTIFICATION_SETTINGS'; payload: Partial<NotificationSettings> };
+  | { type: 'UPDATE_NOTIFICATION_SETTINGS'; payload: Partial<NotificationSettings> }
+  | { type: 'UPDATE_PREFERENCES'; payload: Partial<GuildPreferences> }
+  | { type: 'RESET_ALL_PROGRESS' };
 
 const initialState: AppState = {
   tasks: [],
@@ -120,6 +122,12 @@ const initialState: AppState = {
       achievementUnlocks: true,
       weeklyReport: true,
       friendActivity: false
+    },
+    preferences: {
+      darkMode: true,
+      soundEnabled: true,
+      theme: 'dark',
+      accentColor: 'amber'
     }
   }
 };
@@ -138,6 +146,22 @@ function appReducer(state: AppState, action: AppAction): AppState {
         quests: {
           active: Array.isArray(action.payload.quests?.active) ? action.payload.quests.active : [],
           completed: Array.isArray(action.payload.quests?.completed) ? action.payload.quests.completed : []
+        },
+        guild: {
+          ...state.guild,
+          ...(action.payload.guild || {}),
+          privacy: {
+            ...state.guild.privacy,
+            ...(action.payload.guild?.privacy || {})
+          },
+          notifications: {
+            ...state.guild.notifications,
+            ...(action.payload.guild?.notifications || {})
+          },
+          preferences: {
+            ...state.guild.preferences,
+            ...(action.payload.guild as any)?.preferences || state.guild.preferences
+          }
         }
       };
       return loadedData;
@@ -551,6 +575,34 @@ function appReducer(state: AppState, action: AppAction): AppState {
           notifications: { ...state.guild.notifications, ...action.payload }
         }
       };
+
+    case 'UPDATE_PREFERENCES':
+      return {
+        ...state,
+        guild: {
+          ...state.guild,
+          preferences: { ...state.guild.preferences, ...action.payload }
+        }
+      };
+
+    case 'RESET_ALL_PROGRESS': {
+      return {
+        ...state,
+        tasks: [],
+        todos: [],
+        goals: [],
+        rewards: initialState.rewards,
+        redeemedRewards: [],
+        emotionalLogs: [],
+        cards: { inventory: [], activeCards: [], cooldowns: {} },
+        quests: { active: [], completed: [] },
+        energy: { ...initialState.energy, lastUpdate: new Date() },
+        recommendations: initialState.recommendations,
+        // Preserve character and guild settings (including preferences, privacy, notifications)
+        character: { ...state.character },
+        guild: { ...state.guild }
+      };
+    }
     
     default:
       return state;

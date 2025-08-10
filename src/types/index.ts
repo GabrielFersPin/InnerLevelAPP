@@ -592,12 +592,23 @@ export interface NotificationSettings {
   friendActivity: boolean;
 }
 
+// UI and experience preferences for the guild/user
+export type AccentColor = 'amber' | 'emerald' | 'blue' | 'purple' | 'rose';
+
+export interface GuildPreferences {
+  darkMode: boolean;
+  soundEnabled: boolean;
+  theme: 'dark' | 'light';
+  accentColor: AccentColor;
+}
+
 export interface GuildData {
   currentGuild: Guild | null;
   friends: Friend[];
   friendRequests: FriendRequest[];
   privacy: PrivacySettings;
   notifications: NotificationSettings;
+  preferences: GuildPreferences;
 }
 
 export type PageType = 'character-hub' | 'card-deck' | 'training-ground' | 'character-sheet' | 'guild-settings' | 'personality-test' | 'class-reveal';

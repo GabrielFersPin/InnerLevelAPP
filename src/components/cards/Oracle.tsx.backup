@@ -89,9 +89,9 @@ export function AICardGenerator() {
           </label>
           <div className="grid md:grid-cols-3 gap-4">
             {[
-              { id: 'daily', label: 'Daily Optimized', desc: 'Cards for today based on your energy and schedule' },
               { id: 'goal', label: 'Goal-Oriented', desc: 'Cards specifically designed to achieve a goal' },
-              { id: 'situation', label: 'Situational', desc: 'Cards for a specific situation or challenge' }
+              { id: 'goal', label: 'Goal-Oriented', desc: 'Cards specifically designed to achieve a goal' },
+              
             ].map((type) => (
               <button
                 key={type.id}
@@ -191,7 +191,7 @@ export function AICardGenerator() {
           ) : (
             <span className="flex items-center justify-center">
               <Sparkles className="w-5 h-5 mr-2" />
-              Generate {generationType === 'daily' ? 'Daily' : generationType === 'goal' ? 'Goal' : 'Situational'} Cards
+              Generate Goal-Oriented Cards
             </span>
           )}
         </button>
