@@ -68,6 +68,22 @@ export function MysticForge() {
     }
   };
 
+  const handlePaymentRedirect = () => {
+    const paymentUrl = import.meta.env.VITE_PAYMENT_URL;
+    
+    if (paymentUrl) {
+      // Opens in new tab (recommended for better UX)
+      window.open(paymentUrl, '_blank');
+      
+      // OR if you prefer same tab redirect:
+      // window.location.href = paymentUrl;
+    } else {
+      console.error('Payment URL not configured');
+      // Optional: Show user-friendly error message
+      alert('Payment system is currently unavailable. Please try again later.');
+    }
+  };
+
   const addCardToInventory = (card: Card) => {
     dispatch({ type: 'ADD_CARD', payload: card });
   };
@@ -181,11 +197,14 @@ export function MysticForge() {
             <div className="text-xs text-slate-500">Click Refresh to load your usage.</div>
           )}
           <div className="mt-4 flex justify-end">
-            <a href={paymentUrl} target="_blank" rel="noreferrer"
-               className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg">
+            <button 
+              onClick={handlePaymentRedirect}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={!import.meta.env.VITE_PAYMENT_URL}
+            >
               <CreditCard className="w-4 h-4" />
               Pay to Generate
-            </a>
+            </button>
           </div>
         </div>
 

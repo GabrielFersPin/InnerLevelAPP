@@ -9,6 +9,7 @@ import { ClassReveal } from './components/onboarding/ClassReveal';
 import { AuthModal } from './components/Auth/AuthModal';
 import { GuildSettings } from './components/GuildSettings';
 import { PageType } from './types';
+import PaymentSuccessPage from './components/PaymentSuccessPage';
 import { CharacterClass } from './types';
 import { useAppContext } from './context/AppContext';
 import { useAuth } from './hooks/useAuth';
@@ -35,6 +36,15 @@ function App() {
       setShowAuthModal(false);
     }
   }, [user, authLoading]);
+
+  // Read page from query string (e.g., ?page=payment-success)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const pageParam = params.get('page') as PageType | null;
+    if (pageParam) {
+      setCurrentPage(pageParam);
+    }
+  }, []);
 
   // Check if character needs onboarding
   const needsOnboarding = !state.character?.isOnboarded;
@@ -101,6 +111,8 @@ function App() {
         return <CardDeck onNavigateToAI={() => setCurrentPage('ai-card-generator')} />;
       case 'ai-card-generator':
         return <MysticForge />;
+      case 'payment-success':
+        return <PaymentSuccessPage onContinue={() => setCurrentPage('ai-card-generator')} />;
       case 'training-ground':
         return <TrainingGround />;
       case 'character-sheet':

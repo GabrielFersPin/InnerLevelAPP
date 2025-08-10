@@ -13,7 +13,8 @@ export type PageType =
   | 'rewards'
   | 'wellbeing'
   | 'analytics'
-  | 'profile';
+  | 'profile'
+  | 'payment-success';
 
 // Re-export from index for convenience
 export type { CharacterClass } from './types/index';

@@ -1,6 +1,7 @@
 const express = require("express");
 const OpenAI = require("openai");
 const cors = require("cors");
+const Stripe = require("stripe");
 require('dotenv').config();
 
 const app = express();
@@ -16,7 +17,12 @@ const MONTHLY_TOKEN_LIMIT = parseInt(process.env.MONTHLY_TOKEN_LIMIT || '100000'
 
 // Middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 app.use(cors());
+
+// Stripe
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+const stripe = stripeSecretKey ? new Stripe(stripeSecretKey) : null;
 
 // OpenAI Configuration (API nueva v4+)
 const openai = new OpenAI({
@@ -92,6 +98,50 @@ app.get('/api/usage', (req, res) => {
     generations: { used: usage.generations, limit: MONTHLY_GENERATION_LIMIT },
     tokens: { used: usage.tokens, limit: MONTHLY_TOKEN_LIMIT }
   });
+});
+
+// Create Stripe Checkout Session (subscription)
+app.post('/create-checkout-session', async (req, res) => {
+  try {
+    if (!stripe) {
+      return res.status(500).json({ error: 'Stripe is not configured on the server' });
+    }
+
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const lookupKeyFromBody = req.body.lookup_key;
+    const priceIdFromEnv = process.env.STRIPE_PRICE_ID;
+
+    let priceId = priceIdFromEnv || null;
+
+    if (!priceId && lookupKeyFromBody) {
+      const prices = await stripe.prices.list({
+        lookup_keys: [lookupKeyFromBody],
+        expand: ['data.product']
+      });
+      if (!prices.data || prices.data.length === 0) {
+        return res.status(400).json({ error: 'Invalid lookup_key: price not found' });
+      }
+      priceId = prices.data[0].id;
+    }
+
+    if (!priceId) {
+      return res.status(400).json({ error: 'Missing STRIPE_PRICE_ID or lookup_key' });
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      line_items: [
+        { price: priceId, quantity: 1 }
+      ],
+      success_url: `${frontendUrl}?page=payment-success` + `&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${frontendUrl}?page=ai-card-generator`,
+    });
+
+    return res.redirect(303, session.url);
+  } catch (error) {
+    console.error('Stripe session error:', error);
+    return res.status(500).json({ error: error.message || 'Failed to create checkout session' });
+  }
 });
 
 // Health check endpoint
