@@ -144,6 +144,50 @@ app.post('/create-checkout-session', async (req, res) => {
   }
 });
 
+// Also support GET for convenience (e.g., direct links)
+app.get('/create-checkout-session', async (req, res) => {
+  try {
+    if (!stripe) {
+      return res.status(500).json({ error: 'Stripe is not configured on the server' });
+    }
+
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const lookupKeyFromQuery = req.query.lookup_key;
+    const priceIdFromEnv = process.env.STRIPE_PRICE_ID;
+
+    let priceId = priceIdFromEnv || null;
+
+    if (!priceId && lookupKeyFromQuery) {
+      const prices = await stripe.prices.list({
+        lookup_keys: [lookupKeyFromQuery],
+        expand: ['data.product']
+      });
+      if (!prices.data || prices.data.length === 0) {
+        return res.status(400).json({ error: 'Invalid lookup_key: price not found' });
+      }
+      priceId = prices.data[0].id;
+    }
+
+    if (!priceId) {
+      return res.status(400).json({ error: 'Missing STRIPE_PRICE_ID or lookup_key' });
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      line_items: [
+        { price: priceId, quantity: 1 }
+      ],
+      success_url: `${frontendUrl}?page=payment-success` + `&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${frontendUrl}?page=ai-card-generator`,
+    });
+
+    return res.redirect(303, session.url);
+  } catch (error) {
+    console.error('Stripe session error (GET):', error);
+    return res.status(500).json({ error: error.message || 'Failed to create checkout session' });
+  }
+});
+
 // Health check endpoint
 app.get("/health", (req, res) => {
   res.status(200).json({ 
