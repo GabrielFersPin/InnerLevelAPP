@@ -5,7 +5,6 @@ import { getClassTheme } from '../../data/characterClasses';
 import { Brain, Sparkles, RefreshCw, Clock, Target, Zap, Plus, CreditCard } from 'lucide-react';
 import type { Card } from '../../types/index';
 import GoalCreationForm from './GoalCreationForm';
-import { PaymentModal } from '../PaymentModal';
 
 export function MysticForge() {
   const { state, dispatch } = useAppContext();
@@ -14,7 +13,6 @@ export function MysticForge() {
   const [generatedCards, setGeneratedCards] = useState<Card[]>([]);
   const [goalDescription, setGoalDescription] = useState('');
   const [timeframe, setTimeframe] = useState(7);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showGoalForm, setShowGoalForm] = useState(false);
   const [usage, setUsage] = useState<{ period: string; generations: { used: number; limit: number }; tokens: { used: number; limit: number } } | null>(null);
   const paymentUrl = import.meta.env.VITE_PAYMENT_URL || '/pricing';
@@ -45,7 +43,7 @@ export function MysticForge() {
 
   const handleGenerateCards = async () => {
     if (outOfTokens || outOfGenerations) {
-      setShowPaymentModal(true);
+      alert('You\'ve reached your monthly limit of AI-generated cards. Try again next month!');
       return;
     }
     setIsGenerating(true);
@@ -62,7 +60,7 @@ export function MysticForge() {
       
       // Check if it's a quota exceeded error
       if (error?.code === 'quota_exceeded' || error?.status === 402) {
-        setShowPaymentModal(true);
+        alert('You\'ve reached your monthly limit of AI-generated cards. Try again next month!');
       } else {
         alert('Failed to generate cards. Please try again.');
       }
@@ -373,15 +371,6 @@ export function MysticForge() {
         </div>
       </div>
 
-      {/* Payment Modal */}
-      <PaymentModal
-        isOpen={showPaymentModal}
-        onClose={() => setShowPaymentModal(false)}
-        onPaymentSuccess={() => {
-          setShowPaymentModal(false);
-          fetchUsage(); // Refresh usage after payment
-        }}
-      />
     </div>
   );
 }

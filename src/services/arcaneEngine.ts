@@ -512,21 +512,24 @@ Return JSON array of cards optimized for this context.
       const processedCards = cardsArray.map((cardData: any, index: number) => {
         console.log(`🎴 Processing card ${index + 1}:`, cardData);
         
+        // Handle nested card structure (cardData.card exists)
+        const actualCardData = cardData.card || cardData;
+        
         const card = {
           id: `ai-card-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          name: cardData.name || cardData.title || cardData.card_name || `Generated Card ${index + 1}`,
-          description: cardData.description || cardData.desc || cardData.details || 'AI-generated activity card.',
-          type: cardData.type || 'action',
-          rarity: cardData.rarity || 'common',
-          classTypes: cardData.classTypes || cardData.class_types || ['strategist', 'warrior', 'creator', 'connector', 'sage'],
-          energyCost: cardData.energyCost || cardData.energy_cost || cardData.cost || 20,
-          duration: cardData.duration || 1,
-          impact: cardData.impact || cardData.xp || cardData.experience || 10,
-          cooldown: cardData.cooldown || undefined,
-          skillBonus: cardData.skillBonus || cardData.skill_bonus || [],
-          requirements: cardData.requirements || {},
-          conditions: cardData.conditions || {},
-          tags: cardData.tags || [],
+          name: actualCardData.name || actualCardData.title || actualCardData.card_name || `Generated Card ${index + 1}`,
+          description: actualCardData.description || actualCardData.desc || actualCardData.details || 'AI-generated activity card.',
+          type: actualCardData.type || 'action',
+          rarity: actualCardData.rarity || 'common',
+          classTypes: actualCardData.classTypes || actualCardData.class_types || ['strategist', 'warrior', 'creator', 'connector', 'sage'],
+          energyCost: actualCardData.energyCost || actualCardData.energy_cost || actualCardData.cost || 20,
+          duration: cardData.day || actualCardData.duration || 1,
+          impact: actualCardData.impact || actualCardData.xp || actualCardData.experience || 10,
+          cooldown: actualCardData.cooldown || undefined,
+          skillBonus: actualCardData.skillBonus || actualCardData.skill_bonus || [],
+          requirements: actualCardData.requirements || {},
+          conditions: actualCardData.conditions || {},
+          tags: actualCardData.tags || [],
           createdAt: new Date(),
           forged: true,
           usageCount: 0,
