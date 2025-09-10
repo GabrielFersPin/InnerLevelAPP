@@ -1,5 +1,6 @@
 import { Quest, Card, Character, CharacterClass } from '../types';
 import { classDescriptions } from '../data/personalityTest';
+import { getApiUrl } from '../config/environment';
 
 interface UserContext {
   character: Character;
@@ -24,8 +25,9 @@ interface AICardRecommendation {
 /**
  * Call OpenAI API via local backend server
  */
+
 async function callOpenAI(prompt: string, options: any = {}): Promise<string> {
-  const backendURL = 'http://localhost:5000'; // Tu servidor local
+  const backendURL = getApiUrl(); // Dynamic URL based on environment
   
   try {
     console.log('🔄 Calling local OpenAI backend...');

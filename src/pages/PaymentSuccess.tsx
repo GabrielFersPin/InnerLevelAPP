@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Crown, Sparkles, Zap, Target, TrendingUp, ArrowRight, Check } from 'lucide-react';
 
-const CustomPaymentSuccessPage: React.FC = () => {
+const PaymentSuccess: React.FC = () => {
+  const navigate = useNavigate();
   const [showAnimation, setShowAnimation] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
 
@@ -22,8 +24,8 @@ const CustomPaymentSuccessPage: React.FC = () => {
   }, []);
 
   const handleContinueToApp = () => {
-    // Redirigir de vuelta a la app principal
-    window.location.href = '/';
+    // Redirigir de vuelta a la app principal usando React Router
+    navigate('/');
   };
 
   return (
@@ -154,4 +156,4 @@ const CustomPaymentSuccessPage: React.FC = () => {
   );
 };
 
-export default CustomPaymentSuccessPage;
+export default PaymentSuccess;

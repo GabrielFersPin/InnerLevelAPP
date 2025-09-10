@@ -107,7 +107,7 @@ app.post('/create-checkout-session', async (req, res) => {
       return res.status(500).json({ error: 'Stripe is not configured on the server' });
     }
 
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5176';
     const lookupKeyFromBody = req.body.lookup_key;
     const priceIdFromEnv = process.env.STRIPE_PRICE_ID;
 
@@ -151,7 +151,7 @@ app.get('/create-checkout-session', async (req, res) => {
       return res.status(500).json({ error: 'Stripe is not configured on the server' });
     }
 
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5176';
     const lookupKeyFromQuery = req.query.lookup_key;
     const priceIdFromEnv = process.env.STRIPE_PRICE_ID;
 

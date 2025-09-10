@@ -5,6 +5,7 @@ import { getClassTheme } from '../../data/characterClasses';
 import { Brain, Sparkles, RefreshCw, Clock, Target, Zap, Plus, CreditCard } from 'lucide-react';
 import type { Card } from '../../types/index';
 import GoalCreationForm from './GoalCreationForm';
+import { getApiUrl } from '../../config/environment';
 
 export function MysticForge() {
   const { state, dispatch } = useAppContext();
@@ -24,7 +25,7 @@ export function MysticForge() {
   const fetchUsage = async () => {
     try {
       const userId = (state as any)?.user?.id || (state as any)?.auth?.user?.id || 'anonymous';
-      const res = await fetch(`http://localhost:5000/api/usage?userId=${encodeURIComponent(userId)}`);
+      const res = await fetch(`${getApiUrl()}/api/usage?userId=${encodeURIComponent(userId)}`);
       if (res.ok) {
         const data = await res.json();
         setUsage(data);
