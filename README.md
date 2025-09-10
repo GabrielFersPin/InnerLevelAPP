@@ -162,8 +162,10 @@ npm run deploy
 ```
 
 ### Available Scripts
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
+- `npm run dev` - Start frontend development server
+- `npm run server` - Start backend server only
+- `npm run dev:all` - Start both frontend and backend concurrently
+- `npm run build` - Build frontend for production
 - `npm run lint` - Run ESLint
 - `npm run preview` - Preview production build
 
@@ -175,6 +177,33 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## 🎮 How It Works
+
+### 1. **Character Creation** 🎭
+- Take a personality assessment to discover your character class
+- Choose from 5 unique classes: Strategist, Warrior, Creator, Connector, or Sage
+- Each class has unique strengths and AI-generated recommendations
+
+### 2. **AI-Powered Goal Setting** 🧠
+- Describe your goals in the Mystic Forge
+- AI generates personalized action card sequences
+- Cards include specific actions, durations, and energy costs
+
+### 3. **Training & Execution** ⚔️
+- Use the Training Ground to execute your cards
+- Built-in Pomodoro timer for focused work sessions
+- Gain experience points and level up your character
+
+### 4. **Progress Tracking** 📊
+- Monitor your character's stats and development
+- Track energy usage and regeneration
+- View your card collection and achievements
+
+### 5. **Premium Features** 💳
+- Free tier: 8 AI generations per month
+- Premium tier: Unlimited AI generations for $9.99/month
+- Automatic upgrade prompts when limits are reached
+
 ## 🎮 Start Your Quest Today!
 
 Ready to transform your life into an epic adventure? Create your account and discover which character class matches your personality. Your journey to becoming the hero of your own story starts now!
@@ -185,4 +214,7 @@ Ready to transform your life into an epic adventure? Create your account and dis
 
 ![InnerLevel Screenshot](./screenshots/dashboard.png)
 
-Try the live demo 👉 [https://innerlevel-demo.vercel.app](https://innerlevel-demo.vercel.app)
+**Current Status**: ✅ Fully functional with AI integration and payment system
+- Frontend: http://localhost:5176
+- Backend: http://localhost:5000
+- All features working and ready for users!

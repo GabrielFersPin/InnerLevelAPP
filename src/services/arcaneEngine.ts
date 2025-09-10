@@ -514,7 +514,7 @@ Return JSON array of cards optimized for this context.
         
         const card = {
           id: `ai-card-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          name: cardData.name || cardData.title || `Generated Card ${index + 1}`,
+          name: cardData.name || cardData.title || cardData.card_name || `Generated Card ${index + 1}`,
           description: cardData.description || cardData.desc || cardData.details || 'AI-generated activity card.',
           type: cardData.type || 'action',
           rarity: cardData.rarity || 'common',
