@@ -104,7 +104,11 @@ app.get('/api/usage', (req, res) => {
 app.post('/create-checkout-session', async (req, res) => {
   try {
     if (!stripe) {
-      return res.status(500).json({ error: 'Stripe is not configured on the server' });
+      console.error('❌ Stripe not configured. Please set STRIPE_SECRET_KEY in server/.env file');
+      return res.status(500).json({ 
+        error: 'Stripe is not configured on the server',
+        details: 'Please set STRIPE_SECRET_KEY in server/.env file'
+      });
     }
 
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5176';
@@ -321,5 +325,15 @@ app.listen(port, () => {
     console.error('⚠️  WARNING: OPENAI_API_KEY not found in environment variables');
   } else {
     console.log('✅ OpenAI API key loaded');
+  }
+  
+  // Verificar configuración de Stripe
+  if (!stripe) {
+    console.error('⚠️  WARNING: Stripe not configured');
+    console.error('   Please create server/.env file with:');
+    console.error('   STRIPE_SECRET_KEY=sk_test_your_key_here');
+    console.error('   STRIPE_PRICE_ID=price_your_price_id_here');
+  } else {
+    console.log('✅ Stripe configured');
   }
 });
