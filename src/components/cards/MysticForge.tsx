@@ -5,6 +5,7 @@ import { getClassTheme } from '../../data/characterClasses';
 import { Brain, Sparkles, RefreshCw, Clock, Target, Zap, Plus, CreditCard } from 'lucide-react';
 import type { Card } from '../../types/index';
 import GoalCreationForm from './GoalCreationForm';
+import { PaymentModal } from '../PaymentModal';
 
 export function MysticForge() {
   const { state, dispatch } = useAppContext();
@@ -13,7 +14,7 @@ export function MysticForge() {
   const [generatedCards, setGeneratedCards] = useState<Card[]>([]);
   const [goalDescription, setGoalDescription] = useState('');
   const [timeframe, setTimeframe] = useState(7);
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showGoalForm, setShowGoalForm] = useState(false);
   const [usage, setUsage] = useState<{ period: string; generations: { used: number; limit: number }; tokens: { used: number; limit: number } } | null>(null);
   const paymentUrl = import.meta.env.VITE_PAYMENT_URL || '/pricing';
@@ -44,7 +45,7 @@ export function MysticForge() {
 
   const handleGenerateCards = async () => {
     if (outOfTokens || outOfGenerations) {
-      window.open(paymentUrl, '_blank');
+      setShowPaymentModal(true);
       return;
     }
     setIsGenerating(true);
@@ -56,11 +57,15 @@ export function MysticForge() {
         cards = await ArcaneEngine.generateGoalCards(character, goalDescription, timeframe, userId);
       }
       setGeneratedCards(cards);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to generate cards:', error);
-      alert(typeof error?.message === 'string' && error.message.includes('quota')
-        ? 'Monthly AI generation quota reached. Try again next month.'
-        : 'Failed to generate cards. Please try again.');
+      
+      // Check if it's a quota exceeded error
+      if (error?.code === 'quota_exceeded' || error?.status === 402) {
+        setShowPaymentModal(true);
+      } else {
+        alert('Failed to generate cards. Please try again.');
+      }
       // Show fallback cards
       setGeneratedCards([]);
     } finally {
@@ -367,6 +372,16 @@ export function MysticForge() {
           ))}
         </div>
       </div>
+
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        onPaymentSuccess={() => {
+          setShowPaymentModal(false);
+          fetchUsage(); // Refresh usage after payment
+        }}
+      />
     </div>
   );
 }

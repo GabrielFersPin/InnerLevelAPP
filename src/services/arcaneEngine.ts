@@ -55,6 +55,13 @@ async function callOpenAI(prompt: string, options: any = {}): Promise<string> {
 
     const data = await response.json();
     if (!response.ok) {
+      // Handle quota exceeded specifically
+      if (response.status === 402 && data?.error?.code === 'quota_exceeded') {
+        const error = new Error(data?.error?.message || 'Quota exceeded');
+        (error as any).code = 'quota_exceeded';
+        (error as any).status = 402;
+        throw error;
+      }
       throw new Error(data?.error?.message || `Backend error: ${response.status}`);
     }
     console.log('✅ OpenAI response received successfully');

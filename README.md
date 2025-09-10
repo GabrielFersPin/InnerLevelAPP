@@ -22,39 +22,49 @@ Feel free to reach out if you'd like to contribute or discuss collaboration!
 
 ## Features
 
-### Core Features
-- 🏠 Character Hub - Your personal dashboard and overview
-- 🎴 Card Deck - Manage your collection of action cards
-- 🧠 AI Generator - Create smart cards with AI assistance
-- ⚔️ Training Ground - Execute your cards and gain experience
-- 🏆 Character Sheet - Track your stats and progress
-- ⚙️ Guild Settings - Configure your experience
+### 🎮 Core RPG Features
+- 🏠 **Character Hub** - Your personal dashboard and adventure overview
+- 🎴 **Card Deck** - Manage your collection of action cards with rarity system
+- 🧠 **Mystic Forge** - AI-powered card generation for personalized goals
+- ⚔️ **Training Ground** - Execute cards with Pomodoro timer and gain XP
+- 🏆 **Character Sheet** - Track stats, levels, and character progression
+- ⚙️ **Guild Settings** - Configure your gaming experience
+- 🎭 **Character Classes** - 5 unique classes: Strategist, Warrior, Creator, Connector, Sage
 
-### Personal Development Tools
-- 📝 Activity Logging - Track your daily achievements
-- ⚡ Habit Management - Build and maintain positive habits
-- ✅ To-Do System - Organize and complete tasks
-- 🎯 Smart Goals - AI-powered goal setting and tracking
-  - Custom habit suggestions
-  - Personalized reward systems
-  - Progress milestones
-  - Priority-based organization
-- 🎁 Rewards - Motivational reward system
-- 💝 Emotional Well-being - Track and manage your emotional state
-- 📊 Analytics - Visualize your progress
+### 🤖 AI-Powered Features
+- **Smart Goal Planning** - AI generates personalized action card sequences
+- **Contextual Recommendations** - Cards tailored to your character class and situation
+- **Dynamic Card Generation** - Create goal-specific cards with detailed actions
+- **Intelligent Quota Management** - 8 AI generations per month with upgrade options
+- **Token Optimization** - 2000 tokens per request for complete responses
 
-### AI Integration
-- 🤖 AI-powered goal planning
-- Custom habit recommendations
-- Contextual reward suggestions
-- Progressive milestone generation
+### 💳 Payment & Subscription System
+- **Stripe Integration** - Secure payment processing
+- **Premium Upgrade** - $9.99/month for unlimited AI generations
+- **Quota Management** - Automatic payment modal when limits reached
+- **Webhook Handling** - Real-time payment success processing
+- **Usage Tracking** - Monitor generations and token consumption
 
-### Data Management
-- Local storage persistence
-- Progress tracking
-- Achievement system
-- Experience points (XP)
-- Level progression
+### 👤 User Management
+- **Supabase Authentication** - Secure email/password login system
+- **User Profiles** - Persistent character and progress data
+- **Session Management** - Automatic login/logout handling
+- **Data Persistence** - All progress saved to cloud database
+- **Character Onboarding** - Personality-based class selection
+
+### 🎯 Gamification Elements
+- **Energy System** - 100 energy points with daily regeneration
+- **Experience Points** - Level progression and skill development
+- **Rewards System** - Point-based reward redemption
+- **Achievement Tracking** - Progress milestones and accomplishments
+- **Card Rarity System** - Common, rare, epic, and legendary cards
+
+### 📊 Personal Development Tools
+- **Activity Logging** - Track daily achievements and progress
+- **Habit Management** - Build and maintain positive habits
+- **Goal Tracking** - AI-powered goal setting and monitoring
+- **Progress Analytics** - Visualize your character development
+- **Reward Redemption** - Motivational reward system
 
 ## 🧰 Technologies Used
 
@@ -62,30 +72,42 @@ Feel free to reach out if you'd like to contribute or discuss collaboration!
 - **Framework**: React 18 with TypeScript
 - **Styling**: Tailwind CSS 3.0 with custom UI components
 - **Build Tool**: Vite for faster development and optimized builds
+- **State Management**: React Context API + Reducers
+
+### Backend & API
+- **Server**: Node.js + Express
+- **AI Integration**: OpenAI GPT-4o-mini API
+- **Payment Processing**: Stripe API integration
+- **Authentication**: Supabase Auth
+- **Database**: Supabase (PostgreSQL)
 
 ### AI & Intelligence
-- **AI Engine**: Claude AI via API integration
+- **AI Engine**: OpenAI GPT-4o-mini
+- **Token Management**: 2000 tokens per request
 - **Smart Features**: 
   - Goal planning assistance
-  - Habit recommendations
-  - Personalized reward suggestions
-  - Dynamic milestone generation
+  - Character class-specific recommendations
+  - Dynamic card generation
+  - Contextual action sequences
 
 ### Data Management
-- **Storage**: Local Storage API for persistent data
-- **State Management**: React Context API + Reducers
-- **Data Types**: Strong TypeScript typing
+- **Cloud Storage**: Supabase PostgreSQL database
+- **Real-time Sync**: Automatic data persistence
+- **User Data**: Character progress, cards, goals, achievements
+- **Type Safety**: Strong TypeScript typing throughout
+
+### Payment & Monetization
+- **Payment Gateway**: Stripe Checkout
+- **Subscription Model**: $9.99/month premium tier
+- **Quota System**: 8 AI generations per month (free tier)
+- **Webhook Processing**: Real-time payment success handling
 
 ### Development Tools
 - **IDE**: VS Code with recommended extensions
 - **Testing**: Jest + React Testing Library
 - **Linting**: ESLint + Prettier
 - **Version Control**: Git + GitHub
-
-### Deployment
-- **Build System**: Vite production builder
-- **Hosting**: Your preferred platform (Vercel, Netlify, etc.)
-- **CI/CD**: GitHub Actions workflow ready
+- **Hot Reload**: Nodemon for backend development
 
 ## Getting Started
 
@@ -97,13 +119,34 @@ cd InnerLevelAPP
 
 # Install dependencies
 npm install
+cd server && npm install && cd ..
 
 # Set up environment variables
 cp .env.example .env
-# Add your Supabase and Claude API credentials
+# Add your Supabase, OpenAI, and Stripe API credentials
 
-# Start development server
-npm run dev
+# Start both frontend and backend servers
+npm run dev:all
+```
+
+### Environment Variables Required
+```bash
+# Supabase Configuration
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# OpenAI API
+OPENAI_API_KEY=your_openai_api_key
+
+# Stripe Configuration (for payments)
+STRIPE_SECRET_KEY=your_stripe_secret_key
+STRIPE_PRICE_ID=your_stripe_price_id
+STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
+
+# Server Configuration
+FRONTEND_URL=http://localhost:5176
+MONTHLY_GENERATION_LIMIT=8
+MAX_TOKENS_PER_REQUEST=2000
 ```
 
 ### Production Deployment

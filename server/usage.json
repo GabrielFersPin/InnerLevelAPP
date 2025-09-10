@@ -1,8 +1,14 @@
 {
   "2025-08": {
     "anonymous": {
-      "generations": 5,
-      "tokens": 6375
+      "generations": 8,
+      "tokens": 9519
+    }
+  },
+  "2025-09": {
+    "anonymous": {
+      "generations": 1,
+      "tokens": 651
     }
   }
 }

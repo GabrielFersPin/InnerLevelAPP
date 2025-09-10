@@ -12,7 +12,7 @@ const { getUserUsage, incrementUserUsage } = require('./usageStore');
 
 // Basic config
 const MONTHLY_GENERATION_LIMIT = parseInt(process.env.MONTHLY_GENERATION_LIMIT || '8', 10); // per user
-const MAX_TOKENS_PER_REQUEST = parseInt(process.env.MAX_TOKENS_PER_REQUEST || '500', 10);
+const MAX_TOKENS_PER_REQUEST = parseInt(process.env.MAX_TOKENS_PER_REQUEST || '2000', 10);
 const MONTHLY_TOKEN_LIMIT = parseInt(process.env.MONTHLY_TOKEN_LIMIT || '100000', 10);
 
 // Middleware
@@ -186,6 +186,42 @@ app.get('/create-checkout-session', async (req, res) => {
     console.error('Stripe session error (GET):', error);
     return res.status(500).json({ error: error.message || 'Failed to create checkout session' });
   }
+});
+
+// Stripe webhook endpoint for successful payments
+app.post('/stripe-webhook', express.raw({type: 'application/json'}), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  let event;
+
+  try {
+    if (endpointSecret) {
+      event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+    } else {
+      // For development, parse the body directly
+      event = JSON.parse(req.body.toString());
+    }
+  } catch (err) {
+    console.log(`Webhook signature verification failed.`, err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  // Handle the event
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    console.log('Payment successful for session:', session.id);
+    
+    // Here you would typically:
+    // 1. Extract user ID from session metadata
+    // 2. Reset their quota or upgrade their plan
+    // 3. Send confirmation email
+    
+    // For now, we'll just log it
+    console.log('Customer email:', session.customer_details?.email);
+  }
+
+  res.json({received: true});
 });
 
 // Health check endpoint
