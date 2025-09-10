@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Crown, Sparkles, Zap, Target, TrendingUp, ArrowRight, Check } from 'lucide-react';
+import { getApiUrl } from '../config/environment';
 
 const PaymentSuccess: React.FC = () => {
   const navigate = useNavigate();
   const [showAnimation, setShowAnimation] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [paymentVerified, setPaymentVerified] = useState(false);
+  const [verificationError, setVerificationError] = useState<string | null>(null);
 
   const features = [
     { icon: <Zap className="w-5 h-5" />, text: "Generación ilimitada de cartas IA" },
@@ -14,19 +17,105 @@ const PaymentSuccess: React.FC = () => {
     { icon: <Crown className="w-5 h-5" />, text: "Soporte prioritario de IA" }
   ];
 
+  // Verificar el pago cuando se carga la página
   useEffect(() => {
-    setShowAnimation(true);
-    const timer = setInterval(() => {
-      setCurrentStep(prev => prev < features.length ? prev + 1 : prev);
-    }, 800);
-
-    return () => clearInterval(timer);
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session_id');
+    
+    if (sessionId) {
+      // Verificar el pago con el backend
+      verifyPayment(sessionId);
+    } else {
+      // Si no hay session_id, asumir que el pago fue exitoso (para testing)
+      setPaymentVerified(true);
+    }
   }, []);
+
+  // Animación de características
+  useEffect(() => {
+    if (paymentVerified) {
+      setShowAnimation(true);
+      const timer = setInterval(() => {
+        setCurrentStep(prev => prev < features.length ? prev + 1 : prev);
+      }, 800);
+
+      return () => clearInterval(timer);
+    }
+  }, [paymentVerified]);
+
+  // Función para verificar el pago con el backend
+  const verifyPayment = async (sessionId: string) => {
+    try {
+      console.log('🔍 Verificando pago con session_id:', sessionId);
+      
+      const response = await fetch(`${getApiUrl()}/verify-payment`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ session_id: sessionId }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Pago verificado exitosamente:', data);
+        setPaymentVerified(true);
+      } else {
+        const errorData = await response.json();
+        console.error('❌ Error verificando pago:', errorData);
+        setVerificationError(errorData.error || 'Error verificando el pago');
+      }
+    } catch (error) {
+      console.error('❌ Error de red verificando pago:', error);
+      setVerificationError('Error de conexión. Por favor, verifica tu conexión a internet.');
+    }
+  };
 
   const handleContinueToApp = () => {
     // Redirigir de vuelta a la app principal usando React Router
     navigate('/');
   };
+
+  // Mostrar estado de carga mientras se verifica el pago
+  if (!paymentVerified && !verificationError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
+        <div className="max-w-2xl w-full text-center">
+          <div className="relative mb-8">
+            <div className="absolute inset-0 animate-ping">
+              <Crown className="w-24 h-24 text-yellow-400 mx-auto opacity-75" />
+            </div>
+            <Crown className="w-24 h-24 text-yellow-400 mx-auto relative z-10" />
+          </div>
+          <h1 className="text-3xl font-bold text-white mb-4">Verificando Pago...</h1>
+          <p className="text-gray-300 text-lg">Por favor espera mientras confirmamos tu pago</p>
+          <div className="mt-8">
+            <div className="w-8 h-8 border-4 border-yellow-400/30 border-t-yellow-400 rounded-full animate-spin mx-auto"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Mostrar error si la verificación falló
+  if (verificationError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
+        <div className="max-w-2xl w-full text-center">
+          <div className="bg-red-500/20 border border-red-500/30 rounded-2xl p-8 mb-8">
+            <h1 className="text-3xl font-bold text-red-400 mb-4">Error de Verificación</h1>
+            <p className="text-gray-300 text-lg mb-6">{verificationError}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-200"
+            >
+              Reintentar
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">

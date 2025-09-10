@@ -72,18 +72,30 @@ export function MysticForge() {
     }
   };
 
-  const handlePaymentRedirect = () => {
-    const paymentUrl = import.meta.env.VITE_PAYMENT_URL;
-    
-    if (paymentUrl) {
-      // Opens in new tab (recommended for better UX)
-      window.open(paymentUrl, '_blank');
-      
-      // OR if you prefer same tab redirect:
-      // window.location.href = paymentUrl;
-    } else {
-      console.error('Payment URL not configured');
-      // Optional: Show user-friendly error message
+  const handlePaymentRedirect = async () => {
+    try {
+      // Create Stripe checkout session
+      const response = await fetch(`${getApiUrl()}/create-checkout-session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          lookup_key: 'premium-monthly'
+        })
+      });
+
+      if (response.ok) {
+        const { url } = await response.json();
+        // Redirect to Stripe checkout
+        window.location.href = url;
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to create checkout session:', errorData);
+        alert('Payment system is currently unavailable. Please try again later.');
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
       alert('Payment system is currently unavailable. Please try again later.');
     }
   };
@@ -203,18 +215,17 @@ export function MysticForge() {
           <div className="mt-4 flex justify-end">
             <button 
               onClick={handlePaymentRedirect}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={!import.meta.env.VITE_PAYMENT_URL}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-all duration-200"
             >
               <CreditCard className="w-4 h-4" />
-              Pay to Generate
+              Upgrade to Premium
             </button>
           </div>
         </div>
 
         {/* Generate Button */}
         <button
-          onClick={handleGenerateCards}
+          onClick={outOfTokens || outOfGenerations ? handlePaymentRedirect : handleGenerateCards}
           disabled={isGenerating || !goalDescription.trim()}
           className="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
@@ -226,7 +237,7 @@ export function MysticForge() {
           ) : (
             <span className="flex items-center justify-center">
               <Sparkles className="w-5 h-5 mr-2" />
-              {outOfTokens || outOfGenerations ? 'Pay to Generate' : 'Generate Goal-Oriented Cards'}
+              {outOfTokens || outOfGenerations ? 'Upgrade to Generate' : 'Generate Goal-Oriented Cards'}
             </span>
           )}
         </button>

@@ -188,6 +188,56 @@ app.get('/create-checkout-session', async (req, res) => {
   }
 });
 
+// Verify payment endpoint
+app.post('/verify-payment', async (req, res) => {
+  try {
+    const { session_id } = req.body;
+    
+    if (!session_id) {
+      return res.status(400).json({ error: 'session_id is required' });
+    }
+
+    if (!stripe) {
+      return res.status(500).json({ error: 'Stripe is not configured' });
+    }
+
+    // Retrieve the session from Stripe
+    const session = await stripe.checkout.sessions.retrieve(session_id);
+    
+    if (session.payment_status === 'paid') {
+      console.log('✅ Payment verified successfully for session:', session_id);
+      
+      // Aquí puedes agregar lógica adicional como:
+      // - Actualizar la base de datos del usuario
+      // - Resetear quotas
+      // - Enviar email de confirmación
+      
+      res.json({
+        success: true,
+        message: 'Payment verified successfully',
+        session: {
+          id: session.id,
+          payment_status: session.payment_status,
+          customer_email: session.customer_details?.email,
+          amount_total: session.amount_total
+        }
+      });
+    } else {
+      console.log('❌ Payment not completed for session:', session_id);
+      res.status(400).json({ 
+        error: 'Payment not completed',
+        payment_status: session.payment_status 
+      });
+    }
+  } catch (error) {
+    console.error('❌ Error verifying payment:', error);
+    res.status(500).json({ 
+      error: 'Failed to verify payment',
+      details: error.message 
+    });
+  }
+});
+
 // Stripe webhook endpoint for successful payments
 app.post('/stripe-webhook', express.raw({type: 'application/json'}), async (req, res) => {
   const sig = req.headers['stripe-signature'];
