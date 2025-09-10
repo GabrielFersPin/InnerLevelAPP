@@ -9,7 +9,7 @@ import { ClassReveal } from './components/onboarding/ClassReveal';
 import { AuthModal } from './components/Auth/AuthModal';
 import { GuildSettings } from './components/GuildSettings';
 import { PageType } from './types';
-import PaymentSuccessPage from './components/PaymentSuccessPage';
+import CustomPaymentSuccessPage from './components/CustomPaymentSuccessPage';
 import { CharacterClass } from './types';
 import { useAppContext } from './context/AppContext';
 import { useAuth } from './hooks/useAuth';
@@ -112,7 +112,7 @@ function App() {
       case 'ai-card-generator':
         return <MysticForge />;
       case 'payment-success':
-        return <PaymentSuccessPage onContinue={() => setCurrentPage('ai-card-generator')} />;
+        return <CustomPaymentSuccessPage />;
       case 'training-ground':
         return <TrainingGround />;
       case 'character-sheet':
