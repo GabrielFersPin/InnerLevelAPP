@@ -137,14 +137,27 @@ app.post('/create-checkout-session', async (req, res) => {
       line_items: [
         { price: priceId, quantity: 1 }
       ],
-      success_url: `${frontendUrl}?page=payment-success` + `&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${frontendUrl}?page=ai-card-generator`,
+      success_url: `${frontendUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${frontendUrl}`,
     });
 
     return res.redirect(303, session.url);
   } catch (error) {
     console.error('Stripe session error:', error);
-    return res.status(500).json({ error: error.message || 'Failed to create checkout session' });
+    
+    // Handle specific Stripe errors
+    if (error.message && error.message.includes('Invalid API Key')) {
+      return res.status(500).json({ 
+        error: 'Invalid Stripe API Key',
+        details: 'Please check your STRIPE_SECRET_KEY in server/.env file',
+        message: 'Payment system configuration error'
+      });
+    }
+    
+    return res.status(500).json({ 
+      error: error.message || 'Failed to create checkout session',
+      details: 'Please check your Stripe configuration'
+    });
   }
 });
 
@@ -181,14 +194,27 @@ app.get('/create-checkout-session', async (req, res) => {
       line_items: [
         { price: priceId, quantity: 1 }
       ],
-      success_url: `${frontendUrl}?page=payment-success` + `&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${frontendUrl}?page=ai-card-generator`,
+      success_url: `${frontendUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${frontendUrl}`,
     });
 
     return res.redirect(303, session.url);
   } catch (error) {
     console.error('Stripe session error (GET):', error);
-    return res.status(500).json({ error: error.message || 'Failed to create checkout session' });
+    
+    // Handle specific Stripe errors
+    if (error.message && error.message.includes('Invalid API Key')) {
+      return res.status(500).json({ 
+        error: 'Invalid Stripe API Key',
+        details: 'Please check your STRIPE_SECRET_KEY in server/.env file',
+        message: 'Payment system configuration error'
+      });
+    }
+    
+    return res.status(500).json({ 
+      error: error.message || 'Failed to create checkout session',
+      details: 'Please check your Stripe configuration'
+    });
   }
 });
 
