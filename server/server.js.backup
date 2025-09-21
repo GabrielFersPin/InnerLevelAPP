@@ -1,0 +1,374 @@
+// server/server.js - Servidor principal actualizado para InnerLevelAPP
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+
+// ⚠️ IMPORTANTE: Cargar dotenv ANTES que cualquier otra cosa
+require('dotenv').config();
+
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Logging de configuración inicial
+console.log('\n🚀 === INNERLEVEL SERVER STARTING ===');
+console.log('📍 Working directory:', __dirname);
+console.log('🔧 Environment:', process.env.NODE_ENV || 'development');
+console.log('🌐 Frontend URL:', process.env.FRONTEND_URL || process.env.CLIENT_URL);
+console.log('📊 OpenAI configured:', !!process.env.OPENAI_API_KEY);
+console.log('💳 Stripe configured:', !!process.env.STRIPE_SECRET_KEY);
+
+// Middleware básico
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true }));
+
+// CORS configurado para tu estructura
+app.use(cors({
+  origin: [
+    process.env.FRONTEND_URL || 'http://localhost:5176',
+    process.env.CLIENT_URL || 'http://localhost:5176',
+    'http://localhost:3000', // Por si acaso
+    'http://localhost:5173'  // Vite default
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Middleware de logging
+app.use((req, res, next) => {
+  const timestamp = new Date().toISOString();
+  console.log(`${timestamp} - ${req.method} ${req.path}`);
+  
+  if (req.method === 'POST' && req.body && Object.keys(req.body).length > 0) {
+    console.log('📝 Request body:', JSON.stringify(req.body, null, 2));
+  }
+  next();
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  const healthData = {
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    port: PORT,
+    services: {
+      openai: {
+        configured: !!process.env.OPENAI_API_KEY,
+        keyFormat: process.env.OPENAI_API_KEY ? 
+          process.env.OPENAI_API_KEY.substring(0, 10) + '...' : 'NOT_SET'
+      },
+      stripe: {
+        configured: !!process.env.STRIPE_SECRET_KEY,
+        keyFormat: process.env.STRIPE_SECRET_KEY ? 
+          process.env.STRIPE_SECRET_KEY.substring(0, 15) + '...' : 'NOT_SET',
+        validFormat: process.env.STRIPE_SECRET_KEY ? 
+          (process.env.STRIPE_SECRET_KEY.startsWith('sk_test_') || 
+           process.env.STRIPE_SECRET_KEY.startsWith('sk_live_')) : false
+      }
+    },
+    frontend: {
+      url: process.env.FRONTEND_URL || process.env.CLIENT_URL || 'NOT_SET'
+    }
+  };
+
+  // Determinar si hay problemas
+  const issues = [];
+  if (!process.env.OPENAI_API_KEY) {
+    issues.push('OpenAI API key not configured');
+  }
+  if (!process.env.STRIPE_SECRET_KEY) {
+    issues.push('Stripe secret key not configured');
+  } else if (!healthData.services.stripe.validFormat) {
+    issues.push('Stripe secret key has invalid format');
+  }
+
+  if (issues.length > 0) {
+    healthData.status = 'WARNING';
+    healthData.issues = issues;
+  }
+
+  res.json(healthData);
+});
+
+// Debug configuration endpoint
+app.get('/debug/config', (req, res) => {
+  res.json({
+    environment: {
+      NODE_ENV: process.env.NODE_ENV,
+      PORT: process.env.PORT,
+      FRONTEND_URL: process.env.FRONTEND_URL,
+      CLIENT_URL: process.env.CLIENT_URL
+    },
+    services: {
+      openai: {
+        configured: !!process.env.OPENAI_API_KEY,
+        keyPreview: process.env.OPENAI_API_KEY ? 
+          process.env.OPENAI_API_KEY.substring(0, 10) + '...' : null
+      },
+      stripe: {
+        configured: !!process.env.STRIPE_SECRET_KEY,
+        keyPreview: process.env.STRIPE_SECRET_KEY ? 
+          process.env.STRIPE_SECRET_KEY.substring(0, 15) + '...' : null,
+        validFormat: process.env.STRIPE_SECRET_KEY ? 
+          (process.env.STRIPE_SECRET_KEY.startsWith('sk_test_') || 
+           process.env.STRIPE_SECRET_KEY.startsWith('sk_live_')) : false
+      }
+    },
+    workingDirectory: __dirname,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// ===== OPENAI ROUTES =====
+app.post('/api/openai', async (req, res) => {
+  try {
+    console.log('🤖 OpenAI API request received');
+    
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(500).json({
+        success: false,
+        error: 'OpenAI API key not configured',
+        code: 'OPENAI_NOT_CONFIGURED'
+      });
+    }
+
+    const { prompt, maxTokens = 500 } = req.body;
+    
+    if (!prompt) {
+      return res.status(400).json({
+        success: false,
+        error: 'Prompt is required',
+        code: 'MISSING_PROMPT'
+      });
+    }
+
+    // Simular error de cuota para testing
+    // TODO: Reemplazar con llamada real a OpenAI
+    return res.status(402).json({
+      success: false,
+      error: 'Monthly AI generation quota reached. Please wait until next month or upgrade your plan.',
+      code: 'QUOTA_EXCEEDED'
+    });
+
+    // Ejemplo de llamada real a OpenAI (descomenta cuando tengas cuota):
+    /*
+    const OpenAI = require('openai');
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+
+    const completion = await openai.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "gpt-3.5-turbo",
+      max_tokens: maxTokens,
+    });
+
+    res.json({
+      success: true,
+      data: completion,
+      usage: completion.usage
+    });
+    */
+
+  } catch (error) {
+    console.error('❌ OpenAI error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      code: 'OPENAI_ERROR'
+    });
+  }
+});
+
+// ===== STRIPE ROUTES =====
+const validateStripeConfig = (req, res, next) => {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    return res.status(500).json({
+      success: false,
+      error: 'Stripe not configured on server',
+      code: 'STRIPE_NOT_CONFIGURED'
+    });
+  }
+
+  if (!process.env.STRIPE_SECRET_KEY.startsWith('sk_test_') && 
+      !process.env.STRIPE_SECRET_KEY.startsWith('sk_live_')) {
+    return res.status(500).json({
+      success: false,
+      error: 'Invalid Stripe key format',
+      code: 'STRIPE_INVALID_KEY',
+      details: 'Key must start with sk_test_ or sk_live_'
+    });
+  }
+
+  next();
+};
+
+app.post('/create-checkout-session', validateStripeConfig, async (req, res) => {
+  try {
+    console.log('💳 Creating Stripe checkout session...');
+    
+    const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+    const { priceId, userId, email } = req.body;
+
+    // Validar datos requeridos
+    if (!priceId) {
+      return res.status(400).json({
+        success: false,
+        error: 'priceId is required',
+        code: 'MISSING_PRICE_ID'
+      });
+    }
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        error: 'userId is required',
+        code: 'MISSING_USER_ID'
+      });
+    }
+
+    const frontendUrl = process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:5176';
+    
+    console.log('📊 Session config:', {
+      priceId,
+      userId,
+      email: email || 'not provided',
+      frontendUrl
+    });
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price: priceId,
+          quantity: 1,
+        },
+      ],
+      success_url: `${frontendUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${frontendUrl}/pricing`,
+      metadata: {
+        userId: userId,
+      },
+      ...(email && { customer_email: email })
+    });
+
+    console.log('✅ Stripe session created:', session.id);
+
+    res.json({
+      success: true,
+      sessionId: session.id,
+      url: session.url
+    });
+
+  } catch (error) {
+    console.error('❌ Stripe error:', error);
+
+    // Manejo específico de errores de Stripe
+    let statusCode = 500;
+    let errorCode = 'STRIPE_ERROR';
+
+    if (error.type === 'StripeAuthenticationError') {
+      statusCode = 401;
+      errorCode = 'STRIPE_AUTH_ERROR';
+    } else if (error.type === 'StripeInvalidRequestError') {
+      statusCode = 400;
+      errorCode = 'STRIPE_INVALID_REQUEST';
+    }
+
+    res.status(statusCode).json({
+      success: false,
+      error: error.message,
+      code: errorCode,
+      type: error.type
+    });
+  }
+});
+
+// Stripe config check
+app.get('/api/stripe/config', (req, res) => {
+  res.json({
+    configured: !!process.env.STRIPE_SECRET_KEY,
+    validFormat: process.env.STRIPE_SECRET_KEY ? 
+      (process.env.STRIPE_SECRET_KEY.startsWith('sk_test_') || 
+       process.env.STRIPE_SECRET_KEY.startsWith('sk_live_')) : false,
+    keyPreview: process.env.STRIPE_SECRET_KEY ? 
+      process.env.STRIPE_SECRET_KEY.substring(0, 15) + '...' : null
+  });
+});
+
+// Importar rutas adicionales si existen
+try {
+  const apiRoutes = require('./routes/api');
+  app.use('/api', apiRoutes);
+  console.log('✅ API routes loaded');
+} catch (error) {
+  console.log('⚠️ API routes not found, skipping...');
+}
+
+try {
+  const authRoutes = require('./routes/auth');
+  app.use('/auth', authRoutes);
+  console.log('✅ Auth routes loaded');
+} catch (error) {
+  console.log('⚠️ Auth routes not found, skipping...');
+}
+
+// Catch-all para rutas no encontradas
+app.use('*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    error: 'Route not found',
+    path: req.originalUrl,
+    availableRoutes: [
+      'GET /health',
+      'GET /debug/config',
+      'POST /api/openai',
+      'POST /create-checkout-session',
+      'GET /api/stripe/config'
+    ]
+  });
+});
+
+// Error handler global
+app.use((error, req, res, next) => {
+  console.error('❌ Unhandled error:', error);
+  res.status(500).json({
+    success: false,
+    error: 'Internal server error',
+    message: error.message,
+    ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
+  });
+});
+
+// Iniciar servidor
+app.listen(PORT, () => {
+  console.log('\n✅ === SERVER STARTED SUCCESSFULLY ===');
+  console.log(`🌐 Server running on: http://localhost:${PORT}`);
+  console.log(`🎯 Frontend URL: ${process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:5176'}`);
+  console.log(`📂 Working directory: ${__dirname}`);
+  
+  console.log('\n📋 Available endpoints:');
+  console.log('   GET  /health');
+  console.log('   GET  /debug/config');
+  console.log('   POST /api/openai');
+  console.log('   POST /create-checkout-session');
+  console.log('   GET  /api/stripe/config');
+  
+  console.log('\n🧪 Quick tests:');
+  console.log(`   curl http://localhost:${PORT}/health`);
+  console.log(`   curl http://localhost:${PORT}/debug/config`);
+  console.log('=====================================\n');
+
+  // Verificación inicial de configuración
+  if (!process.env.OPENAI_API_KEY) {
+    console.log('⚠️  OpenAI API key not configured');
+  }
+  if (!process.env.STRIPE_SECRET_KEY) {
+    console.log('⚠️  Stripe secret key not configured');
+    console.log('   Get your key at: https://dashboard.stripe.com/test/apikeys');
+  }
+});
+
+module.exports = app;

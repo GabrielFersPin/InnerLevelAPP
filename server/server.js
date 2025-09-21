@@ -15,10 +15,49 @@ const MONTHLY_GENERATION_LIMIT = parseInt(process.env.MONTHLY_GENERATION_LIMIT |
 const MAX_TOKENS_PER_REQUEST = parseInt(process.env.MAX_TOKENS_PER_REQUEST || '2000', 10);
 const MONTHLY_TOKEN_LIMIT = parseInt(process.env.MONTHLY_TOKEN_LIMIT || '100000', 10);
 
+// Logging inicial mejorado
+console.log('\n🚀 === INNERLEVEL SERVER STARTING ===');
+console.log('📍 Working directory:', __dirname);
+console.log('🔧 Environment:', process.env.NODE_ENV || 'development');
+console.log('🌐 Frontend URL:', process.env.FRONTEND_URL || process.env.CLIENT_URL);
+console.log('📊 OpenAI configured:', !!process.env.OPENAI_API_KEY);
+console.log('💳 Stripe configured:', !!process.env.STRIPE_SECRET_KEY);
+console.log('🔑 Stripe format valid:', process.env.STRIPE_SECRET_KEY ? 
+  (process.env.STRIPE_SECRET_KEY.startsWith('sk_test_') || 
+   process.env.STRIPE_SECRET_KEY.startsWith('sk_live_')) : false);
+
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cors());
+
+// CORS mejorado para tu estructura
+app.use(cors({
+  origin: [
+    process.env.FRONTEND_URL || 'http://localhost:5176',
+    process.env.CLIENT_URL || 'http://localhost:5176',
+    'http://localhost:3000', // Por si acaso
+    'http://localhost:5173'  // Vite default
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Middleware de logging mejorado
+app.use((req, res, next) => {
+  const timestamp = new Date().toISOString();
+  console.log(`${timestamp} - ${req.method} ${req.path}`);
+  
+  if (req.method === 'POST' && req.body && Object.keys(req.body).length > 0) {
+    // Log body pero oculta información sensible
+    const logBody = { ...req.body };
+    if (logBody.messages) {
+      logBody.messages = `[${logBody.messages.length} messages]`;
+    }
+    console.log('📝 Request body:', JSON.stringify(logBody, null, 2));
+  }
+  next();
+});
 
 // Stripe
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
@@ -29,26 +68,91 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// ===== NUEVO: Debug configuration endpoint =====
+app.get('/debug/config', (req, res) => {
+  console.log('🔍 Debug config requested');
+  
+  const stripeValidFormat = process.env.STRIPE_SECRET_KEY ? 
+    (process.env.STRIPE_SECRET_KEY.startsWith('sk_test_') || 
+     process.env.STRIPE_SECRET_KEY.startsWith('sk_live_')) : false;
+
+  res.json({
+    timestamp: new Date().toISOString(),
+    environment: {
+      NODE_ENV: process.env.NODE_ENV,
+      PORT: port,
+      FRONTEND_URL: process.env.FRONTEND_URL,
+      CLIENT_URL: process.env.CLIENT_URL,
+      MONTHLY_GENERATION_LIMIT,
+      MAX_TOKENS_PER_REQUEST,
+      MONTHLY_TOKEN_LIMIT
+    },
+    services: {
+      openai: {
+        configured: !!process.env.OPENAI_API_KEY,
+        keyPreview: process.env.OPENAI_API_KEY ? 
+          process.env.OPENAI_API_KEY.substring(0, 10) + '...' : null
+      },
+      stripe: {
+        configured: !!process.env.STRIPE_SECRET_KEY,
+        keyPreview: process.env.STRIPE_SECRET_KEY ? 
+          process.env.STRIPE_SECRET_KEY.substring(0, 15) + '...' : null,
+        validFormat: stripeValidFormat,
+        priceId: process.env.STRIPE_PRICE_ID || 'not_set'
+      },
+      usageStore: {
+        available: true,
+        type: 'in-memory'
+      }
+    },
+    workingDirectory: __dirname,
+    envFile: {
+      exists: require('fs').existsSync('.env'),
+      path: require('path').resolve('.env')
+    },
+    validation: {
+      issues: [
+        ...(!process.env.OPENAI_API_KEY ? ['OpenAI API key not configured'] : []),
+        ...(!process.env.STRIPE_SECRET_KEY ? ['Stripe secret key not configured'] : []),
+        ...(process.env.STRIPE_SECRET_KEY && !stripeValidFormat ? ['Stripe secret key has invalid format'] : []),
+        ...(!process.env.STRIPE_PRICE_ID ? ['Stripe price ID not configured'] : [])
+      ]
+    }
+  });
+});
+
 // Endpoint for OpenAI Chat Completions (API nueva)
 app.post("/api/openai", async (req, res) => {
   const { model, messages, temperature, max_tokens, userId } = req.body;
 
   if (!messages || !Array.isArray(messages)) {
-    return res.status(400).json({ error: "Messages array is required" });
+    return res.status(400).json({ 
+      success: false,
+      error: "Messages array is required",
+      code: 'MISSING_MESSAGES'
+    });
   }
 
   // Require a userId to enforce per-user quotas
   if (!userId) {
-    return res.status(400).json({ error: "userId is required" });
+    return res.status(400).json({ 
+      success: false,
+      error: "userId is required",
+      code: 'MISSING_USER_ID'
+    });
   }
 
   // Check monthly quota
   const usage = getUserUsage(userId);
   if (usage.generations >= MONTHLY_GENERATION_LIMIT) {
     return res.status(402).json({
-      error: {
-        code: 'quota_exceeded',
-        message: 'Monthly AI generation quota reached. Please wait until next month or upgrade your plan.'
+      success: false,
+      error: 'Monthly AI generation quota reached. Please wait until next month or upgrade your plan.',
+      code: 'QUOTA_EXCEEDED',
+      quota: { 
+        used: usage.generations, 
+        limit: MONTHLY_GENERATION_LIMIT, 
+        period: usage.period 
       }
     });
   }
@@ -69,6 +173,7 @@ app.post("/api/openai", async (req, res) => {
     const after = incrementUserUsage(userId, { generations: 1, tokens: usedTokens });
 
     res.status(200).json({
+      success: true,
       choices: completion.choices,
       usage: completion.usage,
       model: completion.model,
@@ -78,10 +183,10 @@ app.post("/api/openai", async (req, res) => {
   } catch (error) {
     console.error("❌ Error calling OpenAI API:", error.message);
     res.status(500).json({ 
-      error: {
-        message: error.message || "Failed to call OpenAI API",
-        type: error.type || "api_error"
-      }
+      success: false,
+      error: error.message || "Failed to call OpenAI API",
+      code: 'OPENAI_ERROR',
+      type: error.type || "api_error"
     });
   }
 });
@@ -90,32 +195,55 @@ app.post("/api/openai", async (req, res) => {
 app.get('/api/usage', (req, res) => {
   const userId = req.query.userId;
   if (!userId) {
-    return res.status(400).json({ error: 'userId is required' });
+    return res.status(400).json({ 
+      success: false,
+      error: 'userId is required',
+      code: 'MISSING_USER_ID'
+    });
   }
   const usage = getUserUsage(userId);
   res.json({
+    success: true,
     period: usage.period,
     generations: { used: usage.generations, limit: MONTHLY_GENERATION_LIMIT },
     tokens: { used: usage.tokens, limit: MONTHLY_TOKEN_LIMIT }
   });
 });
 
-// Create Stripe Checkout Session (subscription)
+// Create Stripe Checkout Session (subscription) - MEJORADO
 app.post('/create-checkout-session', async (req, res) => {
   try {
+    console.log('💳 Stripe checkout session requested');
+    console.log('📝 Request body:', req.body);
+
     if (!stripe) {
       console.error('❌ Stripe not configured. Please set STRIPE_SECRET_KEY in server/.env file');
       return res.status(500).json({ 
+        success: false,
         error: 'Stripe is not configured on the server',
+        code: 'STRIPE_NOT_CONFIGURED',
         details: 'Please set STRIPE_SECRET_KEY in server/.env file'
       });
     }
 
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5176';
+    // Verificar formato de clave
+    if (!process.env.STRIPE_SECRET_KEY.startsWith('sk_test_') && 
+        !process.env.STRIPE_SECRET_KEY.startsWith('sk_live_')) {
+      return res.status(500).json({
+        success: false,
+        error: 'Invalid Stripe key format',
+        code: 'STRIPE_INVALID_KEY',
+        details: 'Key must start with sk_test_ or sk_live_',
+        currentFormat: process.env.STRIPE_SECRET_KEY.substring(0, 15) + '...'
+      });
+    }
+
+    const frontendUrl = process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:5176';
     const lookupKeyFromBody = req.body.lookup_key;
+    const priceIdFromBody = req.body.priceId; // Nuevo: soporte para priceId directo
     const priceIdFromEnv = process.env.STRIPE_PRICE_ID;
 
-    let priceId = priceIdFromEnv || null;
+    let priceId = priceIdFromBody || priceIdFromEnv || null;
 
     if (!priceId && lookupKeyFromBody) {
       const prices = await stripe.prices.list({
@@ -123,14 +251,28 @@ app.post('/create-checkout-session', async (req, res) => {
         expand: ['data.product']
       });
       if (!prices.data || prices.data.length === 0) {
-        return res.status(400).json({ error: 'Invalid lookup_key: price not found' });
+        return res.status(400).json({ 
+          success: false,
+          error: 'Invalid lookup_key: price not found',
+          code: 'INVALID_LOOKUP_KEY'
+        });
       }
       priceId = prices.data[0].id;
     }
 
     if (!priceId) {
-      return res.status(400).json({ error: 'Missing STRIPE_PRICE_ID or lookup_key' });
+      return res.status(400).json({ 
+        success: false,
+        error: 'Missing STRIPE_PRICE_ID, priceId, or lookup_key',
+        code: 'MISSING_PRICE_ID'
+      });
     }
+
+    console.log('📊 Creating session with:', {
+      priceId,
+      frontendUrl,
+      userId: req.body.userId || 'not_provided'
+    });
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
@@ -139,23 +281,44 @@ app.post('/create-checkout-session', async (req, res) => {
       ],
       success_url: `${frontendUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${frontendUrl}`,
+      metadata: {
+        ...(req.body.userId && { userId: req.body.userId })
+      },
+      ...(req.body.email && { customer_email: req.body.email })
     });
 
-    return res.redirect(303, session.url);
-  } catch (error) {
-    console.error('Stripe session error:', error);
-    
-    // Handle specific Stripe errors
-    if (error.message && error.message.includes('Invalid API Key')) {
-      return res.status(500).json({ 
-        error: 'Invalid Stripe API Key',
-        details: 'Please check your STRIPE_SECRET_KEY in server/.env file',
-        message: 'Payment system configuration error'
+    console.log('✅ Stripe session created successfully:', session.id);
+
+    // Para compatibilidad con tu frontend actual, devolver tanto redirect como JSON
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.json({
+        success: true,
+        sessionId: session.id,
+        url: session.url
       });
+    } else {
+      return res.redirect(303, session.url);
     }
+  } catch (error) {
+    console.error('❌ Stripe session error:', error);
     
-    return res.status(500).json({ 
+    let statusCode = 500;
+    let errorCode = 'STRIPE_ERROR';
+
+    // Handle specific Stripe errors
+    if (error.type === 'StripeAuthenticationError') {
+      statusCode = 401;
+      errorCode = 'STRIPE_AUTH_ERROR';
+    } else if (error.type === 'StripeInvalidRequestError') {
+      statusCode = 400;
+      errorCode = 'STRIPE_INVALID_REQUEST';
+    }
+
+    return res.status(statusCode).json({ 
+      success: false,
       error: error.message || 'Failed to create checkout session',
+      code: errorCode,
+      type: error.type,
       details: 'Please check your Stripe configuration'
     });
   }
@@ -165,10 +328,14 @@ app.post('/create-checkout-session', async (req, res) => {
 app.get('/create-checkout-session', async (req, res) => {
   try {
     if (!stripe) {
-      return res.status(500).json({ error: 'Stripe is not configured on the server' });
+      return res.status(500).json({ 
+        success: false,
+        error: 'Stripe is not configured on the server',
+        code: 'STRIPE_NOT_CONFIGURED'
+      });
     }
 
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5176';
+    const frontendUrl = process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:5176';
     const lookupKeyFromQuery = req.query.lookup_key;
     const priceIdFromEnv = process.env.STRIPE_PRICE_ID;
 
@@ -180,13 +347,21 @@ app.get('/create-checkout-session', async (req, res) => {
         expand: ['data.product']
       });
       if (!prices.data || prices.data.length === 0) {
-        return res.status(400).json({ error: 'Invalid lookup_key: price not found' });
+        return res.status(400).json({ 
+          success: false,
+          error: 'Invalid lookup_key: price not found',
+          code: 'INVALID_LOOKUP_KEY'
+        });
       }
       priceId = prices.data[0].id;
     }
 
     if (!priceId) {
-      return res.status(400).json({ error: 'Missing STRIPE_PRICE_ID or lookup_key' });
+      return res.status(400).json({ 
+        success: false,
+        error: 'Missing STRIPE_PRICE_ID or lookup_key',
+        code: 'MISSING_PRICE_ID'
+      });
     }
 
     const session = await stripe.checkout.sessions.create({
@@ -202,17 +377,10 @@ app.get('/create-checkout-session', async (req, res) => {
   } catch (error) {
     console.error('Stripe session error (GET):', error);
     
-    // Handle specific Stripe errors
-    if (error.message && error.message.includes('Invalid API Key')) {
-      return res.status(500).json({ 
-        error: 'Invalid Stripe API Key',
-        details: 'Please check your STRIPE_SECRET_KEY in server/.env file',
-        message: 'Payment system configuration error'
-      });
-    }
-    
     return res.status(500).json({ 
+      success: false,
       error: error.message || 'Failed to create checkout session',
+      code: 'STRIPE_ERROR',
       details: 'Please check your Stripe configuration'
     });
   }
@@ -224,11 +392,19 @@ app.post('/verify-payment', async (req, res) => {
     const { session_id } = req.body;
     
     if (!session_id) {
-      return res.status(400).json({ error: 'session_id is required' });
+      return res.status(400).json({ 
+        success: false,
+        error: 'session_id is required',
+        code: 'MISSING_SESSION_ID'
+      });
     }
 
     if (!stripe) {
-      return res.status(500).json({ error: 'Stripe is not configured' });
+      return res.status(500).json({ 
+        success: false,
+        error: 'Stripe is not configured',
+        code: 'STRIPE_NOT_CONFIGURED'
+      });
     }
 
     // Retrieve the session from Stripe
@@ -255,14 +431,18 @@ app.post('/verify-payment', async (req, res) => {
     } else {
       console.log('❌ Payment not completed for session:', session_id);
       res.status(400).json({ 
+        success: false,
         error: 'Payment not completed',
+        code: 'PAYMENT_NOT_COMPLETED',
         payment_status: session.payment_status 
       });
     }
   } catch (error) {
     console.error('❌ Error verifying payment:', error);
     res.status(500).json({ 
+      success: false,
       error: 'Failed to verify payment',
+      code: 'PAYMENT_VERIFICATION_ERROR',
       details: error.message 
     });
   }
@@ -304,13 +484,52 @@ app.post('/stripe-webhook', express.raw({type: 'application/json'}), async (req,
   res.json({received: true});
 });
 
-// Health check endpoint
+// Health check endpoint - MEJORADO
 app.get("/health", (req, res) => {
-  res.status(200).json({ 
+  const stripeValidFormat = process.env.STRIPE_SECRET_KEY ? 
+    (process.env.STRIPE_SECRET_KEY.startsWith('sk_test_') || 
+     process.env.STRIPE_SECRET_KEY.startsWith('sk_live_')) : false;
+
+  const healthData = {
     status: "OK", 
     timestamp: new Date().toISOString(),
-    env: process.env.NODE_ENV || "development"
-  });
+    environment: process.env.NODE_ENV || "development",
+    port: port,
+    services: {
+      openai: {
+        configured: !!process.env.OPENAI_API_KEY,
+        keyFormat: process.env.OPENAI_API_KEY ? 
+          process.env.OPENAI_API_KEY.substring(0, 10) + '...' : 'NOT_SET'
+      },
+      stripe: {
+        configured: !!process.env.STRIPE_SECRET_KEY,
+        keyFormat: process.env.STRIPE_SECRET_KEY ? 
+          process.env.STRIPE_SECRET_KEY.substring(0, 15) + '...' : 'NOT_SET',
+        validFormat: stripeValidFormat
+      }
+    },
+    frontend: {
+      url: process.env.FRONTEND_URL || process.env.CLIENT_URL || 'NOT_SET'
+    }
+  };
+
+  // Determinar si hay problemas
+  const issues = [];
+  if (!process.env.OPENAI_API_KEY) {
+    issues.push('OpenAI API key not configured');
+  }
+  if (!process.env.STRIPE_SECRET_KEY) {
+    issues.push('Stripe secret key not configured');
+  } else if (!stripeValidFormat) {
+    issues.push('Stripe secret key has invalid format');
+  }
+
+  if (issues.length > 0) {
+    healthData.status = 'WARNING';
+    healthData.issues = issues;
+  }
+
+  res.status(200).json(healthData);
 });
 
 // Test endpoint
@@ -334,17 +553,59 @@ app.get("/test", async (req, res) => {
   }
 });
 
+// 404 handler para rutas no encontradas
+app.use('*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    error: 'Route not found',
+    path: req.originalUrl,
+    availableRoutes: [
+      'GET /health',
+      'GET /debug/config',
+      'GET /test',
+      'POST /api/openai',
+      'GET /api/usage',
+      'POST /create-checkout-session',
+      'GET /create-checkout-session',
+      'POST /verify-payment',
+      'POST /stripe-webhook'
+    ]
+  });
+});
+
 // Error handling middleware
 app.use((error, req, res, next) => {
-  console.error('Server error:', error);
-  res.status(500).json({ error: 'Internal server error' });
+  console.error('❌ Unhandled server error:', error);
+  res.status(500).json({ 
+    success: false,
+    error: 'Internal server error',
+    message: error.message,
+    ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
+  });
 });
 
 // Start the server
 app.listen(port, () => {
-  console.log(`🚀 Server running at http://localhost:${port}`);
+  console.log(`\n✅ === SERVER STARTED SUCCESSFULLY ===`);
+  console.log(`🌐 Server running at: http://localhost:${port}`);
   console.log(`📊 Health check: http://localhost:${port}/health`);
+  console.log(`🔍 Debug config: http://localhost:${port}/debug/config`);
   console.log(`🧪 Test endpoint: http://localhost:${port}/test`);
+  console.log(`🎯 Frontend URL: ${process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:5176'}`);
+  
+  console.log('\n📋 Available endpoints:');
+  console.log('   GET  /health');
+  console.log('   GET  /debug/config');
+  console.log('   GET  /test');
+  console.log('   POST /api/openai');
+  console.log('   GET  /api/usage');
+  console.log('   POST /create-checkout-session');
+  console.log('   POST /verify-payment');
+  
+  console.log('\n🧪 Quick tests:');
+  console.log(`   curl http://localhost:${port}/health`);
+  console.log(`   curl http://localhost:${port}/debug/config`);
+  console.log('=======================================\n');
   
   // Verificar que la API key esté configurada
   if (!process.env.OPENAI_API_KEY) {
@@ -360,6 +621,16 @@ app.listen(port, () => {
     console.error('   STRIPE_SECRET_KEY=sk_test_your_key_here');
     console.error('   STRIPE_PRICE_ID=price_your_price_id_here');
   } else {
-    console.log('✅ Stripe configured');
+    const stripeValidFormat = process.env.STRIPE_SECRET_KEY ? 
+      (process.env.STRIPE_SECRET_KEY.startsWith('sk_test_') || 
+       process.env.STRIPE_SECRET_KEY.startsWith('sk_live_')) : false;
+    
+    if (stripeValidFormat) {
+      console.log('✅ Stripe configured with valid key format');
+    } else {
+      console.error('⚠️  WARNING: Stripe key has invalid format');
+      console.error('   Key must start with sk_test_ or sk_live_');
+      console.error('   Current format:', process.env.STRIPE_SECRET_KEY.substring(0, 15) + '...');
+    }
   }
 });
