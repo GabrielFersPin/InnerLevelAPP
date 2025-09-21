@@ -33,10 +33,10 @@ app.use(express.urlencoded({ extended: false }));
 // CORS mejorado para tu estructura
 app.use(cors({
   origin: [
-    process.env.FRONTEND_URL || 'http://localhost:5176',
-    process.env.CLIENT_URL || 'http://localhost:5176',
-    'http://localhost:3000', // Por si acaso
-    'http://localhost:5173'  // Vite default
+    'http://localhost:5173',     // Vite default
+    'http://127.0.0.1:5173',     // Tu frontend actual
+    'http://localhost:5176',     // Tu configuración original
+    'http://localhost:3000',     // Por si acaso
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
