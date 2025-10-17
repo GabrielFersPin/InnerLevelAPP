@@ -72,44 +72,35 @@ export function MysticForge() {
     }
   };
 
-  const handlePaymentRedirect = async () => {
-    try {
-      // Create Stripe checkout session
-      const response = await fetch(`${getApiUrl()}/create-checkout-session`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          lookup_key: 'premium-monthly'
-        })
-      });
-
-      if (response.ok) {
-        const { url } = await response.json();
-        // Redirect to Stripe checkout
-        window.location.href = url;
-      } else {
-        const errorData = await response.json();
-        console.error('Failed to create checkout session:', errorData);
-        alert('Payment system is currently unavailable. Please try again later.');
-      }
-    } catch (error) {
-      console.error('Payment error:', error);
-      alert('Payment system is currently unavailable. Please try again later.');
-    }
-  };
-
-  const addCardToInventory = (card: Card) => {
-    dispatch({ type: 'ADD_CARD', payload: card });
-  };
-
-  const addAllCards = () => {
-    generatedCards.forEach(card => {
-      dispatch({ type: 'ADD_CARD', payload: card });
+// In MysticForge.tsx - actualizar el handler
+const handlePaymentRedirect = async () => {
+  try {
+    const response = await fetch('http://localhost:5000/create-checkout-session', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        priceId: 'price_1S9nazRzgYnoH4fIyNCsYgnk', // Tu Price ID
+        userId: '902cd635-6ccf-40d7-b087-d82cabc08cf5', // ID del usuario actual
+        email: 'gabrielfelipef.23@gmail.com' // Email del usuario
+      })
     });
-    setGeneratedCards([]);
-  };
+
+    const data = await response.json();
+    
+    if (data.success && data.url) {
+      window.location.href = data.url; // Redirigir a Stripe Checkout
+    } else {
+      console.error('Error creating payment session:', data.error);
+      // Aquí puedes mostrar tu página de error personalizada
+    }
+  } catch (error) {
+    console.error('Payment error:', error);
+    // Aquí también puedes mostrar tu página de error personalizada
+  }
+};
 
   // Removed manual create buttons for non goal-oriented types
 
