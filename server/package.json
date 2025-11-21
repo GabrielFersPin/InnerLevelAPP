@@ -19,6 +19,9 @@
     "@types/canvas-confetti": "^1.9.0",
     "nodemon": "^3.0.2"
   },
+  "nodemonConfig": {
+    "ignore": ["usage.json"]
+  },
   "engines": {
     "node": ">=16.0.0"
   }

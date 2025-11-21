@@ -50,7 +50,7 @@ async function callOpenAI(prompt: string, options: any = {}): Promise<string> {
           }
         ],
         temperature: options.temperature || 0.7,
-        max_tokens: options.max_tokens || 500,
+        max_tokens: options.max_tokens || 2000,
         userId: options.userId || 'anonymous'
       })
     });
