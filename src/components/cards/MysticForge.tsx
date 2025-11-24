@@ -104,6 +104,19 @@ const handlePaymentRedirect = async () => {
 
   // Removed manual create buttons for non goal-oriented types
 
+  const addCardToInventory = (card: Card) => {
+    dispatch({ type: 'ADD_CARD', payload: card });
+    console.log('✅ Card added to deck:', card.name);
+  };
+
+  const addAllCards = () => {
+    generatedCards.forEach(card => {
+      dispatch({ type: 'ADD_CARD', payload: card });
+    });
+    console.log(`✅ Added ${generatedCards.length} cards to deck`);
+    alert(`Successfully added ${generatedCards.length} cards to your deck!`);
+  };
+
   const handleAddGoal = (newGoal) => {
     dispatch({ type: 'ADD_GOAL', payload: newGoal });
     setShowGoalForm(false);
