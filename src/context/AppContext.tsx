@@ -683,6 +683,34 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     initializeAuth();
   }, []);
 
+  // Load cards from localStorage for non-authenticated users
+  useEffect(() => {
+    if (!user && !loading) {
+      try {
+        const savedCards = localStorage.getItem('lifequest-cards');
+        if (savedCards) {
+          const parsedCards = JSON.parse(savedCards);
+          dispatch({ type: 'LOAD_CARDS', payload: parsedCards });
+          console.log('✅ Loaded cards from localStorage');
+        }
+      } catch (error) {
+        console.error('Error loading cards from localStorage:', error);
+      }
+    }
+  }, [user, loading]);
+
+  // Save cards to localStorage for non-authenticated users
+  useEffect(() => {
+    if (!user && !loading && state.cards) {
+      try {
+        localStorage.setItem('lifequest-cards', JSON.stringify(state.cards));
+        console.log('💾 Saved cards to localStorage');
+      } catch (error) {
+        console.error('Error saving cards to localStorage:', error);
+      }
+    }
+  }, [state.cards, user, loading]);
+
   // Load user data from Supabase
   async function loadUserData(userId: string) {
     try {
