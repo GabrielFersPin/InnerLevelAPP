@@ -48,6 +48,11 @@ export function useUserData() {
         };
 
         dispatch({ type: 'LOAD_DATA', payload: userData });
+
+        // Load cards separately if they exist
+        if (data.cards) {
+          dispatch({ type: 'LOAD_CARDS', payload: data.cards });
+        }
       }
     } catch (error) {
       console.error('Error loading user data:', error);
@@ -69,6 +74,7 @@ export function useUserData() {
           redeemed_rewards: state.redeemedRewards,
           emotional_logs: state.emotionalLogs,
           goals: state.goals,
+          cards: state.cards, // Save cards to database
           updated_at: new Date().toISOString(),
         });
 

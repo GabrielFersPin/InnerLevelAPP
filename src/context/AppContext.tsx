@@ -29,6 +29,7 @@ type AppAction =
   | { type: 'COMPLETE_ONBOARDING' }
   // LifeQuest Cards Actions
   | { type: 'ADD_CARD'; payload: Card }
+  | { type: 'LOAD_CARDS'; payload: any }
   | { type: 'EXECUTE_CARD'; payload: { cardId: string; result: CardResult } }
   | { type: 'UPDATE_CARD_COOLDOWN'; payload: { cardId: string; cooldownUntil: Date } }
   | { type: 'ACTIVATE_CARD'; payload: string }
@@ -304,7 +305,17 @@ function appReducer(state: AppState, action: AppAction): AppState {
           ]
         }
       };
-    
+
+    case 'LOAD_CARDS':
+      return {
+        ...state,
+        cards: {
+          inventory: Array.isArray(action.payload?.inventory) ? action.payload.inventory : [],
+          activeCards: Array.isArray(action.payload?.activeCards) ? action.payload.activeCards : [],
+          cooldowns: action.payload?.cooldowns || {}
+        }
+      };
+
     case 'EXECUTE_CARD': {
       const { cardId, result } = action.payload;
       const inventory = Array.isArray(state.cards?.inventory) ? state.cards.inventory : [];

@@ -54,6 +54,8 @@ export type Database = {
           goals: any;
           // Character data
           character: any;
+          // Cards data
+          cards: any;
           is_onboarded: boolean;
           created_at: string;
           updated_at: string;
@@ -70,6 +72,8 @@ export type Database = {
           goals?: any;
           // Character data
           character?: any;
+          // Cards data
+          cards?: any;
           is_onboarded?: boolean;
           created_at?: string;
           updated_at?: string;
@@ -86,6 +90,8 @@ export type Database = {
           goals?: any;
           // Character data
           character?: any;
+          // Cards data
+          cards?: any;
           is_onboarded?: boolean;
           created_at?: string;
           updated_at?: string;
