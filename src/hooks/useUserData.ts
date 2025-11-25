@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { useAuth } from './useAuth';
 import { supabase } from '../lib/supabase';
@@ -7,25 +7,43 @@ import { AppData } from '../types';
 export function useUserData() {
   const { state, dispatch } = useAppContext();
   const { user } = useAuth();
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isLoadingRef = useRef(false);
 
   // Load user data from database when user logs in
   useEffect(() => {
-    if (user) {
+    if (user && !isLoadingRef.current) {
       loadUserData();
     }
   }, [user]);
 
-  // Save user data to database whenever state changes
+  // Save user data to database whenever state changes (with debounce)
   useEffect(() => {
-    if (user) {
-      saveUserData();
+    if (user && !isLoadingRef.current) {
+      // Clear previous timeout
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+
+      // Debounce save - wait 1 second after last change
+      saveTimeoutRef.current = setTimeout(() => {
+        saveUserData();
+      }, 1000);
     }
-  }, [state, user]);
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [state.tasks, state.habits, state.todos, state.rewards, state.redeemedRewards, state.emotionalLogs, state.goals, state.cards, user]);
 
   const loadUserData = async () => {
-    if (!user) return;
+    if (!user || isLoadingRef.current) return;
 
     try {
+      isLoadingRef.current = true;
+
       const { data, error } = await supabase
         .from('user_data')
         .select('*')
@@ -56,6 +74,8 @@ export function useUserData() {
       }
     } catch (error) {
       console.error('Error loading user data:', error);
+    } finally {
+      isLoadingRef.current = false;
     }
   };
 
