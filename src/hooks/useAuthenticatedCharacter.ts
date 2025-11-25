@@ -1,27 +1,46 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useAuth } from './useAuth';
 import { useAppContext } from '../context/AppContext';
 
 export function useAuthenticatedCharacter() {
   const { user, getUserData, updateUserData } = useAuth();
   const { state, dispatch } = useAppContext();
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isLoadingRef = useRef(false);
 
   // Load character data from database when user logs in
   useEffect(() => {
-    if (user) {
+    if (user && !isLoadingRef.current) {
       loadCharacterFromDatabase();
     }
   }, [user]);
 
-  // Save character data to database when character changes
+  // Save character data to database when character changes (with debounce)
   useEffect(() => {
-    if (user && state.character) {
-      saveCharacterToDatabase();
+    if (user && state.character && !isLoadingRef.current) {
+      // Clear previous timeout
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+
+      // Debounce save - wait 1 second after last change
+      saveTimeoutRef.current = setTimeout(() => {
+        saveCharacterToDatabase();
+      }, 1000);
     }
-  }, [state.character, user]);
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [state.character?.level, state.character?.experience, state.character?.energy, state.character?.isOnboarded, user]);
 
   const loadCharacterFromDatabase = async () => {
+    if (isLoadingRef.current) return;
+
     try {
+      isLoadingRef.current = true;
       console.log('[loadCharacterFromDatabase] called');
       const { data } = await getUserData();
       console.log('[loadCharacterFromDatabase] data from Supabase:', data);
@@ -36,6 +55,8 @@ export function useAuthenticatedCharacter() {
       }
     } catch (error) {
       console.error('Error loading character from database:', error);
+    } finally {
+      isLoadingRef.current = false;
     }
   };
 
