@@ -3,6 +3,7 @@ import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { AppData, Task, Habit, Todo, Reward, RedeemedReward, EmotionalLog, Goal, Card, Quest, CardResult, Character, CharacterClass, PersonalityTestResult, GuildData, Guild, Friend, FriendRequest, PrivacySettings, NotificationSettings, GuildPreferences } from '../types/index';
 import { createNewCharacter } from '../data/characterClasses';
+import { getStarterCards } from '../data/starterCards';
 
 interface AppState extends AppData {}
 
@@ -227,15 +228,28 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, goals: state.goals.filter(g => g.id !== action.payload) };
     
     // Character Reducers
-    case 'CREATE_CHARACTER':
+    case 'CREATE_CHARACTER': {
+      const newCharacter = createNewCharacter(
+        action.payload.name,
+        action.payload.characterClass,
+        action.payload.personalityResult
+      );
+
+      // Get starter cards for the character's class
+      const starterCards = getStarterCards(action.payload.characterClass);
+
       return {
         ...state,
-        character: createNewCharacter(
-          action.payload.name, 
-          action.payload.characterClass, 
-          action.payload.personalityResult
-        )
+        character: newCharacter,
+        cards: {
+          ...state.cards,
+          inventory: [
+            ...(state.cards?.inventory || []),
+            ...starterCards
+          ]
+        }
       };
+    }
     
     case 'LOAD_CHARACTER':
       return {
