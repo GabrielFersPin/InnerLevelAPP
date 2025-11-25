@@ -65,20 +65,30 @@ export function useAuth() {
 
   const fetchProfile = async (userId: string) => {
     try {
+      console.log('🔐 [useAuth] fetchProfile - Starting for userId:', userId);
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('user_id', userId)
         .single();
 
+      console.log('🔐 [useAuth] fetchProfile - Query complete. Error:', error?.code || 'none');
+
       if (error && error.code !== 'PGRST116') {
+        console.error('❌ [useAuth] fetchProfile - Error (not PGRST116):', error);
         throw error;
       }
 
+      if (error && error.code === 'PGRST116') {
+        console.log('⚠️ [useAuth] fetchProfile - No profile found (PGRST116), this is expected for new users');
+      }
+
+      console.log('🔐 [useAuth] fetchProfile - Setting profile data:', data ? 'Profile exists' : 'No profile');
       setProfile(data);
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error('❌ [useAuth] fetchProfile - Caught error:', error);
     } finally {
+      console.log('🔐 [useAuth] fetchProfile - Setting loading to false');
       setLoading(false);
     }
   };

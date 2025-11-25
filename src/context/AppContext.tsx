@@ -645,12 +645,14 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
+  console.log('🎯 [AppProvider] Component initializing...');
   const [state, dispatch] = useReducer(appReducer, initialState);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
-  
+
+  console.log('🎯 [AppProvider] State initialized, loading:', loading);
   const generateId = () => Date.now() + Math.random();
 
   // Initialize auth and load user data

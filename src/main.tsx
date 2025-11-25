@@ -6,6 +6,14 @@ import App from './App.tsx';
 import { AppProvider } from './context/AppContext';
 import './index.css';
 
+console.log('🚀 [main.tsx] Starting application...');
+console.log('🚀 [main.tsx] Environment:', {
+  supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
+  hasSupabaseKey: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
+  apiUrl: import.meta.env.VITE_API_URL,
+  appUrl: import.meta.env.VITE_APP_URL
+});
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AppProvider>
@@ -13,3 +21,5 @@ createRoot(document.getElementById('root')!).render(
     </AppProvider>
   </StrictMode>
 );
+
+console.log('🚀 [main.tsx] React root created and rendering...');
