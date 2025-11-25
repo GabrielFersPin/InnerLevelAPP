@@ -66,17 +66,26 @@ export function useAuth() {
   const fetchProfile = async (userId: string) => {
     try {
       console.log('🔐 [useAuth] fetchProfile - Starting for userId:', userId);
-      const { data, error } = await supabase
+
+      // Add timeout to prevent infinite hang
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
+      );
+
+      const queryPromise = supabase
         .from('user_profiles')
         .select('*')
         .eq('user_id', userId)
         .single();
 
+      const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any;
+
       console.log('🔐 [useAuth] fetchProfile - Query complete. Error:', error?.code || 'none');
 
       if (error && error.code !== 'PGRST116') {
         console.error('❌ [useAuth] fetchProfile - Error (not PGRST116):', error);
-        throw error;
+        // Don't throw - profile is not critical, just log the error
+        console.warn('⚠️ [useAuth] Continuing without profile - app can function without it');
       }
 
       if (error && error.code === 'PGRST116') {
@@ -84,9 +93,11 @@ export function useAuth() {
       }
 
       console.log('🔐 [useAuth] fetchProfile - Setting profile data:', data ? 'Profile exists' : 'No profile');
-      setProfile(data);
+      setProfile(data || null);
     } catch (error) {
       console.error('❌ [useAuth] fetchProfile - Caught error:', error);
+      console.warn('⚠️ [useAuth] Continuing without profile - app can function without it');
+      setProfile(null);
     } finally {
       console.log('🔐 [useAuth] fetchProfile - Setting loading to false');
       setLoading(false);
