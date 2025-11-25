@@ -20,21 +20,34 @@ export function useAuth() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    console.log('🔐 [useAuth] Starting authentication...');
     setLoading(true);
+
     // Use Supabase authentication
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      } else {
+    console.log('🔐 [useAuth] Calling getSession...');
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        console.log('🔐 [useAuth] Got session:', session ? 'User exists' : 'No session');
+        setSession(session);
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          console.log('🔐 [useAuth] Fetching profile for user:', session.user.id);
+          fetchProfile(session.user.id);
+        } else {
+          console.log('🔐 [useAuth] No session, setting loading to false');
+          setLoading(false);
+        }
+      })
+      .catch((error) => {
+        console.error('❌ [useAuth] Error getting session:', error);
         setLoading(false);
-      }
-    });
+      });
 
     // Listen for auth changes
+    console.log('🔐 [useAuth] Setting up auth state listener...');
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('🔐 [useAuth] Auth state changed:', event);
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
@@ -46,6 +59,7 @@ export function useAuth() {
       }
     );
 
+    console.log('🔐 [useAuth] Auth listener setup complete');
     return () => subscription.unsubscribe();
   }, []);
 
