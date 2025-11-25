@@ -658,23 +658,37 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     async function initializeAuth() {
       try {
         console.log('🔄 Initializing auth...');
-        
+
         // Get current session
-        const { data: { session } } = await supabase.auth.getSession();
-        
+        console.log('📡 Fetching session from Supabase...');
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+        if (sessionError) {
+          console.error('❌ Session error:', sessionError);
+          throw sessionError;
+        }
+
+        console.log('📦 Session data:', session ? 'User logged in' : 'No session');
+
         if (session?.user) {
           console.log('✅ User found, loading data...');
           setUser(session.user);
-          await loadUserData(session.user.id);
+          try {
+            await loadUserData(session.user.id);
+            console.log('✅ User data loaded successfully');
+          } catch (loadError) {
+            console.error('❌ Error loading user data:', loadError);
+          }
         } else {
-          console.log('❌ No user session found');
+          console.log('❌ No user session found - continuing as guest');
         }
-        
+
         // Listen for auth changes
+        console.log('👂 Setting up auth listener...');
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
             console.log('🔄 Auth state change:', event);
-            
+
             if (event === 'SIGNED_IN' && session?.user) {
               setUser(session.user);
               await loadUserData(session.user.id);
@@ -685,11 +699,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           }
         );
 
+        console.log('✅ Auth initialization complete');
         setIsInitialized(true);
         return () => subscription.unsubscribe();
       } catch (error) {
         console.error('❌ Error initializing auth:', error);
+        console.error('❌ Error details:', error);
       } finally {
+        console.log('🏁 Setting loading to false');
         setLoading(false);
       }
     }
