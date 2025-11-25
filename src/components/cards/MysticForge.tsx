@@ -75,7 +75,7 @@ export function MysticForge() {
 // In MysticForge.tsx - actualizar el handler
 const handlePaymentRedirect = async () => {
   try {
-    const response = await fetch('http://localhost:5000/create-checkout-session', {
+    const response = await fetch(`${getApiUrl()}/create-checkout-session`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

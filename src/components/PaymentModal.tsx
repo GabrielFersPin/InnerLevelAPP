@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, CreditCard, Zap, Crown } from 'lucide-react';
+import { getApiUrl } from '../config/environment';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -13,7 +14,7 @@ export function PaymentModal({ isOpen, onClose, onPaymentSuccess }: PaymentModal
   const handleUpgrade = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/create-checkout-session', {
+      const response = await fetch(`${getApiUrl()}/create-checkout-session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
