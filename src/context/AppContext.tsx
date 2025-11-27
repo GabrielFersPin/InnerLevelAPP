@@ -323,17 +323,27 @@ function appReducer(state: AppState, action: AppAction): AppState {
       };
     
     // LifeQuest Cards Reducers
-    case 'ADD_CARD':
+    case 'ADD_CARD': {
+      const existingInventory = state.cards?.inventory || [];
+
+      // Check if card with same ID already exists
+      const cardExists = existingInventory.some(c => c.id === action.payload.id);
+
+      if (cardExists) {
+        console.warn('🚫 Card with ID already exists, skipping:', action.payload.id);
+        return state; // Don't add duplicate
+      }
+
+      console.log('✅ Adding new card:', action.payload.id, action.payload.name);
+
       return {
         ...state,
         cards: {
           ...state.cards,
-          inventory: [
-            ...(state.cards?.inventory || []), // ✅ ARREGLO: usar fallback si inventory no existe
-            action.payload
-          ]
+          inventory: [...existingInventory, action.payload]
         }
       };
+    }
 
     case 'LOAD_CARDS':
       return {
