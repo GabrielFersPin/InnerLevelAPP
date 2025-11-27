@@ -19,6 +19,17 @@ export function Dashboard({ onPageChange }: DashboardProps) {
   const [isCardExecutorOpen, setIsCardExecutorOpen] = useState(false);
   const [dailyCards, setDailyCards] = useState<any[]>([]);
 
+  // Debug: Log character state on mount and when it changes
+  useEffect(() => {
+    console.log('🎭 Character State:', {
+      completedCards: state.character.completedCards,
+      completedCardsLength: state.character.completedCards?.length || 0,
+      dailyProgress: state.character.dailyProgress,
+      experience: state.character.experience,
+      level: state.character.level
+    });
+  }, [state.character]);
+
   // Initialize sample data if needed
   useEffect(() => {
     if (state.cards.inventory.length === 0) {
@@ -42,6 +53,16 @@ export function Dashboard({ onPageChange }: DashboardProps) {
   const activeQuestCount = state.quests.active.length;
   const cardCount = state.cards.inventory.length;
   const completedCardsCount = state.character.completedCards?.length || 0;
+
+  // Debug: Log metrics on every render
+  useEffect(() => {
+    console.log('📊 Dashboard Metrics Updated:', {
+      completedCardsCount,
+      totalExperience,
+      energyCurrent: state.energy.current,
+      dailyProgress: state.character.dailyProgress
+    });
+  }, [completedCardsCount, totalExperience, state.energy.current, state.character.dailyProgress]);
   
   const weekAgo = new Date();
   weekAgo.setDate(weekAgo.getDate() - 7);
