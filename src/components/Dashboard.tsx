@@ -49,20 +49,30 @@ export function Dashboard({ onPageChange }: DashboardProps) {
 
   // Calculate enhanced metrics
   const totalPoints = state.tasks.reduce((sum, task) => sum + task.points, 0);
-  const totalExperience = state.quests.completed.reduce((sum, quest) => sum + quest.rewards.experience, 0);
+
+  // Calculate total experience from both quests AND completed cards
+  const questExperience = state.quests.completed.reduce((sum, quest) => sum + quest.rewards.experience, 0);
+  const cardExperience = state.character.completedCards?.reduce((sum, card) => sum + (card.xpGained || 0), 0) || 0;
+  const totalExperience = state.character.experience; // Use character's actual experience
+
   const activeQuestCount = state.quests.active.length;
   const cardCount = state.cards.inventory.length;
   const completedCardsCount = state.character.completedCards?.length || 0;
+
+  // Calculate total energy used from completed cards
+  const totalEnergyUsed = state.character.completedCards?.reduce((sum, card) => sum + (card.energyUsed || 0), 0) || 0;
 
   // Debug: Log metrics on every render
   useEffect(() => {
     console.log('📊 Dashboard Metrics Updated:', {
       completedCardsCount,
       totalExperience,
+      cardExperience,
+      totalEnergyUsed,
       energyCurrent: state.energy.current,
       dailyProgress: state.character.dailyProgress
     });
-  }, [completedCardsCount, totalExperience, state.energy.current, state.character.dailyProgress]);
+  }, [completedCardsCount, totalExperience, cardExperience, totalEnergyUsed, state.energy.current, state.character.dailyProgress]);
   
   const weekAgo = new Date();
   weekAgo.setDate(weekAgo.getDate() - 7);
