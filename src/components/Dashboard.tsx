@@ -70,8 +70,19 @@ export function Dashboard({ onPageChange }: DashboardProps) {
   }
 
   const handleCardExecute = (result: any) => {
+    console.log('🎮 Dashboard handleCardExecute called with result:', result);
+    console.log('🎮 Selected card:', selectedCard);
+    console.log('🎮 Current completedCards before dispatch:', state.character.completedCards?.length || 0);
+    console.log('🎮 Current dailyProgress before dispatch:', state.character.dailyProgress);
+
     dispatch({ type: 'EXECUTE_CARD', payload: { cardId: selectedCard.id, result } });
-    dispatch({ type: 'CONSUME_ENERGY', payload: result.energyConsumed });
+    // Note: Energy consumption is handled inside EXECUTE_CARD reducer
+
+    // Log after a brief moment to see updated state
+    setTimeout(() => {
+      console.log('🎮 Current completedCards after dispatch:', state.character.completedCards?.length || 0);
+      console.log('🎮 Current dailyProgress after dispatch:', state.character.dailyProgress);
+    }, 100);
 
     // Show notification for XP/points gained
     if (result.progressGained) {
@@ -83,8 +94,8 @@ export function Dashboard({ onPageChange }: DashboardProps) {
     // Update quest progress if applicable
     state.quests.active.forEach(quest => {
       if (selectedCard.tags.some((tag: string) => tag === quest.type)) {
-        dispatch({ 
-          type: 'UPDATE_QUEST_PROGRESS', 
+        dispatch({
+          type: 'UPDATE_QUEST_PROGRESS',
           payload: { questId: quest.id, progress: quest.progress + (result.progressGained / 10) }
         });
       }
@@ -311,10 +322,10 @@ export function Dashboard({ onPageChange }: DashboardProps) {
       {/* Recomendaciones de objetivos */}
       <div className="goal-recommendations mt-8">
         <h2 className="text-2xl font-bold text-amber-200 mb-4">Recommended Goals</h2>
-        <GoalRecommendations 
-          character={character}
-          existingGoals={goals}
-          onSelectGoal={(goal) => dispatch({ type: 'ADD_GOAL', payload: goal })}
+        <GoalRecommendations
+          character={state.character}
+          existingGoals={state.goals}
+          onSelectGoal={(goal: any) => dispatch({ type: 'ADD_GOAL', payload: goal })}
         />
       </div>
 
