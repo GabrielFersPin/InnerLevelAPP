@@ -136,8 +136,19 @@ const initialState: AppState = {
 
 function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
-    case 'LOAD_DATA':
+    case 'LOAD_DATA': {
       // ✅ ARREGLO: Asegurar que todos los arrays existan
+      // Deduplicate cards by ID (remove duplicates from loaded data)
+      const loadedInventory = Array.isArray(action.payload.cards?.inventory) ? action.payload.cards.inventory : [];
+      const uniqueCards = loadedInventory.reduce((acc: Card[], card: Card) => {
+        if (!acc.find(c => c.id === card.id)) {
+          acc.push(card);
+        } else {
+          console.warn('🗑️ Removing duplicate card on load:', card.id, card.name);
+        }
+        return acc;
+      }, []);
+
       const loadedData = {
         ...action.payload,
         character: {
@@ -156,7 +167,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
           }
         },
         cards: {
-          inventory: Array.isArray(action.payload.cards?.inventory) ? action.payload.cards.inventory : [],
+          inventory: uniqueCards,
           activeCards: Array.isArray(action.payload.cards?.activeCards) ? action.payload.cards.activeCards : [],
           cooldowns: action.payload.cards?.cooldowns || {}
         },
@@ -182,7 +193,8 @@ function appReducer(state: AppState, action: AppAction): AppState {
         }
       };
       return loadedData;
-      
+    }
+
     case 'ADD_TASK':
       return { ...state, tasks: [...state.tasks, action.payload] };
       
