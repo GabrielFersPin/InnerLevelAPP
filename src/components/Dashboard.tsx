@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../context/AppContext';
-import { Trophy, Crown, Sparkles, Target, BookOpen, Flame, Sword } from 'lucide-react';
+import { Trophy, Crown, Sparkles, Target, BookOpen, Flame, Sword, CheckCircle } from 'lucide-react';
 import { PageType } from '../types/index';
 import { EnergyMeter } from './EnergyMeter';
 import { CardComponent } from './cards/CardComponent';
@@ -41,6 +41,7 @@ export function Dashboard({ onPageChange }: DashboardProps) {
   const totalExperience = state.quests.completed.reduce((sum, quest) => sum + quest.rewards.experience, 0);
   const activeQuestCount = state.quests.active.length;
   const cardCount = state.cards.inventory.length;
+  const completedCardsCount = state.character.completedCards?.length || 0;
   
   const weekAgo = new Date();
   weekAgo.setDate(weekAgo.getDate() - 7);
@@ -160,6 +161,13 @@ export function Dashboard({ onPageChange }: DashboardProps) {
                 <span className="text-rpg-content">Card Collection</span>
               </div>
               <span className="text-rpg-accent font-bold">{cardCount}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <CheckCircle size={16} className="text-green-400" />
+                <span className="text-rpg-content">Cards Completed</span>
+              </div>
+              <span className="text-rpg-accent font-bold">{completedCardsCount}</span>
             </div>
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2">

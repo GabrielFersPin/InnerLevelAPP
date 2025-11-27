@@ -333,10 +333,117 @@ export default function CharacterSheet() {
         </div>
       )}
 
-      {/* Stats Tab - keeping your existing code */}
+      {/* Stats Tab */}
       {activeTab === 'stats' && (
         <div className="space-y-8">
-          {/* Your existing stats content */}
+          {/* Overall Statistics */}
+          <div className={`${theme.panel} rounded-2xl p-8 shadow-2xl`}>
+            <h3 className="text-2xl font-bold text-amber-200 mb-6 flex items-center">
+              <BarChart3 className="w-6 h-6 mr-2" />
+              Overall Statistics
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-slate-700/30 rounded-lg p-6 border border-slate-600/30">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-slate-300">Total Tasks</span>
+                  <Trophy className="w-5 h-5 text-amber-400" />
+                </div>
+                <div className="text-3xl font-bold text-amber-200">{totalTasks}</div>
+                <div className="text-sm text-slate-400 mt-1">{totalPoints} total points</div>
+              </div>
+
+              <div className="bg-slate-700/30 rounded-lg p-6 border border-slate-600/30">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-slate-300">Cards Completed</span>
+                  <CheckCircle className="w-5 h-5 text-green-400" />
+                </div>
+                <div className="text-3xl font-bold text-green-200">{character.completedCards?.length || 0}</div>
+                <div className="text-sm text-slate-400 mt-1">
+                  {character.completedCards?.reduce((sum, c) => sum + c.xpGained, 0) || 0} XP earned
+                </div>
+              </div>
+
+              <div className="bg-slate-700/30 rounded-lg p-6 border border-slate-600/30">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-slate-300">Active Goals</span>
+                  <Target className="w-5 h-5 text-blue-400" />
+                </div>
+                <div className="text-3xl font-bold text-blue-200">{activeGoals.length}</div>
+                <div className="text-sm text-slate-400 mt-1">{completedGoals.length} completed</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Recent Activity */}
+          <div className={`${theme.panel} rounded-2xl p-8 shadow-2xl`}>
+            <h3 className="text-2xl font-bold text-amber-200 mb-6 flex items-center">
+              <Timer className="w-6 h-6 mr-2" />
+              Recent Activity
+            </h3>
+
+            <div className="space-y-3">
+              <div className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/30">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-300">This Week</span>
+                  <span className="text-amber-200 font-semibold">{thisWeek.length} tasks</span>
+                </div>
+              </div>
+              <div className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/30">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-300">This Month</span>
+                  <span className="text-amber-200 font-semibold">{thisMonth.length} tasks</span>
+                </div>
+              </div>
+              <div className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/30">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-300">Average Points/Task</span>
+                  <span className="text-amber-200 font-semibold">{averagePoints} pts</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Completed Cards History */}
+          {character.completedCards && character.completedCards.length > 0 && (
+            <div className={`${theme.panel} rounded-2xl p-8 shadow-2xl`}>
+              <h3 className="text-2xl font-bold text-amber-200 mb-6 flex items-center">
+                <Award className="w-6 h-6 mr-2" />
+                Completed Cards ({character.completedCards.length})
+              </h3>
+
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {character.completedCards.slice().reverse().map((completion, index) => (
+                  <div key={index} className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/30">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <CheckCircle className="w-4 h-4 text-green-400" />
+                          <span className="font-medium text-slate-200">Card Completed</span>
+                        </div>
+                        <div className="text-sm text-slate-400">
+                          {new Date(completion.completedAt).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-green-400 font-semibold">+{completion.xpGained} XP</div>
+                        <div className="text-xs text-slate-400">-{completion.energyUsed} energy</div>
+                      </div>
+                    </div>
+                    {completion.feedback && (
+                      <p className="text-sm text-slate-300 mt-2">{completion.feedback}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

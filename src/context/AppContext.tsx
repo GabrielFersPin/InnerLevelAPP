@@ -334,11 +334,35 @@ function appReducer(state: AppState, action: AppAction): AppState {
       const { cardId, result } = action.payload;
       const inventory = Array.isArray(state.cards?.inventory) ? state.cards.inventory : [];
       const executedCard = inventory.find(c => c.id === cardId);
-      
+
       // Add XP/points to character
       const newExp = state.character.experience + (result.progressGained || 0);
       const currentLevel = state.character.level;
       const newLevel = Math.min(50, Math.floor(Math.sqrt(newExp / 100)) + 1);
+
+      // Create completion record
+      const completion = {
+        cardId: cardId,
+        completedAt: new Date(),
+        feedback: result.message || '',
+        satisfaction: result.progressGained > 20 ? 5 : result.progressGained > 10 ? 4 : 3,
+        energyUsed: result.energyConsumed,
+        xpGained: result.progressGained || 0
+      };
+
+      // Update daily progress
+      const today = new Date().toISOString().split('T')[0];
+      const currentDailyProgress = state.character.dailyProgress.date === today
+        ? state.character.dailyProgress
+        : {
+            date: today,
+            cardsCompleted: 0,
+            energyUsed: 0,
+            xpGained: 0,
+            goalsAdvanced: [],
+            mood: 'neutral' as const,
+            notes: ''
+          };
 
       return {
         ...state,
@@ -346,24 +370,32 @@ function appReducer(state: AppState, action: AppAction): AppState {
           ...state.character,
           experience: newExp,
           level: newLevel,
-          skillPoints: state.character.skillPoints + (newLevel > currentLevel ? newLevel - currentLevel : 0)
+          skillPoints: state.character.skillPoints + (newLevel > currentLevel ? newLevel - currentLevel : 0),
+          completedCards: [...(state.character.completedCards || []), completion],
+          dailyProgress: {
+            ...currentDailyProgress,
+            date: today,
+            cardsCompleted: currentDailyProgress.cardsCompleted + 1,
+            energyUsed: currentDailyProgress.energyUsed + result.energyConsumed,
+            xpGained: currentDailyProgress.xpGained + (result.progressGained || 0)
+          }
         },
         cards: {
           ...state.cards,
           inventory: inventory.map(card =>
-            card.id === cardId 
-              ? { 
-                  ...card, 
+            card.id === cardId
+              ? {
+                  ...card,
                   usageCount: card.usageCount + 1,
                   lastUsed: new Date(),
                   isOnCooldown: card.cooldown ? true : false
                 }
               : card
           ),
-          cooldowns: executedCard?.cooldown 
-            ? { 
-                ...state.cards.cooldowns, 
-                [cardId]: new Date(Date.now() + executedCard.cooldown * 60 * 60 * 1000) 
+          cooldowns: executedCard?.cooldown
+            ? {
+                ...state.cards.cooldowns,
+                [cardId]: new Date(Date.now() + executedCard.cooldown * 60 * 60 * 1000)
               }
             : state.cards.cooldowns
         },
