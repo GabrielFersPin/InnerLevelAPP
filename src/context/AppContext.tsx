@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import { AppData, Task, Habit, Todo, Reward, RedeemedReward, EmotionalLog, Goal, Card, Quest, CardResult, Character, CharacterClass, PersonalityTestResult, GuildData, Guild, Friend, FriendRequest, PrivacySettings, NotificationSettings, GuildPreferences } from '../types/index';
+import { AppData, Task, Habit, Todo, Reward, RedeemedReward, EmotionalLog, Goal, Card, Quest, CardResult, Character, CharacterClass, PersonalityTestResult, GuildData, Guild, Friend, FriendRequest, PrivacySettings, NotificationSettings, GuildPreferences, CardCompletion } from '../types/index';
 import { createNewCharacter } from '../data/characterClasses';
 import { getStarterCards } from '../data/starterCards';
 
@@ -357,10 +357,10 @@ function appReducer(state: AppState, action: AppAction): AppState {
       const currentLevel = state.character.level;
       const newLevel = Math.min(50, Math.floor(Math.sqrt(newExp / 100)) + 1);
 
-      // Create completion record
-      const completion = {
+      // Create completion record (use ISO string for Date to ensure proper serialization)
+      const completion: CardCompletion = {
         cardId: cardId,
-        completedAt: new Date(),
+        completedAt: new Date().toISOString(),
         feedback: result.message || '',
         satisfaction: result.progressGained > 20 ? 5 : result.progressGained > 10 ? 4 : 3,
         energyUsed: result.energyConsumed,

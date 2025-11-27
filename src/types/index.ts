@@ -525,7 +525,7 @@ export interface Achievement {
 
 export interface CardCompletion {
   cardId: string;
-  completedAt: Date;
+  completedAt: Date | string; // Can be Date object or ISO string for database compatibility
   feedback: string;
   satisfaction: number; // 1-5
   energyUsed: number;
