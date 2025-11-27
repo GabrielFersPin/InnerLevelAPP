@@ -140,6 +140,21 @@ function appReducer(state: AppState, action: AppAction): AppState {
       // ✅ ARREGLO: Asegurar que todos los arrays existan
       const loadedData = {
         ...action.payload,
+        character: {
+          ...action.payload.character,
+          completedCards: Array.isArray(action.payload.character?.completedCards)
+            ? action.payload.character.completedCards
+            : [],
+          dailyProgress: action.payload.character?.dailyProgress || {
+            date: new Date().toISOString().split('T')[0],
+            cardsCompleted: 0,
+            energyUsed: 0,
+            xpGained: 0,
+            goalsAdvanced: [],
+            mood: 'neutral' as const,
+            notes: ''
+          }
+        },
         cards: {
           inventory: Array.isArray(action.payload.cards?.inventory) ? action.payload.cards.inventory : [],
           activeCards: Array.isArray(action.payload.cards?.activeCards) ? action.payload.cards.activeCards : [],
@@ -335,6 +350,8 @@ function appReducer(state: AppState, action: AppAction): AppState {
       const inventory = Array.isArray(state.cards?.inventory) ? state.cards.inventory : [];
       const executedCard = inventory.find(c => c.id === cardId);
 
+      console.log('🎯 EXECUTE_CARD action triggered:', { cardId, result });
+
       // Add XP/points to character
       const newExp = state.character.experience + (result.progressGained || 0);
       const currentLevel = state.character.level;
@@ -350,6 +367,9 @@ function appReducer(state: AppState, action: AppAction): AppState {
         xpGained: result.progressGained || 0
       };
 
+      console.log('📝 Card completion record:', completion);
+      console.log('📊 Current completedCards count:', state.character.completedCards?.length || 0);
+
       // Update daily progress
       const today = new Date().toISOString().split('T')[0];
       const currentDailyProgress = state.character.dailyProgress.date === today
@@ -364,6 +384,18 @@ function appReducer(state: AppState, action: AppAction): AppState {
             notes: ''
           };
 
+      const newCompletedCards = [...(state.character.completedCards || []), completion];
+      const newDailyProgress = {
+        ...currentDailyProgress,
+        date: today,
+        cardsCompleted: currentDailyProgress.cardsCompleted + 1,
+        energyUsed: currentDailyProgress.energyUsed + result.energyConsumed,
+        xpGained: currentDailyProgress.xpGained + (result.progressGained || 0)
+      };
+
+      console.log('✅ New completedCards count:', newCompletedCards.length);
+      console.log('📈 New dailyProgress:', newDailyProgress);
+
       return {
         ...state,
         character: {
@@ -371,14 +403,8 @@ function appReducer(state: AppState, action: AppAction): AppState {
           experience: newExp,
           level: newLevel,
           skillPoints: state.character.skillPoints + (newLevel > currentLevel ? newLevel - currentLevel : 0),
-          completedCards: [...(state.character.completedCards || []), completion],
-          dailyProgress: {
-            ...currentDailyProgress,
-            date: today,
-            cardsCompleted: currentDailyProgress.cardsCompleted + 1,
-            energyUsed: currentDailyProgress.energyUsed + result.energyConsumed,
-            xpGained: currentDailyProgress.xpGained + (result.progressGained || 0)
-          }
+          completedCards: newCompletedCards,
+          dailyProgress: newDailyProgress
         },
         cards: {
           ...state.cards,
@@ -794,7 +820,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       if (userData) {
         console.log('✅ User data loaded successfully');
-        
+
+        // Ensure character has all required fields (migration for existing users)
+        const character = userData.character || initialState.character;
+        const migratedCharacter = {
+          ...character,
+          completedCards: character.completedCards || [],
+          dailyProgress: character.dailyProgress || {
+            date: new Date().toISOString().split('T')[0],
+            cardsCompleted: 0,
+            energyUsed: 0,
+            xpGained: 0,
+            goalsAdvanced: [],
+            mood: 'neutral' as const,
+            notes: ''
+          }
+        };
+
         // Parse dates in energy object and ensure all fields exist
         const parsedData: AppState = {
           tasks: userData.tasks || [],
@@ -804,7 +846,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           redeemedRewards: userData.redeemed_rewards || [],
           emotionalLogs: userData.emotional_logs || [],
           goals: userData.goals || [],
-          character: userData.character || initialState.character,
+          character: migratedCharacter,
           cards: userData.cards || initialState.cards,
           quests: userData.quests || initialState.quests,
           energy: userData.energy ? {
