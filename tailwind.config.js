@@ -3,21 +3,64 @@ export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        serif: ['Cinzel', 'serif'],
+        cinzel: ['Cinzel', 'serif'],
+      },
       animation: {
-        'fadeIn': 'fadeIn 0.3s ease-in-out',
-        'slideIn': 'slideIn 0.3s ease-out',
+        'fadeIn': 'fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+        'slideIn': 'slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
       keyframes: {
         fadeIn: {
-          '0%': { opacity: '0', transform: 'translateY(20px)' },
-          '100%': { opacity: '1', transform: 'translateY(0)' },
+          '0%': { opacity: '0', transform: 'translateY(10px) scale(0.98)' },
+          '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
         },
         slideIn: {
-          '0%': { transform: 'translateX(-100%)' },
-          '100%': { transform: 'translateX(0)' },
+          '0%': { opacity: '0', transform: 'translateX(-20px)' },
+          '100%': { opacity: '1', transform: 'translateX(0)' },
         },
       },
       colors: {
+        gold: {
+          50: '#fff9e6',
+          100: '#ffedb3',
+          200: '#ffe080',
+          300: '#ffd44d',
+          400: '#ffc71a',
+          500: '#e6b000',
+          600: '#b38800',
+          700: '#806100',
+          800: '#4d3a00',
+          900: '#1a1300',
+        },
+        mythic: {
+          50: '#f5f3ff',
+          100: '#ede9fe',
+          200: '#ddd6fe',
+          300: '#c4b5fd',
+          400: '#a78bfa',
+          500: '#8b5cf6',
+          600: '#7c3aed',
+          700: '#6d28d9',
+          800: '#5b21b6',
+          900: '#4c1d95',
+        },
+        void: {
+          50: '#f8fafc',
+          100: '#f1f5f9',
+          200: '#e2e8f0',
+          300: '#cbd5e1',
+          400: '#94a3b8',
+          500: '#64748b',
+          600: '#475569',
+          700: '#334155',
+          800: '#1e293b',
+          900: '#0f172a',
+          950: '#020617',
+        },
         purple: {
           50: '#f5f3ff',
           100: '#ede9fe',
@@ -32,7 +75,13 @@ export default {
         },
       },
       backdropBlur: {
+        'xs': '2px',
         'lg': '10px',
+        'xl': '20px',
+      },
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+        'hero-pattern': "url('/assets/pattern.svg')",
       }
     },
   },

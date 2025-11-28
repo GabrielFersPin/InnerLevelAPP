@@ -1,3 +1,6 @@
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -5,145 +8,208 @@
 /* LifeQuest Cards - RPG Theme Styles */
 @layer base {
   body {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    @apply bg-slate-950 text-slate-200;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: 'Cinzel', serif;
+    @apply tracking-wide;
   }
 }
 
 @layer components {
+
   /* RPG Card Styles */
   .card-common {
-    @apply border-slate-400 bg-slate-700/80 text-slate-200;
+    @apply border border-slate-700/50 bg-slate-800/40 text-slate-200 backdrop-blur-md;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   }
-  
+
   .card-uncommon {
-    @apply border-emerald-400 bg-emerald-900/20 text-emerald-100 shadow-emerald-400/20;
-    box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+    @apply border border-emerald-500/30 bg-emerald-900/20 text-emerald-100 backdrop-blur-md;
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.15), inset 0 0 20px rgba(16, 185, 129, 0.05);
   }
-  
+
   .card-rare {
-    @apply border-blue-400 bg-blue-900/20 text-blue-100 shadow-blue-400/20;
-    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+    @apply border border-blue-500/30 bg-blue-900/20 text-blue-100 backdrop-blur-md;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.2), inset 0 0 20px rgba(59, 130, 246, 0.05);
   }
-  
+
   .card-epic {
-    @apply border-purple-400 bg-purple-900/20 text-purple-100 shadow-purple-400/20;
-    box-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+    @apply border border-purple-500/30 bg-purple-900/20 text-purple-100 backdrop-blur-md;
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.25), inset 0 0 20px rgba(168, 85, 247, 0.05);
   }
-  
+
   .card-legendary {
-    @apply border-amber-400 bg-amber-900/20 text-amber-100 shadow-amber-400/20;
-    box-shadow: 0 0 25px rgba(245, 158, 11, 0.6);
-    animation: legendary-pulse 2s ease-in-out infinite alternate;
+    @apply border border-amber-500/40 bg-amber-900/20 text-amber-100 backdrop-blur-md;
+    box-shadow: 0 0 25px rgba(245, 158, 11, 0.3), inset 0 0 30px rgba(245, 158, 11, 0.1);
+    animation: legendary-pulse 3s ease-in-out infinite alternate;
   }
-  
+
   /* RPG Button Styles */
   .btn-rpg {
-    @apply bg-gradient-to-b from-amber-600 to-amber-800 text-amber-100 font-semibold py-2 px-4 rounded-lg border border-amber-500/50 shadow-lg hover:from-amber-500 hover:to-amber-700 transition-all duration-200;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    @apply relative overflow-hidden bg-gradient-to-b from-amber-600 to-amber-800 text-amber-50 font-cinzel font-bold py-2 px-6 rounded-lg border border-amber-400/30 shadow-lg hover:from-amber-500 hover:to-amber-700 transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-amber-500/25;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
   }
-  
-  .btn-rpg:hover {
-    box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+
+  .btn-rpg::after {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 transition-opacity duration-300;
   }
-  
+
+  .btn-rpg:hover::after {
+    @apply opacity-100;
+  }
+
+  .btn-rpg:active {
+    @apply transform translate-y-0 shadow-md;
+  }
+
   /* Energy Bar Styles */
   .energy-bar {
-    @apply bg-gradient-to-r from-blue-500 to-cyan-400;
-    box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+    @apply bg-gradient-to-r from-blue-600 via-blue-400 to-cyan-300;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
   }
-  
+
   /* Quest Progress Bar */
   .quest-progress {
-    @apply bg-gradient-to-r from-emerald-500 to-green-400;
-    box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+    @apply bg-gradient-to-r from-emerald-600 via-emerald-400 to-green-300;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
   }
-  
+
   /* RPG Panel */
   .rpg-panel {
-    @apply bg-slate-800/90 border border-amber-500/30 rounded-xl backdrop-blur-lg shadow-2xl;
+    @apply bg-slate-900/80 border border-slate-700/50 rounded-xl backdrop-blur-xl shadow-2xl;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   }
-  
+
   /* Text Styles */
   .text-rpg-title {
-    @apply text-amber-200 font-bold;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    @apply font-cinzel text-amber-100 font-bold tracking-wider;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
   }
-  
+
   .text-rpg-content {
-    @apply text-slate-200;
+    @apply text-slate-300 leading-relaxed;
   }
-  
+
   .text-rpg-accent {
     @apply text-amber-400 font-medium;
+  }
+
+  /* Glass Utilities */
+  .glass-panel {
+    @apply bg-white/5 backdrop-blur-lg border border-white/10 shadow-xl;
+  }
+
+  .glass-button {
+    @apply bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 transition-all duration-200;
   }
 }
 
 @layer utilities {
+  .font-cinzel {
+    font-family: 'Cinzel', serif;
+  }
+
+  .font-inter {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .text-glow {
+    text-shadow: 0 0 10px currentColor;
+  }
+
+  .text-glow-sm {
+    text-shadow: 0 0 5px currentColor;
+  }
+
   .animate-fadeIn {
-    animation: fadeIn 0.5s ease-in-out;
+    animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
-  
+
   .animate-slideInUp {
-    animation: slideInUp 0.6s ease-out;
+    animation: slideInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
-  
+
   @keyframes fadeIn {
     from {
       opacity: 0;
-      transform: translateY(10px);
+      transform: translateY(10px) scale(0.98);
     }
+
     to {
       opacity: 1;
-      transform: translateY(0);
+      transform: translateY(0) scale(1);
     }
   }
-  
+
   @keyframes slideInUp {
     from {
       opacity: 0;
-      transform: translateY(30px);
+      transform: translateY(40px);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
     }
   }
-  
+
   @keyframes legendary-pulse {
     0% {
-      box-shadow: 0 0 25px rgba(245, 158, 11, 0.6);
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.4), inset 0 0 20px rgba(245, 158, 11, 0.1);
     }
+
     100% {
-      box-shadow: 0 0 35px rgba(245, 158, 11, 0.8);
+      box-shadow: 0 0 30px rgba(245, 158, 11, 0.6), inset 0 0 30px rgba(245, 158, 11, 0.2);
     }
   }
-  
+
   @keyframes float {
-    0%, 100% { 
-      transform: translateY(0px) rotate(0deg); 
+
+    0%,
+    100% {
+      transform: translateY(0px);
     }
-    25% { 
-      transform: translateY(-20px) rotate(90deg); 
-    }
-    50% { 
-      transform: translateY(-40px) rotate(180deg); 
-    }
-    75% { 
-      transform: translateY(-20px) rotate(270deg); 
+
+    50% {
+      transform: translateY(-10px);
     }
   }
-  
+
   .animate-float {
-    animation: float 3s ease-in-out infinite;
+    animation: float 4s ease-in-out infinite;
   }
-  
+
   /* Sparkle effect for magical elements */
   .sparkle::before {
     content: "✨";
     position: absolute;
-    top: -5px;
-    right: -5px;
-    font-size: 0.75rem;
+    top: -8px;
+    right: -8px;
+    font-size: 1rem;
     opacity: 0.8;
+    animation: spin 3s linear infinite;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg) scale(0.8);
+    }
+
+    50% {
+      transform: rotate(180deg) scale(1.2);
+    }
+
+    to {
+      transform: rotate(360deg) scale(0.8);
+    }
   }
 }
