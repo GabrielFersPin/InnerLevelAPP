@@ -3,8 +3,22 @@ import { useAppContext } from '../../context/AppContext';
 import { classDescriptions } from '../../data/personalityTest';
 import { getClassTheme, calculateLevelFromXP, getXPRequiredForNextLevel } from '../../data/characterClasses';
 import { ArcaneEngine } from "../../services/arcaneEngine";
-import { Crown, Zap, Target, Star, TrendingUp, Calendar, Sparkles, Brain, RefreshCw } from 'lucide-react';
+import { Zap, Target, Star, TrendingUp, Sparkles, Brain, RefreshCw } from 'lucide-react';
 import type { Card } from '../../types/index';
+// Import Class Object Icons
+import techSword from '../../assets/tech_sword.jpg';
+import techOrb from '../../assets/tech_orb.png';
+import techHammer from '../../assets/tech_hammer.png';
+import techLantern from '../../assets/tech_lantern.png';
+
+// Map classes to their specific object icons
+const classIcons: Record<string, string> = {
+  warrior: techSword,
+  strategist: techOrb,
+  creator: techHammer,
+  connector: techLantern,
+  sage: techOrb, // Fallback to Orb for Sage
+};
 
 export function CharacterHub() {
   const { state, dispatch } = useAppContext();
@@ -26,6 +40,9 @@ export function CharacterHub() {
 
   const availableCards = state.cards?.inventory || [];
   const energyPercent = (character.energy.current / character.energy.maximum) * 100;
+
+  // Determine the correct icon for the current class
+  const CharacterIcon = classIcons[character.class] || techSword;
 
   // Load AI recommendations on component mount
   useEffect(() => {
@@ -63,8 +80,10 @@ export function CharacterHub() {
     <div className="space-y-8">
       {/* Welcome Header */}
       <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-gold-200 mb-2 font-cinzel text-glow-sm">
+        <h1 className="text-4xl font-bold text-gold-200 mb-2 font-cinzel text-glow-sm flex items-center justify-center gap-4">
+          <img src={CharacterIcon} alt={`${character.class} Icon`} className="w-12 h-12 rounded-full border border-tech-cyan shadow-[0_0_10px_rgba(0,240,255,0.3)]" />
           Welcome back, {character.name}
+          <img src={CharacterIcon} alt={`${character.class} Icon`} className="w-12 h-12 rounded-full border border-tech-cyan shadow-[0_0_10px_rgba(0,240,255,0.3)] transform scale-x-[-1]" />
         </h1>
         <p className="text-xl text-slate-300 font-inter">
           Ready to continue your quest as {classInfo.name}?
@@ -77,18 +96,23 @@ export function CharacterHub() {
 
           {/* Avatar & Class Info */}
           <div className="text-center">
-            <div className="relative mb-6">
-              <div className="w-32 h-32 mx-auto bg-gradient-to-br from-gold-500 to-orange-500 rounded-full flex items-center justify-center shadow-2xl ring-4 ring-gold-500/20">
-                <Crown className="w-16 h-16 text-void-950" />
+            <div className="relative mb-6 inline-block">
+              <div className="w-40 h-40 mx-auto relative flex items-center justify-center group">
+                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-tech-cyan to-tech-magenta opacity-20 blur-xl group-hover:opacity-40 transition-opacity duration-500 animate-pulse-slow"></div>
+                <img
+                  src={CharacterIcon}
+                  alt={`${character.class} Avatar`}
+                  className="w-full h-full rounded-full object-cover border-2 border-tech-cyan shadow-[0_0_15px_rgba(0,240,255,0.4)] z-10 relative transition-transform duration-300 group-hover:scale-105 animate-spin-slow"
+                />
               </div>
-              <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
-                <span className="bg-gradient-to-r from-gold-500 to-orange-500 text-void-950 px-4 py-1 rounded-full text-sm font-bold shadow-lg font-cinzel">
+              <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 z-20 w-full">
+                <span className="bg-void-950/90 border border-tech-cyan text-tech-cyan px-6 py-1.5 rounded-full text-sm font-bold shadow-[0_0_10px_rgba(0,240,255,0.3)] font-cinzel tracking-wider">
                   Level {character.level}
                 </span>
               </div>
             </div>
 
-            <h2 className="text-2xl font-bold text-gold-200 mb-2 font-cinzel">
+            <h2 className="text-2xl font-bold text-gold-200 mb-2 font-cinzel flex items-center justify-center gap-2">
               {classInfo.name}
             </h2>
             <p className="text-gold-300 italic mb-4 font-inter">
@@ -131,9 +155,9 @@ export function CharacterHub() {
               <div className="w-full bg-void-800 rounded-full h-4 border border-void-700">
                 <div
                   className={`h-4 rounded-full transition-all duration-300 shadow-lg ${energyPercent > 75 ? 'bg-gradient-to-r from-green-500 to-emerald-500 shadow-emerald-500/20' :
-                      energyPercent > 50 ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-orange-500/20' :
-                        energyPercent > 25 ? 'bg-gradient-to-r from-orange-500 to-red-500 shadow-red-500/20' :
-                          'bg-gradient-to-r from-red-600 to-red-700 shadow-red-600/20'
+                    energyPercent > 50 ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-orange-500/20' :
+                      energyPercent > 25 ? 'bg-gradient-to-r from-orange-500 to-red-500 shadow-red-500/20' :
+                        'bg-gradient-to-r from-red-600 to-red-700 shadow-red-600/20'
                     }`}
                   style={{ width: `${energyPercent}%` }}
                 ></div>
@@ -146,9 +170,9 @@ export function CharacterHub() {
 
             {/* Energy Status */}
             <div className={`p-3 rounded-lg backdrop-blur-sm ${energyPercent > 75 ? 'bg-green-900/20 border border-green-500/20' :
-                energyPercent > 50 ? 'bg-yellow-900/20 border border-yellow-500/20' :
-                  energyPercent > 25 ? 'bg-orange-900/20 border border-orange-500/20' :
-                    'bg-red-900/20 border border-red-500/20'
+              energyPercent > 50 ? 'bg-yellow-900/20 border border-yellow-500/20' :
+                energyPercent > 25 ? 'bg-orange-900/20 border border-orange-500/20' :
+                  'bg-red-900/20 border border-red-500/20'
               }`}>
               <p className="text-sm text-center font-inter text-slate-200">
                 {energyPercent > 75 ? '⚡ Fully Energized - Perfect for challenging cards!' :
@@ -254,8 +278,8 @@ export function CharacterHub() {
             <button
               onClick={() => setShowAICards(!showAICards)}
               className={`px-4 py-2 rounded-lg font-medium transition-all font-inter ${showAICards
-                  ? 'bg-gradient-to-r from-mythic-600 to-indigo-600 text-white shadow-lg shadow-mythic-500/20'
-                  : 'bg-void-700 text-slate-300 hover:bg-void-600 border border-void-600'
+                ? 'bg-gradient-to-r from-mythic-600 to-indigo-600 text-white shadow-lg shadow-mythic-500/20'
+                : 'bg-void-700 text-slate-300 hover:bg-void-600 border border-void-600'
                 }`}
             >
               {showAICards ? 'Show Class Cards' : 'AI Powered'}
@@ -307,8 +331,8 @@ export function CharacterHub() {
 
                 return (
                   <div key={card.id} className={`rounded-xl p-6 border transition-all hover:scale-105 hover:shadow-xl ${showAICards
-                      ? 'bg-gradient-to-br from-mythic-900/20 to-indigo-900/20 border-mythic-500/30 hover:border-mythic-400/50'
-                      : 'bg-void-800/50 border-void-600 hover:border-gold-500/30'
+                    ? 'bg-gradient-to-br from-mythic-900/20 to-indigo-900/20 border-mythic-500/30 hover:border-mythic-400/50'
+                    : 'bg-void-800/50 border-void-600 hover:border-gold-500/30'
                     }`}>
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-lg font-medium text-gold-100 font-cinzel">{card.name}</span>
@@ -348,10 +372,10 @@ export function CharacterHub() {
                       onClick={() => handleExecuteCard(card)}
                       disabled={!canAfford}
                       className={`w-full px-4 py-2 rounded-lg font-medium transition-all font-inter ${!canAfford
-                          ? 'bg-void-700 text-slate-500 cursor-not-allowed border border-void-600'
-                          : showAICards
-                            ? 'bg-gradient-to-r from-mythic-600 to-indigo-600 text-white hover:from-mythic-700 hover:to-indigo-700 shadow-lg shadow-mythic-500/20'
-                            : 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white hover:from-indigo-700 hover:to-blue-700 shadow-lg shadow-indigo-500/20'
+                        ? 'bg-void-700 text-slate-500 cursor-not-allowed border border-void-600'
+                        : showAICards
+                          ? 'bg-gradient-to-r from-mythic-600 to-indigo-600 text-white hover:from-mythic-700 hover:to-indigo-700 shadow-lg shadow-mythic-500/20'
+                          : 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white hover:from-indigo-700 hover:to-blue-700 shadow-lg shadow-indigo-500/20'
                         }`}
                     >
                       {!canAfford ? 'Not Enough Energy' : 'Add to Deck'}

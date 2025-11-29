@@ -20,7 +20,7 @@ const navigation = [
 
 export function Sidebar({ currentPage, onPageChange }: SidebarProps) {
   return (
-    <nav className="w-80 rpg-panel p-6 shadow-2xl rounded-r-3xl fixed h-full overflow-y-auto z-30 bg-void-900/90 border-r border-gold-500/20 backdrop-blur-xl">
+    <nav className="w-80 rpg-panel p-6 fixed h-full overflow-y-auto z-30 transition-all duration-300">
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold bg-gradient-to-r from-gold-400 to-gold-600 bg-clip-text text-transparent font-cinzel tracking-wide drop-shadow-sm">
           ⚔️ LifeQuest Cards
@@ -39,28 +39,28 @@ export function Sidebar({ currentPage, onPageChange }: SidebarProps) {
               key={item.id}
               onClick={() => onPageChange(item.id)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 text-left relative group ${isActive
-                  ? 'bg-gradient-to-r from-gold-600/20 to-gold-700/10 border border-gold-500/40 text-gold-100 shadow-lg shadow-gold-500/10'
-                  : 'bg-void-800/30 hover:bg-void-700/50 text-slate-400 hover:text-gold-200 hover:translate-x-1 border border-transparent hover:border-gold-500/20'
+                ? 'bg-gradient-to-r from-tech-cyan/20 to-tech-magenta/10 border border-tech-cyan/40 text-tech-cyan shadow-lg shadow-tech-cyan/10'
+                : 'bg-void-800/30 hover:bg-void-700/50 text-slate-400 hover:text-tech-cyan hover:translate-x-1 border border-transparent hover:border-tech-cyan/20'
                 }`}
             >
-              <Icon size={18} className={`transition-colors duration-300 ${isActive ? 'text-gold-400' : 'text-slate-500 group-hover:text-gold-400'}`} />
+              <Icon size={18} className={`transition-colors duration-300 ${isActive ? 'text-tech-cyan' : 'text-slate-500 group-hover:text-tech-cyan'}`} />
               <div className="flex-1 min-w-0">
-                <div className={`font-medium text-sm font-cinzel ${isActive ? 'text-gold-100' : 'text-slate-300 group-hover:text-gold-100'}`}>
+                <div className={`font-medium text-sm font-cinzel ${isActive ? 'text-tech-cyan' : 'text-slate-300 group-hover:text-tech-cyan'}`}>
                   {item.label}
                 </div>
-                <div className={`text-xs font-inter ${isActive ? 'text-gold-300/70' : 'text-slate-500 group-hover:text-gold-300/50'}`}>
+                <div className={`text-xs font-inter ${isActive ? 'text-tech-cyan/70' : 'text-slate-500 group-hover:text-tech-cyan/50'}`}>
                   {item.description}
                 </div>
               </div>
               {isNewFeature && (
                 <div className="absolute -top-1 -right-1">
-                  <span className="text-[10px] bg-emerald-500/90 text-white px-1.5 py-0.5 rounded-full font-bold shadow-sm border border-emerald-400/50">
+                  <span className="text-[10px] bg-tech-magenta/90 text-white px-1.5 py-0.5 rounded-full font-bold shadow-sm border border-tech-magenta/50">
                     NEW
                   </span>
                 </div>
               )}
               {isActive && (
-                <div className="absolute inset-0 rounded-xl bg-gold-400/5 animate-pulse-slow pointer-events-none"></div>
+                <div className="absolute inset-0 rounded-xl bg-tech-cyan/5 animate-pulse-slow pointer-events-none"></div>
               )}
             </button>
           );

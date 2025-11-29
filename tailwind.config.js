@@ -12,6 +12,7 @@ export default {
         'fadeIn': 'fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
         'slideIn': 'slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'spin-slow': 'spin 20s linear infinite',
       },
       keyframes: {
         fadeIn: {
@@ -73,6 +74,12 @@ export default {
           800: '#6d28d9',
           900: '#581c87',
         },
+        tech: {
+          cyan: '#00f0ff',
+          magenta: '#ff00ff',
+          gold: '#ffd700',
+          dark: '#0a0a12',
+        },
       },
       backdropBlur: {
         'xs': '2px',
@@ -81,8 +88,9 @@ export default {
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'hero-pattern': "url('/assets/pattern.svg')",
-      }
+        'hero-pattern': "url('/src/assets/hero-pattern.svg')",
+        'rpg-pattern': "url('/src/assets/rpg_background.png')",
+      },
     },
   },
   plugins: [],
