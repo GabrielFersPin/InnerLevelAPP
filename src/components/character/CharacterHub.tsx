@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../../context/AppContext';
+import { CardExecutor } from '../cards/CardExecutor';
+import { showAlert } from '../../utils/notifications';
+
 import { classDescriptions } from '../../data/personalityTest';
 import { getClassTheme, calculateLevelFromXP, getXPRequiredForNextLevel } from '../../data/characterClasses';
 import { ArcaneEngine } from "../../services/arcaneEngine";
@@ -23,10 +26,15 @@ const classIcons: Record<string, string> = {
 export function CharacterHub() {
   const { state, dispatch } = useAppContext();
   const { character } = state;
-  const [oracleGuidance, setAiRecommendations] = useState<Card[]>([]);
+  // Use global state for recommendations instead of local state
+  const oracleGuidance = state.recommendations?.daily || [];
   const [isLoadingAI, setIsLoadingAI] = useState(false);
   const [aiInsight, setAiInsight] = useState<string>('');
   const [showAICards, setShowAICards] = useState(false);
+
+  // Card Execution State
+  const [selectedCard, setSelectedCard] = useState<Card | null>(null);
+  const [isCardExecutorOpen, setIsCardExecutorOpen] = useState(false);
 
   if (!character) return null;
 
@@ -38,7 +46,7 @@ export function CharacterHub() {
   const xpNeeded = xpForNextLevel - getXPRequiredForNextLevel(currentLevel - 1);
   const progressPercent = Math.min(100, (xpProgress / xpNeeded) * 100);
 
-  const availableCards = state.cards?.inventory || [];
+  const availableCards = (state.cards?.inventory || []).filter(card => !card.isOnCooldown);
   const energyPercent = (character.energy.current / character.energy.maximum) * 100;
 
   // Determine the correct icon for the current class
@@ -46,18 +54,23 @@ export function CharacterHub() {
 
   // Load AI recommendations on component mount
   useEffect(() => {
-    loadAIRecommendations();
-  }, [character.class, character.level, character.energy.current]);
+    // Only load if we don't have recommendations or if they are old (optional logic, for now just check empty)
+    if (oracleGuidance.length === 0) {
+      loadAIRecommendations();
+    }
+  }, [character.class, character.level]);
 
   const loadAIRecommendations = async () => {
     setIsLoadingAI(true);
     try {
       const recommendation = await ArcaneEngine.getSmartRecommendations(character);
-      setAiRecommendations(recommendation.cards);
+      // Dispatch to global state
+      dispatch({ type: 'GENERATE_RECOMMENDATIONS', payload: recommendation.cards });
       setAiInsight(recommendation.reasoning);
     } catch (error) {
       console.log('Using fallback recommendations:', error);
-      setAiRecommendations(availableCards.slice(0, 3));
+      // Dispatch fallback to global state
+      dispatch({ type: 'GENERATE_RECOMMENDATIONS', payload: availableCards.slice(0, 3) });
       setAiInsight(`Curated ${character.class} cards based on your current level and energy`);
     } finally {
       setIsLoadingAI(false);
@@ -69,9 +82,40 @@ export function CharacterHub() {
   };
 
   const handleExecuteCard = (card: Card) => {
-    // Add card to inventory for execution
-    dispatch({ type: 'ADD_CARD', payload: card });
-    // Could also directly execute the card here
+    if (showAICards) {
+      // If it's an AI recommendation, add to inventory
+      dispatch({ type: 'ADD_CARD', payload: card });
+      showAlert('Card added to your grimoire!', 'success');
+    } else {
+      // If it's already in inventory, execute it
+      setSelectedCard(card);
+      setIsCardExecutorOpen(true);
+    }
+  };
+
+  const handleCardComplete = (result: any) => {
+    console.log('🎮 CharacterHub handleCardComplete called with result:', result);
+
+    if (selectedCard) {
+      dispatch({ type: 'EXECUTE_CARD', payload: { cardId: selectedCard.id, result } });
+
+      // Show notification
+      if (result.progressGained) {
+        showAlert(`+${result.progressGained} XP gained!`, 'success');
+      } else {
+        showAlert('Card executed!', 'success');
+      }
+
+      // Update quest progress if applicable
+      state.quests.active.forEach(quest => {
+        if (selectedCard.tags.some((tag: string) => tag === quest.type)) {
+          dispatch({
+            type: 'UPDATE_QUEST_PROGRESS',
+            payload: { questId: quest.id, progress: quest.progress + (result.progressGained / 10) }
+          });
+        }
+      });
+    }
   };
 
   const displayedRecommendations = showAICards ? oracleGuidance : availableCards.slice(0, 3);
@@ -378,7 +422,7 @@ export function CharacterHub() {
                           : 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white hover:from-indigo-700 hover:to-blue-700 shadow-lg shadow-indigo-500/20'
                         }`}
                     >
-                      {!canAfford ? 'Not Enough Energy' : 'Add to Deck'}
+                      {!canAfford ? 'Not Enough Energy' : (showAICards ? 'Add to Deck' : 'Execute')}
                     </button>
                   </div>
                 );
@@ -422,6 +466,19 @@ export function CharacterHub() {
             ))}
           </div>
         </div>
+      )}
+      {/* Card Executor Modal */}
+      {selectedCard && (
+        <CardExecutor
+          card={selectedCard}
+          isOpen={isCardExecutorOpen}
+          onClose={() => {
+            setIsCardExecutorOpen(false);
+            setSelectedCard(null);
+          }}
+          onExecute={handleCardComplete}
+          currentEnergy={state.energy.current}
+        />
       )}
     </div>
   );

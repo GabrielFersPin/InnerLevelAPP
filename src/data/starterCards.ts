@@ -1,4 +1,4 @@
-import { Card, CharacterClass } from '../types';
+import { Card, CharacterClass } from '../types/index';
 
 /**
  * Starter cards for each character class
@@ -26,7 +26,8 @@ const strategistCards: Omit<Card, 'id' | 'createdAt'>[] = [
     tags: ["planning", "productivity", "morning"],
     forged: false,
     usageCount: 0,
-    isOnCooldown: false
+    isOnCooldown: false,
+    cooldown: 24
   },
   {
     name: "Data Analysis Deep Dive",
@@ -43,7 +44,8 @@ const strategistCards: Omit<Card, 'id' | 'createdAt'>[] = [
     tags: ["analysis", "optimization", "growth"],
     forged: false,
     usageCount: 0,
-    isOnCooldown: false
+    isOnCooldown: false,
+    cooldown: 24
   },
   {
     name: "Strategic Learning Sprint",
@@ -60,7 +62,8 @@ const strategistCards: Omit<Card, 'id' | 'createdAt'>[] = [
     tags: ["learning", "skill-building", "strategy"],
     forged: false,
     usageCount: 0,
-    isOnCooldown: false
+    isOnCooldown: false,
+    cooldown: 24
   }
 ];
 
@@ -81,7 +84,8 @@ const warriorCards: Omit<Card, 'id' | 'createdAt'>[] = [
     tags: ["fitness", "discipline", "morning"],
     forged: false,
     usageCount: 0,
-    isOnCooldown: false
+    isOnCooldown: false,
+    cooldown: 24
   },
   {
     name: "Challenge Accepted",
@@ -98,7 +102,8 @@ const warriorCards: Omit<Card, 'id' | 'createdAt'>[] = [
     tags: ["challenge", "discipline", "growth"],
     forged: false,
     usageCount: 0,
-    isOnCooldown: false
+    isOnCooldown: false,
+    cooldown: 24
   },
   {
     name: "Habit Forge",
@@ -115,7 +120,8 @@ const warriorCards: Omit<Card, 'id' | 'createdAt'>[] = [
     tags: ["habits", "consistency", "discipline"],
     forged: false,
     usageCount: 0,
-    isOnCooldown: false
+    isOnCooldown: false,
+    cooldown: 24
   }
 ];
 
@@ -136,7 +142,8 @@ const creatorCards: Omit<Card, 'id' | 'createdAt'>[] = [
     tags: ["creativity", "flow", "creation"],
     forged: false,
     usageCount: 0,
-    isOnCooldown: false
+    isOnCooldown: false,
+    cooldown: 24
   },
   {
     name: "Inspiration Hunt",
@@ -153,7 +160,8 @@ const creatorCards: Omit<Card, 'id' | 'createdAt'>[] = [
     tags: ["inspiration", "exploration", "creativity"],
     forged: false,
     usageCount: 0,
-    isOnCooldown: false
+    isOnCooldown: false,
+    cooldown: 24
   },
   {
     name: "Prototype & Experiment",
@@ -170,7 +178,8 @@ const creatorCards: Omit<Card, 'id' | 'createdAt'>[] = [
     tags: ["experimentation", "prototyping", "learning"],
     forged: false,
     usageCount: 0,
-    isOnCooldown: false
+    isOnCooldown: false,
+    cooldown: 24
   }
 ];
 
@@ -191,7 +200,8 @@ const connectorCards: Omit<Card, 'id' | 'createdAt'>[] = [
     tags: ["relationships", "connection", "social"],
     forged: false,
     usageCount: 0,
-    isOnCooldown: false
+    isOnCooldown: false,
+    cooldown: 24
   },
   {
     name: "Network Weaver",
@@ -208,7 +218,8 @@ const connectorCards: Omit<Card, 'id' | 'createdAt'>[] = [
     tags: ["networking", "outreach", "relationships"],
     forged: false,
     usageCount: 0,
-    isOnCooldown: false
+    isOnCooldown: false,
+    cooldown: 24
   },
   {
     name: "Collaborative Session",
@@ -225,7 +236,8 @@ const connectorCards: Omit<Card, 'id' | 'createdAt'>[] = [
     tags: ["teamwork", "collaboration", "social"],
     forged: false,
     usageCount: 0,
-    isOnCooldown: false
+    isOnCooldown: false,
+    cooldown: 24
   }
 ];
 
@@ -246,7 +258,8 @@ const sageCards: Omit<Card, 'id' | 'createdAt'>[] = [
     tags: ["meditation", "mindfulness", "recovery"],
     forged: false,
     usageCount: 0,
-    isOnCooldown: false
+    isOnCooldown: false,
+    cooldown: 24
   },
   {
     name: "Wisdom Seeking",
@@ -263,7 +276,8 @@ const sageCards: Omit<Card, 'id' | 'createdAt'>[] = [
     tags: ["reflection", "wisdom", "learning"],
     forged: false,
     usageCount: 0,
-    isOnCooldown: false
+    isOnCooldown: false,
+    cooldown: 24
   },
   {
     name: "Balance Restoration",
@@ -280,7 +294,8 @@ const sageCards: Omit<Card, 'id' | 'createdAt'>[] = [
     tags: ["self-care", "balance", "wellness"],
     forged: false,
     usageCount: 0,
-    isOnCooldown: false
+    isOnCooldown: false,
+    cooldown: 24
   }
 ];
 

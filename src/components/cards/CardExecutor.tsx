@@ -34,7 +34,7 @@ export function CardExecutor({ card, isOpen, onClose, onExecute, currentEnergy }
 
   const handleStartExecution = () => {
     if (!canExecute) return;
-    
+
     setIsExecuting(true);
     setTimeRemaining(card.duration * 60);
   };
@@ -42,15 +42,15 @@ export function CardExecutor({ card, isOpen, onClose, onExecute, currentEnergy }
   const handleCompleteExecution = () => {
     // Calculate result based on feedback and energy level
     let progressGained = card.impact;
-    
+
     // Apply energy level multiplier
     const energyMultiplier = energyLevel / 5; // 1.0 at level 5
     progressGained *= energyMultiplier;
-    
+
     // Apply completion quality multiplier
-    const qualityMultiplier = feedback === 'excellent' ? 1.5 : 
-                             feedback === 'good' ? 1.2 : 
-                             feedback === 'average' ? 1.0 : 0.8;
+    const qualityMultiplier = feedback === 'excellent' ? 1.5 :
+      feedback === 'good' ? 1.2 :
+        feedback === 'average' ? 1.0 : 0.8;
     progressGained *= qualityMultiplier;
 
     const result: CardResult = {
@@ -67,6 +67,7 @@ export function CardExecutor({ card, isOpen, onClose, onExecute, currentEnergy }
       message: `Successfully completed "${card.name}"! Great work!`
     };
 
+    console.log('⚡ CardExecutor calling onExecute with result:', result);
     onExecute(result);
     onClose();
     resetForm();
@@ -108,9 +109,9 @@ export function CardExecutor({ card, isOpen, onClose, onExecute, currentEnergy }
           {/* Card Display */}
           <div className="flex justify-center">
             <div className="w-80">
-              <CardComponent 
-                card={card} 
-                size="large" 
+              <CardComponent
+                card={card}
+                size="large"
                 showDetails={true}
                 isDisabled={!canExecute}
               />
@@ -123,7 +124,7 @@ export function CardExecutor({ card, isOpen, onClose, onExecute, currentEnergy }
               <div className="flex items-center gap-2 text-red-400">
                 <Zap size={20} />
                 <span className="font-semibold">
-                  {currentEnergy < card.energyCost 
+                  {currentEnergy < card.energyCost
                     ? `Insufficient Energy (Need: ${card.energyCost}, Have: ${currentEnergy})`
                     : 'Card is on cooldown'
                   }
@@ -194,10 +195,10 @@ export function CardExecutor({ card, isOpen, onClose, onExecute, currentEnergy }
                 Stay focused! You're doing great.
               </div>
               <div className="w-full bg-slate-700 rounded-full h-3">
-                <div 
+                <div
                   className="quest-progress h-3 rounded-full transition-all duration-1000"
-                  style={{ 
-                    width: `${((card.duration * 60 - timeRemaining) / (card.duration * 60)) * 100}%` 
+                  style={{
+                    width: `${((card.duration * 60 - timeRemaining) / (card.duration * 60)) * 100}%`
                   }}
                 />
               </div>

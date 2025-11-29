@@ -14,7 +14,8 @@ import {
   Timer,
   RotateCcw,
   Swords,
-  Brain
+  Brain,
+  Square
 } from 'lucide-react';
 
 // Import Pixel Art Assets
@@ -32,7 +33,7 @@ interface PomodoroState {
 }
 
 export function TrainingGround() {
-  const { state } = useAppContext();
+  const { state, dispatch } = useAppContext();
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [isExecutorOpen, setIsExecutorOpen] = useState(false);
   const [planningZone, setPlanningZone] = useState<Card[]>([]);
@@ -149,7 +150,8 @@ export function TrainingGround() {
 
   // Inventory: cards not in any zone
   const inventoryCards = state.cards.inventory.filter(
-    c => !planningZone.find(z => z.id === c.id)
+    c => !c.isOnCooldown
+      && !planningZone.find(z => z.id === c.id)
       && !actionField.find(z => z.id === c.id)
       && !supportZone.find(z => z.id === c.id)
       && !discardZone.find(z => z.id === c.id)
@@ -214,6 +216,19 @@ export function TrainingGround() {
 
   // Handle card execution in session
   const handleSessionCardExecute = (result: any) => {
+    const currentCard = actionField[currentSessionIndex];
+
+    // Dispatch to global state to sync progress
+    if (currentCard) {
+      dispatch({
+        type: 'EXECUTE_CARD',
+        payload: {
+          cardId: currentCard.id,
+          result: result
+        }
+      });
+    }
+
     setSessionResults(results => [...results, result]);
     // Move card to discard
     setDiscardZone(z => [...z, actionField[currentSessionIndex]]);

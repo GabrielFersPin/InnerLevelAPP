@@ -89,9 +89,10 @@ export default function CharacterSheet() {
     if (!goal.timeframe) return 'No deadline';
 
     const deadline = new Date(goal.createdAt);
-    const timeframeDays = goal.timeframe.includes('week') ? 7 :
-      goal.timeframe.includes('month') ? 30 :
-        goal.timeframe.includes('year') ? 365 : 1;
+    const timeframeStr = String(goal.timeframe);
+    const timeframeDays = timeframeStr.includes('week') ? 7 :
+      timeframeStr.includes('month') ? 30 :
+        timeframeStr.includes('year') ? 365 : 1;
 
     deadline.setDate(deadline.getDate() + timeframeDays);
     const now = new Date();
@@ -158,8 +159,8 @@ export default function CharacterSheet() {
             key={id}
             onClick={() => setActiveTab(id)}
             className={`flex-1 flex items-center justify-center space-x-2 px-4 py-3 rounded-lg font-bold transition-all font-cinzel tracking-wide ${activeTab === id
-                ? 'bg-gradient-to-r from-tech-gold/20 to-orange-900/20 text-gold-100 border border-tech-gold/30 shadow-[0_0_10px_rgba(255,215,0,0.1)]'
-                : 'text-slate-400 hover:text-gold-200 hover:bg-white/5'
+              ? 'bg-gradient-to-r from-tech-gold/20 to-orange-900/20 text-gold-100 border border-tech-gold/30 shadow-[0_0_10px_rgba(255,215,0,0.1)]'
+              : 'text-slate-400 hover:text-gold-200 hover:bg-white/5'
               }`}
           >
             <Icon className="w-4 h-4" />
@@ -203,9 +204,9 @@ export default function CharacterSheet() {
                           {/* Domain and Category Tags */}
                           <div className="flex flex-wrap gap-2 mb-4">
                             <span className={`text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-sm border ${getGoalDomainColor(goal.domain)}`}>
-                              {goal.category.replace('-', ' ')}
+                              {(goal.category || 'uncategorized').replace('-', ' ')}
                             </span>
-                            {goal.relatedSkills.map((skill: string) => (
+                            {(goal.relatedSkills || []).map((skill: string) => (
                               <span key={skill} className="text-xs font-bold px-3 py-1 rounded-sm bg-void-950 text-slate-400 border border-slate-700 flex items-center gap-1">
                                 <Brain className="w-3 h-3" />
                                 {skill}

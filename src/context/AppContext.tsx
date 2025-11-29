@@ -5,9 +5,9 @@ import { AppData, Task, Habit, Todo, Reward, RedeemedReward, EmotionalLog, Goal,
 import { createNewCharacter } from '../data/characterClasses';
 import { getStarterCards } from '../data/starterCards';
 
-interface AppState extends AppData {}
+interface AppState extends AppData { }
 
-type AppAction = 
+type AppAction =
   | { type: 'ADD_TASK'; payload: Task }
   | { type: 'ADD_HABIT'; payload: Habit }
   | { type: 'DELETE_HABIT'; payload: number }
@@ -60,22 +60,22 @@ type AppAction =
 const initialState: AppState = {
   tasks: [],
   habits: [
-    {id: 1, name: "Daily Coding", category: "Professional", points: 5},
-    {id: 2, name: "LinkedIn Post", category: "Professional", points: 10},
-    {id: 3, name: "Job Application", category: "Professional", points: 15},
-    {id: 4, name: "Exercise", category: "Personal", points: 5},
-    {id: 5, name: "Reading", category: "Personal", points: 3},
-    {id: 6, name: "Slept well 7 hours", category: "Self-Care", points: 10},
-    {id: 7, name: "Screen-free break (20 min)", category: "Self-Care", points: 5},
-    {id: 8, name: "Wrote how I felt today", category: "Self-Care", points: 15},
-    {id: 9, name: "Guilt-free rest", category: "Self-Care", points: 20},    
-    {id: 10, name: "Meditation", category: "Self-Care", points: 10}
+    { id: 1, name: "Daily Coding", category: "Professional", points: 5 },
+    { id: 2, name: "LinkedIn Post", category: "Professional", points: 10 },
+    { id: 3, name: "Job Application", category: "Professional", points: 15 },
+    { id: 4, name: "Exercise", category: "Personal", points: 5 },
+    { id: 5, name: "Reading", category: "Personal", points: 3 },
+    { id: 6, name: "Slept well 7 hours", category: "Self-Care", points: 10 },
+    { id: 7, name: "Screen-free break (20 min)", category: "Self-Care", points: 5 },
+    { id: 8, name: "Wrote how I felt today", category: "Self-Care", points: 15 },
+    { id: 9, name: "Guilt-free rest", category: "Self-Care", points: 20 },
+    { id: 10, name: "Meditation", category: "Self-Care", points: 10 }
   ],
   todos: [],
   rewards: [
-    {id: 1, name: "Coffee Shop Visit", description: "Treat yourself to a nice coffee", points: 50, category: "Small Treat", redeemed: false},
-    {id: 2, name: "Movie Night", description: "Watch that movie you've been wanting to see", points: 100, category: "Entertainment", redeemed: false},
-    {id: 3, name: "New Book", description: "Buy that book from your wishlist", points: 200, category: "Learning", redeemed: false}
+    { id: 1, name: "Coffee Shop Visit", description: "Treat yourself to a nice coffee", points: 50, category: "Small Treat", redeemed: false },
+    { id: 2, name: "Movie Night", description: "Watch that movie you've been wanting to see", points: 100, category: "Entertainment", redeemed: false },
+    { id: 3, name: "New Book", description: "Buy that book from your wishlist", points: 200, category: "Learning", redeemed: false }
   ],
   redeemedRewards: [],
   emotionalLogs: [],
@@ -197,50 +197,50 @@ function appReducer(state: AppState, action: AppAction): AppState {
 
     case 'ADD_TASK':
       return { ...state, tasks: [...state.tasks, action.payload] };
-      
+
     case 'ADD_HABIT':
       return { ...state, habits: [...state.habits, action.payload] };
-      
+
     case 'DELETE_HABIT':
       return { ...state, habits: state.habits.filter(h => h.id !== action.payload) };
-      
+
     case 'ADD_TODO':
       return { ...state, todos: [...state.todos, action.payload] };
-      
+
     case 'COMPLETE_TODO':
       return {
         ...state,
-        todos: state.todos.map(todo => 
-          todo.id === action.payload.todoId 
+        todos: state.todos.map(todo =>
+          todo.id === action.payload.todoId
             ? { ...todo, status: 'Completed' as const }
             : todo
         ),
         tasks: [...state.tasks, action.payload.task]
       };
-      
+
     case 'DELETE_TODO':
       return { ...state, todos: state.todos.filter(t => t.id !== action.payload) };
-      
+
     case 'ADD_REWARD':
       return { ...state, rewards: [...state.rewards, action.payload] };
-      
+
     case 'REDEEM_REWARD':
       return {
         ...state,
-        rewards: state.rewards.map(reward => 
-          reward.id === action.payload.rewardId 
+        rewards: state.rewards.map(reward =>
+          reward.id === action.payload.rewardId
             ? { ...reward, redeemed: true }
             : reward
         ),
         redeemedRewards: [...state.redeemedRewards, action.payload.redeemedReward]
       };
-      
+
     case 'ADD_EMOTIONAL_LOG':
       return { ...state, emotionalLogs: [...state.emotionalLogs, action.payload] };
-      
+
     case 'ADD_GOAL':
       return { ...state, goals: [...state.goals, action.payload] };
-      
+
     case 'UPDATE_GOAL':
       return {
         ...state,
@@ -250,10 +250,10 @@ function appReducer(state: AppState, action: AppAction): AppState {
             : goal
         )
       };
-      
+
     case 'DELETE_GOAL':
       return { ...state, goals: state.goals.filter(g => g.id !== action.payload) };
-    
+
     // Character Reducers
     case 'CREATE_CHARACTER': {
       const newCharacter = createNewCharacter(
@@ -277,24 +277,24 @@ function appReducer(state: AppState, action: AppAction): AppState {
         }
       };
     }
-    
+
     case 'LOAD_CHARACTER':
       return {
         ...state,
         character: action.payload
       };
-    
+
     case 'UPDATE_CHARACTER':
       return {
         ...state,
         character: { ...state.character, ...action.payload }
       };
-    
+
     case 'GAIN_EXPERIENCE': {
       const newExp = state.character.experience + action.payload;
       const currentLevel = state.character.level;
       const newLevel = Math.min(50, Math.floor(Math.sqrt(newExp / 100)) + 1);
-      
+
       return {
         ...state,
         character: {
@@ -305,13 +305,13 @@ function appReducer(state: AppState, action: AppAction): AppState {
         }
       };
     }
-    
+
     case 'UPDATE_SKILL': {
       const { skillName, xp } = action.payload;
       const currentSkill = state.character.skills[skillName];
       const newXP = currentSkill.totalXP + xp;
       const newLevel = Math.min(50, Math.floor(newXP / 100) + 1);
-      
+
       return {
         ...state,
         character: {
@@ -327,13 +327,13 @@ function appReducer(state: AppState, action: AppAction): AppState {
         }
       };
     }
-    
+
     case 'COMPLETE_ONBOARDING':
       return {
         ...state,
         character: { ...state.character, isOnboarded: true }
       };
-    
+
     // LifeQuest Cards Reducers
     case 'ADD_CARD': {
       const existingInventory = state.cards?.inventory || [];
@@ -368,35 +368,36 @@ function appReducer(state: AppState, action: AppAction): AppState {
       };
 
     case 'EXECUTE_CARD': {
-      const { cardId, result } = action.payload;
-      const inventory = Array.isArray(state.cards?.inventory) ? state.cards.inventory : [];
-      const executedCard = inventory.find(c => c.id === cardId);
+      try {
+        const { cardId, result } = action.payload;
+        const inventory = Array.isArray(state.cards?.inventory) ? state.cards.inventory : [];
+        const executedCard = inventory.find(c => c.id === cardId);
 
-      console.log('🎯 EXECUTE_CARD action triggered:', { cardId, result });
+        console.log('🎯 EXECUTE_CARD action triggered:', { cardId, result });
 
-      // Add XP/points to character
-      const newExp = state.character.experience + (result.progressGained || 0);
-      const currentLevel = state.character.level;
-      const newLevel = Math.min(50, Math.floor(Math.sqrt(newExp / 100)) + 1);
+        // Add XP/points to character
+        const newExp = state.character.experience + (result.progressGained || 0);
+        const currentLevel = state.character.level;
+        const newLevel = Math.min(50, Math.floor(Math.sqrt(newExp / 100)) + 1);
 
-      // Create completion record (use ISO string for Date to ensure proper serialization)
-      const completion: CardCompletion = {
-        cardId: cardId,
-        completedAt: new Date().toISOString(),
-        feedback: result.message || '',
-        satisfaction: result.progressGained > 20 ? 5 : result.progressGained > 10 ? 4 : 3,
-        energyUsed: result.energyConsumed,
-        xpGained: result.progressGained || 0
-      };
+        // Create completion record (use ISO string for Date to ensure proper serialization)
+        const completion: CardCompletion = {
+          cardId: cardId,
+          completedAt: new Date().toISOString(),
+          feedback: result.message || '',
+          satisfaction: result.progressGained > 20 ? 5 : result.progressGained > 10 ? 4 : 3,
+          energyUsed: result.energyConsumed,
+          xpGained: result.progressGained || 0
+        };
 
-      console.log('📝 Card completion record:', completion);
-      console.log('📊 Current completedCards count:', state.character.completedCards?.length || 0);
+        console.log('📝 Card completion record:', completion);
+        console.log('📊 Current completedCards count:', state.character.completedCards?.length || 0);
 
-      // Update daily progress
-      const today = new Date().toISOString().split('T')[0];
-      const currentDailyProgress = state.character.dailyProgress.date === today
-        ? state.character.dailyProgress
-        : {
+        // Update daily progress
+        const today = new Date().toISOString().split('T')[0];
+        const currentDailyProgress = state.character.dailyProgress?.date === today
+          ? state.character.dailyProgress
+          : {
             date: today,
             cardsCompleted: 0,
             energyUsed: 0,
@@ -406,54 +407,56 @@ function appReducer(state: AppState, action: AppAction): AppState {
             notes: ''
           };
 
-      const newCompletedCards = [...(state.character.completedCards || []), completion];
-      const newDailyProgress = {
-        ...currentDailyProgress,
-        date: today,
-        cardsCompleted: currentDailyProgress.cardsCompleted + 1,
-        energyUsed: currentDailyProgress.energyUsed + result.energyConsumed,
-        xpGained: currentDailyProgress.xpGained + (result.progressGained || 0)
-      };
+        const newCompletedCards = [...(state.character.completedCards || []), completion];
+        const newDailyProgress = {
+          ...currentDailyProgress,
+          date: today,
+          cardsCompleted: currentDailyProgress.cardsCompleted + 1,
+          energyUsed: currentDailyProgress.energyUsed + result.energyConsumed,
+          xpGained: currentDailyProgress.xpGained + (result.progressGained || 0)
+        };
 
-      console.log('✅ New completedCards count:', newCompletedCards.length);
-      console.log('📈 New dailyProgress:', newDailyProgress);
+        console.log('✅ New completedCards count:', newCompletedCards.length);
+        console.log('📈 New dailyProgress:', newDailyProgress);
 
-      return {
-        ...state,
-        character: {
-          ...state.character,
-          experience: newExp,
-          level: newLevel,
-          skillPoints: state.character.skillPoints + (newLevel > currentLevel ? newLevel - currentLevel : 0),
-          completedCards: newCompletedCards,
-          dailyProgress: newDailyProgress
-        },
-        cards: {
-          ...state.cards,
-          inventory: inventory.map(card =>
-            card.id === cardId
-              ? {
+        return {
+          ...state,
+          character: {
+            ...state.character,
+            experience: newExp,
+            level: newLevel,
+            skillPoints: state.character.skillPoints + (newLevel > currentLevel ? newLevel - currentLevel : 0),
+            completedCards: newCompletedCards,
+            dailyProgress: newDailyProgress
+          },
+          cards: {
+            ...state.cards,
+            inventory: inventory.map(card =>
+              card.id === cardId
+                ? {
                   ...card,
                   usageCount: card.usageCount + 1,
                   lastUsed: new Date(),
-                  isOnCooldown: card.cooldown ? true : false
+                  isOnCooldown: true // Always set to true on execution
                 }
-              : card
-          ),
-          cooldowns: executedCard?.cooldown
-            ? {
-                ...state.cards.cooldowns,
-                [cardId]: new Date(Date.now() + executedCard.cooldown * 60 * 60 * 1000)
-              }
-            : state.cards.cooldowns
-        },
-        energy: {
-          ...state.energy,
-          current: Math.max(0, state.energy.current - result.energyConsumed)
-        }
-      };
+                : card
+            ),
+            cooldowns: {
+              ...state.cards.cooldowns,
+              [cardId]: new Date(Date.now() + (executedCard?.cooldown || 24) * 60 * 60 * 1000)
+            }
+          },
+          energy: {
+            ...state.energy,
+            current: Math.max(0, state.energy.current - result.energyConsumed)
+          }
+        };
+      } catch (error) {
+        console.error('❌ Error in EXECUTE_CARD reducer:', error);
+        return state;
+      }
     }
-    
+
     case 'UPDATE_CARD_COOLDOWN':
       return {
         ...state,
@@ -470,19 +473,19 @@ function appReducer(state: AppState, action: AppAction): AppState {
           )
         }
       };
-    
+
     case 'ACTIVATE_CARD':
       return {
         ...state,
         cards: {
           ...state.cards,
           activeCards: [
-            ...(Array.isArray(state.cards?.activeCards) ? state.cards.activeCards : []), 
+            ...(Array.isArray(state.cards?.activeCards) ? state.cards.activeCards : []),
             action.payload
           ]
         }
       };
-    
+
     case 'DEACTIVATE_CARD':
       return {
         ...state,
@@ -492,7 +495,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
             .filter(id => id !== action.payload)
         }
       };
-    
+
     case 'CREATE_QUEST':
       return {
         ...state,
@@ -501,7 +504,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
           active: [...state.quests.active, action.payload]
         }
       };
-    
+
     case 'UPDATE_QUEST_PROGRESS':
       return {
         ...state,
@@ -514,20 +517,20 @@ function appReducer(state: AppState, action: AppAction): AppState {
           )
         }
       };
-    
+
     case 'COMPLETE_QUEST': {
       const completedQuest = state.quests.active.find(q => q.id === action.payload);
       return {
         ...state,
         quests: {
           active: state.quests.active.filter(q => q.id !== action.payload),
-          completed: completedQuest 
+          completed: completedQuest
             ? [...state.quests.completed, { ...completedQuest, status: 'completed' as const }]
             : state.quests.completed
         }
       };
     }
-    
+
     case 'UPDATE_ENERGY':
       return {
         ...state,
@@ -537,7 +540,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
           lastUpdate: new Date()
         }
       };
-    
+
     case 'CONSUME_ENERGY':
       return {
         ...state,
@@ -547,7 +550,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
           lastUpdate: new Date()
         }
       };
-    
+
     case 'GENERATE_RECOMMENDATIONS':
       return {
         ...state,
@@ -556,7 +559,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
           lastGenerated: new Date()
         }
       };
-    
+
     case 'UPDATE_ENERGY_FROM_TIME': {
       const now = new Date();
       const timeDiff = (now.getTime() - state.energy.lastUpdate.getTime()) / (1000 * 60 * 60); // hours
@@ -573,7 +576,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         }
       };
     }
-    
+
     case 'UPDATE_CARD':
       return {
         ...state,
@@ -584,7 +587,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
           )
         }
       };
-    
+
     // Guild Reducers
     case 'JOIN_GUILD':
       return {
@@ -594,7 +597,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
           currentGuild: action.payload
         }
       };
-    
+
     case 'LEAVE_GUILD':
       return {
         ...state,
@@ -603,7 +606,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
           currentGuild: null
         }
       };
-    
+
     case 'ADD_FRIEND':
       return {
         ...state,
@@ -612,7 +615,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
           friends: [...state.guild.friends, action.payload]
         }
       };
-    
+
     case 'REMOVE_FRIEND':
       return {
         ...state,
@@ -621,7 +624,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
           friends: state.guild.friends.filter(friend => friend.id !== action.payload)
         }
       };
-    
+
     case 'ADD_FRIEND_REQUEST':
       return {
         ...state,
@@ -630,11 +633,11 @@ function appReducer(state: AppState, action: AppAction): AppState {
           friendRequests: [...state.guild.friendRequests, action.payload]
         }
       };
-    
+
     case 'ACCEPT_FRIEND_REQUEST': {
       const request = state.guild.friendRequests.find(req => req.id === action.payload);
       if (!request) return state;
-      
+
       const newFriend: Friend = {
         id: request.from.id,
         name: request.from.name,
@@ -643,7 +646,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         status: 'offline',
         streak: 0
       };
-      
+
       return {
         ...state,
         guild: {
@@ -653,7 +656,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         }
       };
     }
-    
+
     case 'DECLINE_FRIEND_REQUEST':
       return {
         ...state,
@@ -662,7 +665,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
           friendRequests: state.guild.friendRequests.filter(req => req.id !== action.payload)
         }
       };
-    
+
     case 'UPDATE_PRIVACY_SETTINGS':
       return {
         ...state,
@@ -671,7 +674,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
           privacy: { ...state.guild.privacy, ...action.payload }
         }
       };
-    
+
     case 'UPDATE_NOTIFICATION_SETTINGS':
       return {
         ...state,
@@ -708,7 +711,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         guild: { ...state.guild }
       };
     }
-    
+
     default:
       return state;
   }
@@ -783,7 +786,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
         console.log('✅ Auth initialization complete');
         setIsInitialized(true);
-        return () => subscription.unsubscribe();
+
+        // Listen for storage changes to sync across tabs
+        const handleStorageChange = (event: StorageEvent) => {
+          if (event.key === 'lifequest-guest-data' && session?.user) {
+            // If guest data changes (and we are using it as primary storage for now), reload
+            // Note: Ideally we should use a specific key for authenticated users or rely on Supabase realtime
+            // But for now, if we are using localStorage for persistence, this helps.
+            // Actually, for authenticated users, we might want to listen to a different key or just reload user data
+            loadUserData(session.user.id);
+          }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+
+        return () => {
+          subscription.unsubscribe();
+          window.removeEventListener('storage', handleStorageChange);
+        };
       } catch (error) {
         console.error('❌ Error initializing auth:', error);
         console.error('❌ Error details:', error);
@@ -796,39 +816,84 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     initializeAuth();
   }, []);
 
-  // Load cards from localStorage for non-authenticated users
+  // Load guest data from localStorage
   useEffect(() => {
     if (!user && !loading) {
       try {
-        const savedCards = localStorage.getItem('lifequest-cards');
-        if (savedCards) {
-          const parsedCards = JSON.parse(savedCards);
-          dispatch({ type: 'LOAD_CARDS', payload: parsedCards });
-          console.log('✅ Loaded cards from localStorage');
+        const savedData = localStorage.getItem('lifequest-guest-data');
+        if (savedData) {
+          const parsedData = JSON.parse(savedData);
+          // Merge saved data with initial state to ensure structure
+          const mergedData = {
+            ...initialState,
+            ...parsedData,
+            // Ensure dates are parsed correctly
+            energy: {
+              ...initialState.energy,
+              ...parsedData.energy,
+              lastUpdate: new Date(parsedData.energy?.lastUpdate || Date.now())
+            },
+            cards: {
+              ...initialState.cards,
+              ...parsedData.cards,
+              // Handle legacy card storage if needed, or just overwrite
+            }
+          };
+          dispatch({ type: 'LOAD_DATA', payload: mergedData });
+          console.log('✅ Loaded guest data from localStorage');
+        } else {
+          // Fallback: Check for legacy card data
+          const savedCards = localStorage.getItem('lifequest-cards');
+          if (savedCards) {
+            const parsedCards = JSON.parse(savedCards);
+            dispatch({ type: 'LOAD_CARDS', payload: parsedCards });
+            console.log('✅ Loaded legacy cards from localStorage');
+          }
         }
       } catch (error) {
-        console.error('Error loading cards from localStorage:', error);
+        console.error('Error loading guest data:', error);
       }
     }
   }, [user, loading]);
 
-  // Save cards to localStorage for non-authenticated users
+  // Save guest data to localStorage
   useEffect(() => {
-    if (!user && !loading && state.cards) {
-      try {
-        localStorage.setItem('lifequest-cards', JSON.stringify(state.cards));
-        console.log('💾 Saved cards to localStorage');
-      } catch (error) {
-        console.error('Error saving cards to localStorage:', error);
-      }
+    if (!user && !loading && isInitialized) {
+      const saveGuestData = setTimeout(() => {
+        try {
+          const dataToSave = {
+            tasks: state.tasks,
+            habits: state.habits,
+            todos: state.todos,
+            rewards: state.rewards,
+            redeemedRewards: state.redeemedRewards,
+            emotionalLogs: state.emotionalLogs,
+            goals: state.goals,
+            character: state.character,
+            cards: state.cards,
+            quests: state.quests,
+            energy: state.energy,
+            recommendations: state.recommendations,
+            guild: state.guild
+          };
+          localStorage.setItem('lifequest-guest-data', JSON.stringify(dataToSave));
+          // Also keep legacy cards sync for now just in case
+          localStorage.setItem('lifequest-cards', JSON.stringify(state.cards));
+          console.log('💾 Saved guest data to localStorage');
+        } catch (error) {
+          console.error('Error saving guest data:', error);
+        }
+      }, 1000); // Debounce
+
+      return () => clearTimeout(saveGuestData);
     }
-  }, [state.cards, user, loading]);
+  }, [state, user, loading, isInitialized]);
 
   // Load user data from Supabase
   async function loadUserData(userId: string) {
     try {
       console.log('📥 Loading user data for:', userId);
-      
+
       const { data: userData, error } = await supabase
         .from('user_data')
         .select('*')
@@ -915,7 +980,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         });
 
       if (error) throw error;
-      
+
       console.log('✅ Initial user data created');
       dispatch({ type: 'LOAD_DATA', payload: initialState });
     } catch (error) {
@@ -937,7 +1002,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const newTimeout = setTimeout(async () => {
       try {
         console.log('💾 Saving user data...');
-        
+
         const { error } = await supabase
           .from('user_data')
           .upsert({

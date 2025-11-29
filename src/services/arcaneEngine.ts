@@ -28,25 +28,25 @@ interface AICardRecommendation {
 
 async function callOpenAI(prompt: string, options: any = {}): Promise<string> {
   const backendURL = getApiUrl(); // Dynamic URL based on environment
-  
+
   try {
     console.log('🔄 Calling local OpenAI backend...');
-    
+
     const response = await fetch(`${backendURL}/api/openai`, {
       method: 'POST',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         model: options.model || 'gpt-4o-mini', // Modelo más económico
         messages: [
-          { 
-            role: 'system', 
-            content: options.systemPrompt || 'You are a helpful AI assistant for a gamified productivity RPG called LifeQuest. Generate engaging, actionable content that helps users improve their real lives through RPG mechanics.' 
+          {
+            role: 'system',
+            content: options.systemPrompt || 'You are a helpful AI assistant for a gamified productivity RPG called LifeQuest. Generate engaging, actionable content that helps users improve their real lives through RPG mechanics.'
           },
-          { 
-            role: 'user', 
-            content: prompt 
+          {
+            role: 'user',
+            content: prompt
           }
         ],
         temperature: options.temperature || 0.7,
@@ -67,17 +67,17 @@ async function callOpenAI(prompt: string, options: any = {}): Promise<string> {
       throw new Error(data?.error?.message || `Backend error: ${response.status}`);
     }
     console.log('✅ OpenAI response received successfully');
-    
+
     return data.choices[0].message.content;
   } catch (error) {
     console.error('❌ Backend API call failed:', error);
-    
+
     // Verificar si el servidor está corriendo
     if (error.message.includes('fetch')) {
       console.error('💡 Tip: Make sure your backend server is running on http://localhost:5000');
       console.error('💡 Run: npm run dev in your server directory');
     }
-    
+
     throw error;
   }
 }
@@ -87,13 +87,13 @@ export class ArcaneEngine {
    * Generate a structured quest plan based on user objective
    */
   static async generateQuest(
-    objective: string, 
-    timeline: number, 
+    objective: string,
+    timeline: number,
     availability: number,
     userPreferences: string[] = []
   ): Promise<Quest> {
     const prompt = this.buildQuestPrompt(objective, timeline, availability, userPreferences);
-    
+
     try {
       const response = await callOpenAI(prompt, {
         systemPrompt: 'You are an expert quest designer for a gamified productivity RPG. Create engaging, realistic, and achievable quests.'
@@ -110,10 +110,11 @@ export class ArcaneEngine {
    */
   static async generateDailyCards(userContext: UserContext): Promise<AICardRecommendation> {
     const prompt = this.buildDailyCardsPrompt(userContext);
-    
+
     try {
       const response = await callOpenAI(prompt, {
-        systemPrompt: 'You are an expert card designer for the LifeQuest RPG system. Create personalized, engaging activity cards that match the user\'s character class and current context.'
+        systemPrompt: 'You are an expert card designer for the LifeQuest RPG system. Create personalized, engaging activity cards that match the user\'s character class and current context.',
+        userId: userContext.character.id
       });
       const cards = this.parseCardsResponse(response);
       return this.buildRecommendation(cards, userContext);
@@ -131,20 +132,20 @@ export class ArcaneEngine {
     situation: string = 'general'
   ): Promise<AICardRecommendation> {
     const prompt = this.buildClassSpecificPrompt(character, situation);
-    
+
     try {
       const response = await callOpenAI(prompt, {
         systemPrompt: 'You are an expert character development specialist for the LifeQuest RPG. Create advanced cards that help users master their character class.'
       });
       const cards = this.parseCardsResponse(response);
-      return this.buildRecommendation(cards, { 
-        character, 
-        energy: character.energy.current, 
-        availableTime: 4, 
-        currentMood: 'neutral', 
-        recentActivity: [], 
-        activeQuests: [], 
-        preferences: [] 
+      return this.buildRecommendation(cards, {
+        character,
+        energy: character.energy.current,
+        availableTime: 4,
+        currentMood: 'neutral',
+        recentActivity: [],
+        activeQuests: [],
+        preferences: []
       });
     } catch (error) {
       console.error('Failed to generate class-specific cards:', error);
@@ -162,7 +163,7 @@ export class ArcaneEngine {
     userId?: string
   ): Promise<Card[]> {
     const prompt = this.buildGoalCardsPrompt(character, goalDescription, timeframe);
-    
+
     try {
       const response = await callOpenAI(prompt, {
         systemPrompt: 'You are a goal achievement strategist for the LifeQuest RPG. Create card sequences that help users achieve their specific goals using their character class strengths.'
@@ -184,7 +185,7 @@ export class ArcaneEngine {
     constraints: string[]
   ): Promise<Card[]> {
     const prompt = this.buildContextualCardsPrompt(situation, goals, constraints);
-    
+
     try {
       const response = await callOpenAI(prompt, {
         systemPrompt: 'You are a contextual activity advisor for the LifeQuest RPG. Create cards that are perfectly suited to the user\'s current situation and constraints.'
@@ -202,7 +203,7 @@ export class ArcaneEngine {
   static async getSmartRecommendations(character: Character): Promise<AICardRecommendation> {
     const timeOfDay = new Date().getHours();
     const energyPercentage = (character.energy.current / character.energy.maximum) * 100;
-    
+
     const userContext: UserContext = {
       character,
       energy: character.energy.current,
@@ -222,7 +223,7 @@ export class ArcaneEngine {
   static async testConnection(): Promise<void> {
     try {
       console.log('🧪 Testing OpenAI backend connection...');
-      
+
       // Primero probar el health check
       const healthResponse = await fetch('http://localhost:5000/health');
       if (!healthResponse.ok) {
@@ -245,8 +246,8 @@ export class ArcaneEngine {
 
   // Private methods
   private static buildQuestPrompt(
-    objective: string, 
-    timeline: number, 
+    objective: string,
+    timeline: number,
     availability: number,
     preferences: string[]
   ): string {
@@ -288,7 +289,7 @@ Make it engaging, realistic, and achievable within the given timeline.
   private static buildDailyCardsPrompt(userContext: UserContext): string {
     const { character } = userContext;
     const classInfo = classDescriptions[character.class];
-    
+
     return `
 You are generating personalized activity cards for a ${classInfo.name} in the LifeQuest RPG system.
 
@@ -390,7 +391,7 @@ Focus on creating names that would make a ${character.class} feel epic and motiv
 
   private static buildClassSpecificPrompt(character: Character, situation: string): string {
     const classInfo = classDescriptions[character.class];
-    
+
     return `
 Generate 4-5 advanced cards for a Level ${character.level} ${classInfo.name} in situation: "${situation}"
 
@@ -404,7 +405,7 @@ Same JSON format as daily cards but with higher impact and skill focus.
     timeframe: number
   ): string {
     const classInfo = classDescriptions[character.class];
-    
+
     return `
 Create a strategic card sequence for a ${classInfo.name} to achieve: "${goalDescription}"
 
@@ -467,9 +468,9 @@ Return JSON array of cards optimized for this context.
   private static parseCardsResponse(response: string): Card[] {
     try {
       console.log('🔍 Raw OpenAI response:', response);
-      
+
       let jsonString = response.trim();
-      
+
       // Remove markdown code blocks if present
       if (jsonString.includes('```json')) {
         const startIndex = jsonString.indexOf('```json') + 7;
@@ -494,16 +495,16 @@ Return JSON array of cards optimized for this context.
 
       const parsed = JSON.parse(jsonString);
       console.log('📊 Parsed object:', parsed);
-      
+
       // Try different possible array locations
       let cardsArray = parsed.recommendations || parsed.cards || parsed.card_sequence || parsed.data || parsed;
-      
+
       console.log('🎴 Cards array found:', cardsArray);
-      
+
       if (cardsArray && typeof cardsArray === 'object' && !Array.isArray(cardsArray)) {
         cardsArray = Object.values(cardsArray);
       }
-      
+
       if (!Array.isArray(cardsArray)) {
         console.error('❌ Expected an array in the AI response, but received:', cardsArray);
         return this.generateBasicFallbackCards();
@@ -513,10 +514,10 @@ Return JSON array of cards optimized for this context.
 
       const processedCards = cardsArray.map((cardData: any, index: number) => {
         console.log(`🎴 Processing card ${index + 1}:`, cardData);
-        
+
         // Handle nested card structure (cardData.card exists)
         const actualCardData = cardData.card || cardData;
-        
+
         const card = {
           id: `ai-card-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           name: actualCardData.name || actualCardData.title || actualCardData.card_name || `Generated Card ${index + 1}`,
@@ -527,7 +528,7 @@ Return JSON array of cards optimized for this context.
           energyCost: actualCardData.energyCost || actualCardData.energy_cost || actualCardData.cost || 20,
           duration: cardData.day || actualCardData.duration || 1,
           impact: actualCardData.impact || actualCardData.xp || actualCardData.experience || 10,
-          cooldown: actualCardData.cooldown || undefined,
+          cooldown: actualCardData.cooldown || 24,
           skillBonus: actualCardData.skillBonus || actualCardData.skill_bonus || [],
           requirements: actualCardData.requirements || {},
           conditions: actualCardData.conditions || {},
@@ -537,14 +538,14 @@ Return JSON array of cards optimized for this context.
           usageCount: 0,
           isOnCooldown: false
         };
-        
+
         console.log(`✅ Processed card:`, card);
         return card;
       });
 
       console.log(`🎉 Successfully processed ${processedCards.length} cards`);
       return processedCards;
-      
+
     } catch (error) {
       console.error('❌ Failed to parse AI response:', error);
       console.error('📝 Raw response that failed:', response);
@@ -573,7 +574,7 @@ Return JSON array of cards optimized for this context.
    */
   private static generateBasicFallbackCards(): Card[] {
     console.log('🔄 Generating fallback cards...');
-    
+
     return [
       {
         id: `fallback-card-${Date.now()}-1`,
@@ -620,7 +621,7 @@ Return JSON array of cards optimized for this context.
     const totalCost = cards.reduce((sum, card) => sum + card.energyCost, 0);
     const remainingAfter = userContext.character.energy.current - totalCost;
     const regenerationTime = Math.max(0, -remainingAfter / userContext.character.energy.regenerationRate);
-    
+
     return {
       cards,
       reasoning: `Optimized for ${userContext.character.class} with ${userContext.availableTime}h available`,
@@ -689,7 +690,7 @@ Return JSON array of cards optimized for this context.
       connector: ['social', 'collaborative', 'networking'],
       sage: ['mindful', 'balanced', 'reflective']
     };
-    
+
     return classPrefs[character.class] || [];
   }
 }

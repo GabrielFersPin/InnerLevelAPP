@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { useAppContext } from '../context/AppContext';
 import { showAlert } from '../utils/notifications';
 import { User, Mail, Edit2, Save, X, Shield, Bell, Palette, Database, Download, Upload, Trash2, Key, Lock, Target } from 'lucide-react';
 import techOrb from '../assets/tech_orb.png';
 
 export function Profile() {
   const { user, profile, updateProfile, signOut } = useAuth();
+  const { state } = useAppContext();
   const [activeTab, setActiveTab] = useState<'profile' | 'preferences' | 'data' | 'security'>('profile');
   const [isEditing, setIsEditing] = useState(false);
 
@@ -33,7 +35,7 @@ export function Profile() {
       });
 
       if (error) {
-        showAlert(error.message, 'error');
+        showAlert((error as any).message, 'error');
       } else {
         showAlert('Profile updated successfully!', 'success');
         setIsEditing(false);
@@ -104,6 +106,18 @@ export function Profile() {
       }
     };
     reader.readAsText(file);
+  };
+
+  const handleResetProgress = () => {
+    const confirmation = prompt('Type "RESET" to confirm. This will delete all your progress and restart the game.');
+    if (confirmation === 'RESET') {
+      try {
+        localStorage.clear();
+        window.location.reload();
+      } catch (error) {
+        showAlert('Failed to reset progress', 'error');
+      }
+    }
   };
 
   const handleDeleteAccount = async () => {
@@ -424,6 +438,20 @@ export function Profile() {
                   />
                 </label>
               </div>
+
+              <div className="p-6 bg-red-900/20 border border-red-500/30 rounded-xl">
+                <h4 className="font-bold text-red-300 mb-2 font-cinzel">Reset Progress</h4>
+                <p className="text-red-200/70 text-sm mb-4 font-inter">
+                  Start over from the beginning. This will clear all data and reload the starter cards.
+                </p>
+                <button
+                  onClick={handleResetProgress}
+                  className="flex items-center gap-2 bg-red-600/20 text-red-300 px-4 py-2 rounded-lg border border-red-500/50 hover:bg-red-600/30 transition-all font-cinzel font-bold text-sm hover:shadow-[0_0_10px_rgba(239,68,68,0.3)]"
+                >
+                  <Trash2 size={16} />
+                  Reset Game
+                </button>
+              </div>
             </div>
           </div>
 
@@ -435,10 +463,12 @@ export function Profile() {
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: 'Total Activities', value: JSON.parse(localStorage.getItem('innerlevel_tasks') || '[]').length },
-                { label: 'Habits Created', value: JSON.parse(localStorage.getItem('innerlevel_habits') || '[]').length },
-                { label: 'Tasks Completed', value: JSON.parse(localStorage.getItem('innerlevel_todos') || '[]').filter((t: any) => t.status === 'Completed').length },
-                { label: 'Goals Set', value: JSON.parse(localStorage.getItem('innerlevel_goals') || '[]').length },
+                { label: 'Total Activities', value: state.tasks.length },
+                { label: 'Habits Created', value: state.habits.length },
+                { label: 'Tasks Completed', value: state.todos.filter(t => t.status === 'Completed').length },
+                { label: 'Goals Set', value: state.goals.length },
+                { label: 'Cards Completed', value: state.character.completedCards?.length || 0 },
+                { label: 'XP Gained', value: state.character.experience || 0 },
               ].map((stat, index) => (
                 <div key={index} className="text-center p-4 bg-void-900/50 border border-white/5 rounded-xl hover:border-tech-magenta/30 transition-all">
                   <div className="text-3xl font-bold text-tech-magenta font-mono mb-1">{stat.value}</div>

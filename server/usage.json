@@ -19,8 +19,12 @@
   },
   "2025-11": {
     "anonymous": {
-      "generations": 9,
-      "tokens": 11730
+      "generations": 11,
+      "tokens": 12775
+    },
+    "char_1764033827358_ff643bpu4": {
+      "generations": 10,
+      "tokens": 13156
     }
   }
 }

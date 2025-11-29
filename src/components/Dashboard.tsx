@@ -110,10 +110,15 @@ export function Dashboard({ onPageChange }: DashboardProps) {
     dispatch({ type: 'EXECUTE_CARD', payload: { cardId: selectedCard.id, result } });
     // Note: Energy consumption is handled inside EXECUTE_CARD reducer
 
+    console.log('🔄 Dispatching EXECUTE_CARD for:', selectedCard.name);
+
     // Log after a brief moment to see updated state
     setTimeout(() => {
-      console.log('🎮 Current completedCards after dispatch:', state.character.completedCards?.length || 0);
-      console.log('🎮 Current dailyProgress after dispatch:', state.character.dailyProgress);
+      console.log('✅ State after execution:', {
+        completedCards: state.character.completedCards?.length || 0,
+        dailyProgress: state.character.dailyProgress,
+        energy: state.energy.current
+      });
     }, 100);
 
     // Show notification for XP/points gained
