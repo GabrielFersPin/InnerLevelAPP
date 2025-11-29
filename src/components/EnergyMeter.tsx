@@ -10,11 +10,11 @@ interface EnergyMeterProps {
   showDetails?: boolean;
 }
 
-export function EnergyMeter({ 
-  energy, 
-  onEnergyUpdate, 
-  size = 'medium', 
-  showDetails = true 
+export function EnergyMeter({
+  energy,
+  onEnergyUpdate,
+  size = 'medium',
+  showDetails = true
 }: EnergyMeterProps) {
   const [currentEnergy, setCurrentEnergy] = useState(energy);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -60,35 +60,35 @@ export function EnergyMeter({
 
   const getEnergyBarGradient = () => {
     if (percentage >= 80) {
-      return 'bg-gradient-to-r from-emerald-500 to-green-400';
+      return 'bg-gradient-to-r from-emerald-500 to-green-400 shadow-[0_0_10px_rgba(16,185,129,0.5)]';
     } else if (percentage >= 50) {
-      return 'bg-gradient-to-r from-blue-500 to-cyan-400';
+      return 'bg-gradient-to-r from-blue-500 to-tech-cyan shadow-[0_0_10px_rgba(0,240,255,0.5)]';
     } else if (percentage >= 20) {
-      return 'bg-gradient-to-r from-amber-500 to-yellow-400';
+      return 'bg-gradient-to-r from-amber-500 to-tech-gold shadow-[0_0_10px_rgba(255,215,0,0.5)]';
     } else {
-      return 'bg-gradient-to-r from-red-500 to-red-400';
+      return 'bg-gradient-to-r from-red-500 to-red-400 shadow-[0_0_10px_rgba(239,68,68,0.5)]';
     }
   };
 
   return (
-    <div className={`rpg-panel ${containerClasses[size]}`}>
+    <div className={`bg-void-950/40 border border-white/10 backdrop-blur-md rounded-2xl shadow-xl ${containerClasses[size]}`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <Zap size={size === 'small' ? 16 : size === 'medium' ? 20 : 24} className="text-blue-400" />
-          <span className={`font-bold text-rpg-title ${textClasses[size]}`}>
+          <Zap size={size === 'small' ? 16 : size === 'medium' ? 20 : 24} className="text-tech-cyan animate-pulse" />
+          <span className={`font-bold font-cinzel text-gold-200 ${textClasses[size]}`}>
             Energy
           </span>
         </div>
-        <div className={`font-bold ${energyStatus.color} ${textClasses[size]}`}>
+        <div className={`font-bold font-mono ${energyStatus.color} ${textClasses[size]}`}>
           {Math.round(currentEnergy.current)}/{currentEnergy.maximum}
         </div>
       </div>
 
       {/* Energy Bar */}
       <div className="relative mb-3">
-        <div className={`w-full bg-slate-700 rounded-full ${sizeClasses[size]} overflow-hidden`}>
-          <div 
+        <div className={`w-full bg-void-900 rounded-full ${sizeClasses[size]} overflow-hidden border border-white/5`}>
+          <div
             className={`
               ${getEnergyBarGradient()} 
               ${sizeClasses[size]} 
@@ -99,32 +99,32 @@ export function EnergyMeter({
           >
             {/* Shimmer effect for legendary energy */}
             {percentage >= 90 && (
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse" />
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[shimmer_2s_infinite]" />
             )}
           </div>
         </div>
-        
+
         {/* Percentage indicator */}
-        <div className="absolute right-0 -top-6 text-xs text-slate-400">
+        <div className="absolute right-0 -top-6 text-xs text-tech-cyan font-mono">
           {percentage}%
         </div>
       </div>
 
       {/* Energy Status Message */}
-      <div className={`${energyStatus.color} font-medium mb-2 ${size === 'small' ? 'text-xs' : 'text-sm'}`}>
+      <div className={`${energyStatus.color} font-medium mb-2 font-inter ${size === 'small' ? 'text-xs' : 'text-sm'}`}>
         {energyStatus.message}
       </div>
 
       {/* Details */}
       {showDetails && size !== 'small' && (
-        <div className="grid grid-cols-2 gap-4 text-xs text-slate-400">
+        <div className="grid grid-cols-2 gap-4 text-xs text-slate-400 font-mono">
           <div className="flex items-center gap-1">
-            <TrendingUp size={12} />
+            <TrendingUp size={12} className="text-emerald-400" />
             <span>Regen: {currentEnergy.regenerationRate.toFixed(1)}/hr</span>
           </div>
-          
+
           <div className="flex items-center gap-1">
-            <Clock size={12} />
+            <Clock size={12} className="text-amber-400" />
             <span>{timeToFull.message}</span>
           </div>
         </div>
@@ -133,8 +133,8 @@ export function EnergyMeter({
       {/* Energy Tips */}
       {showDetails && size === 'large' && percentage < 30 && (
         <div className="mt-4 p-3 bg-amber-900/20 border border-amber-500/30 rounded-lg">
-          <div className="text-amber-300 font-semibold text-sm mb-1">⚡ Energy Tips:</div>
-          <ul className="text-xs text-amber-200 space-y-1">
+          <div className="text-amber-300 font-bold text-sm mb-1 font-cinzel">⚡ Energy Tips:</div>
+          <ul className="text-xs text-amber-200/80 space-y-1 font-inter">
             <li>• Use recovery cards to restore energy faster</li>
             <li>• Take breaks between intense activities</li>
             <li>• Consider easier tasks when energy is low</li>
@@ -145,8 +145,8 @@ export function EnergyMeter({
       {/* High Energy Celebration */}
       {showDetails && size === 'large' && percentage >= 90 && (
         <div className="mt-4 p-3 bg-emerald-900/20 border border-emerald-500/30 rounded-lg">
-          <div className="text-emerald-300 font-semibold text-sm mb-1">🌟 Peak Energy!</div>
-          <p className="text-xs text-emerald-200">
+          <div className="text-emerald-300 font-bold text-sm mb-1 font-cinzel">🌟 Peak Energy!</div>
+          <p className="text-xs text-emerald-200/80 font-inter">
             Perfect time for challenging quests and epic cards!
           </p>
         </div>
@@ -155,15 +155,15 @@ export function EnergyMeter({
       {/* Today's Energy Usage */}
       {showDetails && size === 'large' && currentEnergy.dailyUsage.length > 0 && (
         <div className="mt-4">
-          <div className="text-slate-300 font-semibold text-sm mb-2">Today's Usage:</div>
+          <div className="text-slate-300 font-bold text-sm mb-2 font-cinzel">Today's Usage:</div>
           <div className="space-y-1">
             {currentEnergy.dailyUsage
               .filter(usage => new Date(usage.date).toDateString() === new Date().toDateString())
               .slice(-3)
               .map((usage, index) => (
-                <div key={index} className="flex justify-between text-xs text-slate-400">
+                <div key={index} className="flex justify-between text-xs text-slate-400 font-inter border-b border-white/5 pb-1 last:border-0">
                   <span>{usage.usage[usage.usage.length - 1]?.activity || 'Activity'}</span>
-                  <span>-{usage.usage[usage.usage.length - 1]?.amount || 0} energy</span>
+                  <span className="text-tech-magenta font-mono">-{usage.usage[usage.usage.length - 1]?.amount || 0} energy</span>
                 </div>
               ))
             }

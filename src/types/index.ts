@@ -88,15 +88,15 @@ export interface Goal {
   id: number;
   title: string;
   description: string;
-  
+
   // Goal categorization
   domain: GoalDomain;
   category: GoalCategory;
-  
+
   // Character development
   relatedSkills: string[]; // Which character skills this goal develops
   classAlignment: CharacterClass[]; // Which classes benefit most from this goal
-  
+
   // Planning and tracking
   timeframe: string;
   priority: 'High' | 'Medium' | 'Low';
@@ -104,10 +104,10 @@ export interface Goal {
   createdAt: string;
   completedAt?: string;
   progress: number;
-  
+
   // Milestones and subtasks
   milestones: GoalMilestone[];
-  
+
   // AI-generated plan (optional)
   aiPlan?: {
     habits: Array<{
@@ -128,14 +128,14 @@ export interface Goal {
       points: number;
     }>;
   };
-  
+
   // Tracking
   weeklyProgress: number; // Progress made this week
   estimatedCompletion?: string; // AI-estimated completion date
   difficulty: 'Easy' | 'Medium' | 'Hard' | 'Epic';
 }
 
-export type GoalDomain = 
+export type GoalDomain =
   | 'career'
   | 'health'
   | 'relationships'
@@ -145,7 +145,7 @@ export type GoalDomain =
   | 'education'
   | 'spiritual';
 
-export type GoalCategory = 
+export type GoalCategory =
   // Career
   | 'job-search'
   | 'skill-development'
@@ -454,7 +454,7 @@ export interface Character {
   experience: number;
   skillPoints: number;
   avatar: string;
-  
+
   // Energy specific by class
   energy: {
     current: number;
@@ -462,26 +462,26 @@ export interface Character {
     regenerationRate: number;
     lastUpdate: Date;
   };
-  
+
   // Skills specific by class
   skills: Record<string, {
     level: number;
     experience: number;
     totalXP: number;
   }>;
-  
+
   // Inventory and progress
   deck: Card[];
   activeDeck: string[]; // IDs of equipped cards
   completedCards: CardCompletion[];
   achievements: Achievement[];
-  
+
   // Game state
   currentGoals: Goal[];
   dailyProgress: DailyProgress;
   streak: number;
   prestigeLevel: number;
-  
+
   // Character creation
   isOnboarded: boolean;
   personalityTestResults?: PersonalityTestResult;
@@ -611,4 +611,4 @@ export interface GuildData {
   preferences: GuildPreferences;
 }
 
-export type PageType = 'character-hub' | 'card-deck' | 'training-ground' | 'character-sheet' | 'guild-settings' | 'personality-test' | 'class-reveal';
+export type PageType = 'character-hub' | 'card-deck' | 'training-ground' | 'character-sheet' | 'guild-settings' | 'personality-test' | 'class-reveal' | 'card-generator' | 'card-inventory' | 'quest-designer' | 'analytics';

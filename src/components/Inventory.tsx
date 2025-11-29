@@ -1,10 +1,12 @@
- import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { getUserGifts, addGift, updateGift, deleteGift, claimGift, Gift } from '../services/giftService';
 import { useAuth } from '../hooks/useAuth';
 import { useAppContext } from '../context/AppContext';
 import { Edit, Trash2, Sparkles, CalendarHeart, Gift as GiftIcon } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { ArcaneEngine } from '../services/arcaneEngine';
+import techOrb from '../assets/tech_orb.png';
+import techLantern from '../assets/tech_lantern.png';
 
 // Extend Gift type locally
 interface UIRPGGift extends Gift {
@@ -13,7 +15,7 @@ interface UIRPGGift extends Gift {
 }
 
 const RARITY_OPTIONS: { value: 'common' | 'rare' | 'epic' | 'legendary'; label: string; color: string; icon: JSX.Element }[] = [
-  { value: 'common', label: 'Common', color: 'gray', icon: <Sparkles className="w-5 h-5 text-gray-400" /> },
+  { value: 'common', label: 'Common', color: 'gray', icon: <Sparkles className="w-5 h-5 text-slate-400" /> },
   { value: 'rare', label: 'Rare', color: 'blue', icon: <Sparkles className="w-5 h-5 text-blue-400" /> },
   { value: 'epic', label: 'Epic', color: 'purple', icon: <Sparkles className="w-5 h-5 text-purple-400" /> },
   { value: 'legendary', label: 'Legendary', color: 'amber', icon: <Sparkles className="w-5 h-5 text-amber-400" /> },
@@ -162,133 +164,162 @@ const Inventory: React.FC = () => {
     });
   };
 
-  if (loading) return <div>Loading inventory...</div>;
+  if (loading) return <div className="text-center text-gold-200 font-cinzel p-8">Accessing Vault...</div>;
 
   // Add rarity icons and color map
   const rarityStyles: Record<string, string> = {
-    common: 'border-gray-400 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800',
-    rare: 'border-blue-400 bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-800',
-    epic: 'border-purple-500 bg-gradient-to-br from-purple-900 via-indigo-900 to-slate-800',
-    legendary: 'border-amber-400 bg-gradient-to-br from-amber-700 via-amber-900 to-slate-800 animate-pulse-slow',
+    common: 'border-slate-600 bg-void-900/50 shadow-[0_0_10px_rgba(148,163,184,0.1)]',
+    rare: 'border-blue-500/50 bg-blue-950/30 shadow-[0_0_15px_rgba(59,130,246,0.2)]',
+    epic: 'border-purple-500/50 bg-purple-950/30 shadow-[0_0_15px_rgba(168,85,247,0.2)]',
+    legendary: 'border-amber-500/50 bg-amber-950/30 shadow-[0_0_20px_rgba(245,158,11,0.2)] animate-pulse-slow',
   };
 
   return (
-    <div className="p-4 max-w-2xl mx-auto">
+    <div className="p-4 max-w-4xl mx-auto space-y-8">
+      {/* Header */}
+      <div className="text-center">
+        <h2 className="text-4xl font-bold text-gold-200 mb-4 font-cinzel text-glow-sm flex items-center justify-center gap-3">
+          <img src={techLantern} alt="Lantern" className="w-8 h-8 pixelated" />
+          Treasure Vault
+          <img src={techLantern} alt="Lantern" className="w-8 h-8 pixelated transform scale-x-[-1]" />
+        </h2>
+        <p className="text-slate-300 font-inter">Manage your rewards and track your progress.</p>
+      </div>
+
       {/* Streak & Daily Bonus + Mystery Chest */}
-      <div className="mb-6 flex items-center gap-6">
-        <div className="flex items-center gap-2 bg-gradient-to-r from-amber-700 via-amber-900 to-indigo-900 px-4 py-2 rounded-xl border-2 border-amber-500 shadow-lg">
-          <CalendarHeart className="w-6 h-6 text-amber-300" />
-          <span className="text-lg font-bold text-amber-200">Streak: {streak} day{streak === 1 ? '' : 's'}</span>
+      <div className="flex flex-wrap justify-center gap-6">
+        <div className="flex items-center gap-3 bg-void-950/60 px-6 py-4 rounded-xl border border-tech-gold/30 shadow-[0_0_15px_rgba(255,215,0,0.1)] backdrop-blur-md">
+          <CalendarHeart className="w-8 h-8 text-tech-gold" />
+          <div className="flex flex-col">
+            <span className="text-xs text-slate-400 uppercase tracking-wider font-cinzel">Current Streak</span>
+            <span className="text-2xl font-bold text-gold-100 font-cinzel">{streak} Day{streak === 1 ? '' : 's'}</span>
+          </div>
         </div>
+
         <button
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold border-2 shadow-lg transition-all duration-200
+          className={`flex items-center gap-3 px-6 py-4 rounded-xl font-bold border transition-all duration-300 font-cinzel
             ${canClaim
-              ? 'bg-gradient-to-r from-green-500 via-emerald-600 to-teal-700 text-white border-green-300 hover:from-green-400 hover:to-teal-600 scale-105'
-              : 'bg-slate-700 text-slate-400 border-slate-600 opacity-60 cursor-not-allowed'}`}
+              ? 'bg-gradient-to-r from-emerald-900/80 to-teal-900/80 text-emerald-100 border-emerald-500/50 hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:scale-105'
+              : 'bg-void-900/50 text-slate-500 border-slate-700 cursor-not-allowed'}`}
           onClick={handleClaimDaily}
           disabled={!canClaim}
-          title={canClaim ? 'Claim your daily bonus!' : 'Already claimed today'}
         >
-          <GiftIcon className="w-5 h-5 mr-1 -ml-1" /> Claim Daily Bonus
+          <GiftIcon className={`w-6 h-6 ${canClaim ? 'animate-bounce text-emerald-400' : ''}`} />
+          {canClaim ? 'Claim Daily Reward' : 'Reward Claimed'}
         </button>
+
         <button
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold border-2 shadow-lg transition-all duration-200 bg-gradient-to-r from-amber-400 via-yellow-500 to-orange-600 text-amber-900 border-amber-300 hover:from-yellow-300 hover:to-orange-400 hover:scale-105 ${chestOpen ? 'animate-bounce' : ''}`}
+          className={`flex items-center gap-3 px-6 py-4 rounded-xl font-bold border transition-all duration-300 font-cinzel bg-gradient-to-r from-tech-gold/20 to-orange-900/40 text-gold-200 border-tech-gold/50 hover:shadow-[0_0_20px_rgba(255,215,0,0.3)] hover:scale-105 ${chestOpen ? 'animate-pulse' : ''}`}
           onClick={handleOpenChest}
           disabled={chestOpen || chestLoading}
-          title="Open the Mystery Chest!"
         >
-          <GiftIcon className={`w-6 h-6 ${chestOpen ? 'animate-spin-slow' : ''}`} />
+          <img src={techOrb} className={`w-6 h-6 pixelated ${chestOpen ? 'animate-spin-slow' : ''}`} alt="Orb" />
           {chestLoading ? 'Summoning...' : 'Mystery Chest'}
         </button>
       </div>
+
       {chestMsg && (
-        <div className="mb-4 text-center text-lg font-bold text-amber-300 animate-fadeIn drop-shadow-glow">
-          {chestMsg}
+        <div className="text-center p-4 bg-void-900/80 border border-tech-gold/30 rounded-xl animate-fadeIn shadow-lg max-w-md mx-auto">
+          <p className="text-lg font-bold text-gold-300 font-cinzel">{chestMsg}</p>
         </div>
       )}
+
       {/* Progress Bar */}
-      <div className="mb-6">
-        <div className="flex justify-between items-end mb-1">
-          <div className="text-lg font-bold text-amber-300">Level {currentLevel}</div>
-          <div className="text-xs text-slate-400">XP: {currentXP} / {xpForNextLevel}</div>
+      <div className="bg-void-950/40 border border-white/10 rounded-2xl p-6 backdrop-blur-md">
+        <div className="flex justify-between items-end mb-3">
+          <div className="text-xl font-bold text-gold-200 font-cinzel">Level {currentLevel}</div>
+          <div className="text-sm text-tech-cyan font-mono">XP: {currentXP} / {xpForNextLevel}</div>
         </div>
-        <div className="w-full h-5 bg-slate-700 rounded-full shadow-inner border border-amber-700 relative overflow-hidden">
+        <div className="w-full h-6 bg-void-900 rounded-full shadow-inner border border-void-700 relative overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 rounded-full shadow-lg transition-all duration-500"
+            className="h-full bg-gradient-to-r from-tech-gold via-orange-500 to-tech-gold bg-[length:200%_100%] animate-shimmer rounded-full shadow-[0_0_10px_rgba(255,215,0,0.3)] transition-all duration-1000"
             style={{ width: `${progress * 100}%` }}
           ></div>
-          <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-slate-900/80">
+          <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-void-950 uppercase tracking-widest z-10 mix-blend-screen">
             {Math.round(progress * 100)}% to Level {nextLevel}
           </div>
         </div>
       </div>
-      <h2 className="text-2xl font-bold mb-4 text-amber-200">Your Rewards & Inventory</h2>
-      <button
-        className="mb-4 px-6 py-2 bg-gradient-to-r from-amber-500 via-amber-600 to-indigo-600 text-white font-bold rounded-xl shadow-lg hover:from-amber-400 hover:to-indigo-500 hover:scale-105 transition-all duration-200 border-2 border-amber-400"
-        onClick={() => { setShowModal(true); setEditingGift(null); }}
-      >
-        + Forge Reward
-      </button>
-      <ul className="space-y-6">
+
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gold-100 font-cinzel flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-tech-magenta" />
+          Inventory
+        </h2>
+        <button
+          className="px-6 py-2 bg-tech-cyan/20 text-tech-cyan font-bold rounded-lg border border-tech-cyan/50 hover:bg-tech-cyan/30 hover:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all font-cinzel text-sm"
+          onClick={() => { setShowModal(true); setEditingGift(null); }}
+        >
+          + Forge Reward
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {gifts.map(gift => {
           const g = gift as UIRPGGift;
           const rarity = g.rarity || 'common';
           const rarityOption = RARITY_OPTIONS.find(r => r.value === rarity);
           const icon = g.icon || '🪙';
+
           return (
-            <li
+            <div
               key={g.id}
-              className={`relative border-2 rounded-2xl p-5 flex justify-between items-center shadow-xl hover:shadow-amber-400/30 transition group ${rarityStyles[rarity]}`}
+              className={`relative border rounded-xl p-5 flex flex-col justify-between shadow-lg backdrop-blur-sm transition-all hover:-translate-y-1 ${rarityStyles[rarity]}`}
             >
-              <div className="flex items-center gap-4">
-                <span className="text-3xl drop-shadow-glow">
+              <div className="flex items-start gap-4 mb-4">
+                <div className="text-4xl filter drop-shadow-md bg-void-950/30 w-16 h-16 flex items-center justify-center rounded-lg border border-white/5">
                   {icon}
-                </span>
+                </div>
                 <div>
-                  <div className="font-extrabold text-lg tracking-wide flex items-center gap-2 text-amber-200">
+                  <div className="font-bold text-lg tracking-wide flex items-center gap-2 text-gold-100 font-cinzel">
                     {g.name}
-                    <span className={`text-xs font-bold uppercase ml-2 px-2 py-0.5 rounded-full border ${rarity === 'legendary' ? 'border-amber-400 bg-amber-900 text-amber-200 animate-pulse' : rarity === 'epic' ? 'border-purple-400 bg-purple-900 text-purple-200' : rarity === 'rare' ? 'border-blue-400 bg-blue-900 text-blue-200' : 'border-gray-400 bg-slate-800 text-gray-300'}`}>{rarityOption?.label}</span>
                   </div>
-                  <div className="text-sm text-indigo-200 italic">{g.description}</div>
-                  <div className="text-xs mt-1 text-slate-400">Level: {g.level_required} | Status: {g.status}</div>
+                  <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-sm border inline-block mb-2 ${rarity === 'legendary' ? 'border-amber-500 text-amber-400' : rarity === 'epic' ? 'border-purple-500 text-purple-400' : rarity === 'rare' ? 'border-blue-500 text-blue-400' : 'border-slate-500 text-slate-400'}`}>
+                    {rarityOption?.label}
+                  </span>
+                  <div className="text-sm text-slate-300 font-inter leading-relaxed">{g.description}</div>
                 </div>
               </div>
-              <div className="flex gap-2 items-center ml-4">
-                <button
-                  className={`flex items-center gap-1 px-3 py-1 rounded-full shadow-lg border-2 font-semibold text-sm transition-all duration-150
-                    ${g.status === 'unlocked'
-                      ? 'bg-gradient-to-r from-purple-600 via-indigo-700 to-indigo-900 text-white border-indigo-500 hover:from-purple-400 hover:to-indigo-500'
-                      : 'bg-slate-700 text-slate-400 border-slate-600 opacity-60 cursor-not-allowed'}
-                  `}
-                  title={g.status === 'unlocked' ? 'Use Reward' : g.status === 'locked' ? 'Reward is locked' : 'Reward already used'}
-                  onClick={() => g.status === 'unlocked' && handleClaimGift(g.id)}
-                  disabled={g.status !== 'unlocked'}
-                >
-                  <Sparkles className="w-4 h-4 mr-1 -ml-1 text-amber-300" /> Use
-                </button>
-                <button
-                  className="flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-600 text-slate-900 rounded-full shadow-lg border-2 border-yellow-300 hover:from-yellow-300 hover:to-amber-400 font-semibold text-sm transition-all duration-150"
-                  title="Edit Reward"
-                  onClick={() => { setEditingGift(g); setShowModal(true); }}
-                >
-                  <Edit className="w-4 h-4 mr-1 -ml-1" /> Edit
-                </button>
-                <button
-                  className="flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-red-500 via-rose-600 to-rose-800 text-white rounded-full shadow-lg border-2 border-red-400 hover:from-red-400 hover:to-rose-600 font-semibold text-sm transition-all duration-150"
-                  title="Delete Reward"
-                  onClick={() => handleDeleteGift(g.id)}
-                >
-                  <Trash2 className="w-4 h-4 mr-1 -ml-1" /> Delete
-                </button>
+
+              <div className="flex items-center justify-between mt-auto pt-4 border-t border-white/5">
+                <div className="text-xs text-slate-500 font-mono">Lvl {g.level_required} • {g.status}</div>
+                <div className="flex gap-2">
+                  <button
+                    className={`flex items-center gap-1 px-3 py-1.5 rounded-md font-bold text-xs transition-all
+                      ${g.status === 'unlocked'
+                        ? 'bg-tech-cyan/20 text-tech-cyan border border-tech-cyan/50 hover:bg-tech-cyan/30 hover:shadow-[0_0_10px_rgba(0,240,255,0.3)]'
+                        : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed'}
+                    `}
+                    title={g.status === 'unlocked' ? 'Use Reward' : 'Locked'}
+                    onClick={() => g.status === 'unlocked' && handleClaimGift(g.id)}
+                    disabled={g.status !== 'unlocked'}
+                  >
+                    <Sparkles className="w-3 h-3" /> Use
+                  </button>
+                  <button
+                    className="p-1.5 text-slate-400 hover:text-gold-400 transition-colors"
+                    onClick={() => { setEditingGift(g); setShowModal(true); }}
+                  >
+                    <Edit className="w-4 h-4" />
+                  </button>
+                  <button
+                    className="p-1.5 text-slate-400 hover:text-red-400 transition-colors"
+                    onClick={() => handleDeleteGift(g.id)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
-            </li>
+            </div>
           );
         })}
-      </ul>
+      </div>
+
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded shadow w-96">
-            <div className="mb-4 font-bold text-lg">{editingGift ? 'Edit Gift' : 'Add Gift'}</div>
+        <div className="fixed inset-0 bg-void-950/80 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
+          <div className="bg-void-900 border border-tech-gold/30 p-6 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] w-96 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-tech-gold to-transparent opacity-50"></div>
+            <div className="mb-6 font-bold text-xl text-gold-100 font-cinzel text-center">{editingGift ? 'Reforge Artifact' : 'Forge New Artifact'}</div>
             <GiftForm
               initialGift={editingGift}
               onSave={async (gift) => {
@@ -340,63 +371,68 @@ const GiftForm: React.FC<GiftFormProps> = ({ initialGift, onSave, onCancel }) =>
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 bg-slate-900 rounded-xl p-4 shadow-xl border border-amber-700">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-semibold text-amber-300 mb-1">Icon</label>
-        <input
-          className="w-16 border-2 border-indigo-400 bg-slate-800 text-2xl text-center rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-          value={icon}
-          onChange={e => setIcon(e.target.value)}
-          maxLength={2}
-          placeholder="🪙"
-        />
-        <span className="text-xs text-slate-400 ml-2">(Emoji or 1-2 chars)</span>
+        <label className="block text-xs font-bold text-tech-cyan mb-1 uppercase tracking-wider">Icon</label>
+        <div className="flex gap-2">
+          <input
+            className="w-16 bg-void-950 border border-slate-700 text-2xl text-center rounded-lg px-2 py-1 focus:outline-none focus:border-tech-cyan transition text-white"
+            value={icon}
+            onChange={e => setIcon(e.target.value)}
+            maxLength={2}
+            placeholder="🪙"
+          />
+          <div className="text-xs text-slate-500 flex items-center">(Emoji)</div>
+        </div>
       </div>
       <div>
-        <label className="block text-sm font-semibold text-amber-300 mb-1">Name *</label>
+        <label className="block text-xs font-bold text-tech-cyan mb-1 uppercase tracking-wider">Artifact Name</label>
         <input
-          className="w-full border-2 border-amber-400 bg-slate-800 text-amber-100 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 transition"
+          className="w-full bg-void-950 border border-slate-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:border-tech-cyan transition font-cinzel"
           value={name}
           onChange={e => setName(e.target.value)}
           required
         />
       </div>
       <div>
-        <label className="block text-sm font-semibold text-amber-300 mb-1">Description</label>
+        <label className="block text-xs font-bold text-tech-cyan mb-1 uppercase tracking-wider">Description</label>
         <input
-          className="w-full border-2 border-indigo-400 bg-slate-800 text-amber-100 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+          className="w-full bg-void-950 border border-slate-700 text-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:border-tech-cyan transition font-inter text-sm"
           value={description}
           onChange={e => setDescription(e.target.value)}
         />
       </div>
-      <div>
-        <label className="block text-sm font-semibold text-amber-300 mb-1">Level Required *</label>
-        <input
-          type="number"
-          min={1}
-          className="w-full border-2 border-amber-400 bg-slate-800 text-amber-100 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 transition"
-          value={level}
-          onChange={e => setLevel(Number(e.target.value))}
-          required
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs font-bold text-tech-cyan mb-1 uppercase tracking-wider">Level Req.</label>
+          <input
+            type="number"
+            min={1}
+            className="w-full bg-void-950 border border-slate-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:border-tech-cyan transition"
+            value={level}
+            onChange={e => setLevel(Number(e.target.value))}
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-tech-cyan mb-1 uppercase tracking-wider">Rarity</label>
+          <select
+            className="w-full bg-void-950 border border-slate-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:border-tech-cyan transition"
+            value={rarity}
+            onChange={e => setRarity(e.target.value as 'common' | 'rare' | 'epic' | 'legendary')}
+          >
+            {RARITY_OPTIONS.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
       </div>
-      <div>
-        <label className="block text-sm font-semibold text-amber-300 mb-1">Rarity</label>
-        <select
-          className="w-full border-2 border-purple-400 bg-slate-800 text-amber-100 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
-          value={rarity}
-          onChange={e => setRarity(e.target.value as 'common' | 'rare' | 'epic' | 'legendary')}
-        >
-          {RARITY_OPTIONS.map(opt => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
-        </select>
-      </div>
+
       {isEdit && (
         <div>
-          <label className="block text-sm font-semibold text-amber-300 mb-1">Status</label>
+          <label className="block text-xs font-bold text-tech-cyan mb-1 uppercase tracking-wider">Status</label>
           <select
-            className="w-full border-2 border-indigo-400 bg-slate-800 text-amber-100 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+            className="w-full bg-void-950 border border-slate-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:border-tech-cyan transition"
             value={status}
             onChange={e => setStatus(e.target.value as 'locked' | 'unlocked' | 'used')}
           >
@@ -406,10 +442,12 @@ const GiftForm: React.FC<GiftFormProps> = ({ initialGift, onSave, onCancel }) =>
           </select>
         </div>
       )}
-      {error && <div className="text-red-400 text-sm mb-2 font-semibold">{error}</div>}
-      <div className="flex justify-end gap-2 mt-4">
-        <button type="button" className="px-4 py-2 bg-slate-700 text-amber-200 rounded-lg border border-slate-600 hover:bg-slate-600 transition" onClick={onCancel}>Cancel</button>
-        <button type="submit" className="px-4 py-2 bg-gradient-to-r from-amber-500 via-amber-600 to-indigo-600 text-white font-bold rounded-lg shadow-lg border-2 border-amber-400 hover:from-amber-400 hover:to-indigo-500 hover:scale-105 transition-all duration-200">{isEdit ? 'Save' : 'Add'}</button>
+
+      {error && <div className="text-red-400 text-sm mb-2 font-bold">{error}</div>}
+
+      <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-white/10">
+        <button type="button" className="px-4 py-2 text-slate-400 hover:text-white transition font-cinzel" onClick={onCancel}>Cancel</button>
+        <button type="submit" className="px-6 py-2 bg-gradient-to-r from-tech-gold to-orange-600 text-void-950 font-bold rounded-lg shadow-lg hover:shadow-amber-500/20 hover:scale-105 transition-all duration-200 font-cinzel">{isEdit ? 'Save Changes' : 'Forge Item'}</button>
       </div>
     </form>
   );

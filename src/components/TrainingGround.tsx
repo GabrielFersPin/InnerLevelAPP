@@ -1,21 +1,26 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { CardExecutor } from './cards/CardExecutor';
 import { CardComponent } from './cards/CardComponent';
 import type { Card } from '../types/index';
 import confetti from 'canvas-confetti';
-import { 
-  Sparkles, 
-  Gift as GiftIcon, 
-  Star, 
-  Play, 
-  Pause, 
-  Square, 
-  Clock, 
+import {
+  Sparkles,
+  Gift as GiftIcon,
+  Star,
+  Play,
+  Pause,
   CheckCircle,
   Timer,
-  RotateCcw
+  RotateCcw,
+  Swords,
+  Brain
 } from 'lucide-react';
+
+// Import Pixel Art Assets
+import techSword from '../assets/tech_sword.jpg';
+import techOrb from '../assets/tech_orb.png';
+import techLantern from '../assets/tech_lantern.png';
 
 interface PomodoroState {
   isActive: boolean;
@@ -37,12 +42,12 @@ export function TrainingGround() {
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [sessionResults, setSessionResults] = useState<any[]>([]);
   const [currentSessionIndex, setCurrentSessionIndex] = useState(0);
-  const [draggedCard, setDraggedCard] = useState<{card: Card, from: string} | null>(null);
-  
+  const [draggedCard, setDraggedCard] = useState<{ card: Card, from: string } | null>(null);
+
   // Session execution mode
   const [executionMode, setExecutionMode] = useState<'pomodoro' | 'manual' | null>(null);
   const [showModeSelection, setShowModeSelection] = useState(false);
-  
+
   // Pomodoro timer state
   const [pomodoro, setPomodoro] = useState<PomodoroState>({
     isActive: false,
@@ -56,7 +61,7 @@ export function TrainingGround() {
   // Pomodoro timer effect
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
-    
+
     if (pomodoro.isActive && !pomodoro.isPaused && pomodoro.timeLeft > 0) {
       interval = setInterval(() => {
         setPomodoro(prev => ({
@@ -68,7 +73,7 @@ export function TrainingGround() {
       // Timer finished
       handlePomodoroComplete();
     }
-    
+
     return () => {
       if (interval) clearInterval(interval);
     };
@@ -81,7 +86,7 @@ export function TrainingGround() {
       isActive: false,
       isPaused: false
     }));
-    
+
     // Show completion notification
     confetti({
       particleCount: 100,
@@ -89,14 +94,14 @@ export function TrainingGround() {
       origin: { y: 0.6 },
       colors: ['#10b981', '#059669', '#047857']
     });
-    
+
     // Auto-complete current card
     if (selectedCard) {
       const result = {
-        message: `Completed "${selectedCard.title}" using Pomodoro technique!`,
+        message: `Completed "${selectedCard.name}" using Pomodoro technique!`,
         progressGained: selectedCard.impact,
         energyConsumed: selectedCard.energyCost,
-        effects: [`+${selectedCard.impact} XP`, ...selectedCard.skillBonus.map(b => `+${b.amount} ${b.skillName}`)],
+        effects: [`+${selectedCard.impact} XP`, ...selectedCard.skillBonus.map(b => `+${b.xpBonus} ${b.skillName}`)],
         completionMethod: 'pomodoro'
       };
       handleSessionCardExecute(result);
@@ -107,11 +112,11 @@ export function TrainingGround() {
   const startPomodoro = () => {
     setPomodoro(prev => ({ ...prev, isActive: true, isPaused: false }));
   };
-  
+
   const pausePomodoro = () => {
     setPomodoro(prev => ({ ...prev, isPaused: !prev.isPaused }));
   };
-  
+
   const resetPomodoro = () => {
     setPomodoro(prev => ({
       ...prev,
@@ -120,7 +125,7 @@ export function TrainingGround() {
       timeLeft: prev.totalTime
     }));
   };
-  
+
   const stopPomodoro = () => {
     setPomodoro(prev => ({
       ...prev,
@@ -155,8 +160,8 @@ export function TrainingGround() {
     setDraggedCard({ card, from });
     e.dataTransfer.effectAllowed = 'move';
   };
-  
-  const handleDropToZone = (zoneSetter: React.Dispatch<React.SetStateAction<Card[]>>, zone: Card[], zoneName: string) => (e: React.DragEvent<HTMLDivElement>) => {
+
+  const handleDropToZone = (zoneSetter: React.Dispatch<React.SetStateAction<Card[]>>, zone: Card[], _zoneName: string) => (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     if (draggedCard && !zone.find(c => c.id === draggedCard.card.id)) {
       // Remove from previous zone
@@ -166,7 +171,7 @@ export function TrainingGround() {
     }
     setDraggedCard(null);
   };
-  
+
   const removeCardFromZone = (card: Card, from: string) => {
     switch (from) {
       case 'inventory': break; // nothing to remove
@@ -192,7 +197,7 @@ export function TrainingGround() {
     setCurrentSessionIndex(0);
     setSelectedCard(actionField[0]);
     setShowModeSelection(false);
-    
+
     if (mode === 'pomodoro') {
       // Reset and prepare pomodoro timer
       setPomodoro(prev => ({
@@ -214,10 +219,10 @@ export function TrainingGround() {
     setDiscardZone(z => [...z, actionField[currentSessionIndex]]);
     // Remove from action field
     setActionField(z => z.filter((_, i) => i !== currentSessionIndex));
-    
+
     const newActionField = actionField.filter((_, i) => i !== currentSessionIndex);
     const nextIndex = currentSessionIndex;
-    
+
     if (nextIndex < newActionField.length) {
       setSelectedCard(newActionField[nextIndex]);
       if (executionMode === 'manual') {
@@ -246,10 +251,10 @@ export function TrainingGround() {
   const handleManualComplete = () => {
     if (selectedCard) {
       const result = {
-        message: `Manually completed "${selectedCard.title}"!`,
+        message: `Manually completed "${selectedCard.name}"!`,
         progressGained: selectedCard.impact,
         energyConsumed: selectedCard.energyCost,
-        effects: [`+${selectedCard.impact} XP`, ...selectedCard.skillBonus.map(b => `+${b.amount} ${b.skillName}`)],
+        effects: [`+${selectedCard.impact} XP`, ...selectedCard.skillBonus.map(b => `+${b.xpBonus} ${b.skillName}`)],
         completionMethod: 'manual'
       };
       handleSessionCardExecute(result);
@@ -288,14 +293,18 @@ export function TrainingGround() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4 text-amber-200">Training Ground</h2>
-      
+      <h2 className="text-4xl font-bold mb-8 text-gold-200 font-cinzel text-glow-sm flex items-center gap-3">
+        <Swords className="w-8 h-8 text-tech-cyan" />
+        Training Ground
+        <Swords className="w-8 h-8 text-tech-cyan transform scale-x-[-1]" />
+      </h2>
+
       {/* Mode Selection Modal */}
       {showModeSelection && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-slate-800 border-2 border-amber-400 rounded-2xl p-8 max-w-md w-full mx-4">
             <h3 className="text-2xl font-bold text-amber-200 mb-6 text-center">Choose Your Session Mode</h3>
-            
+
             <div className="space-y-4">
               <button
                 onClick={() => startSessionWithMode('pomodoro')}
@@ -307,7 +316,7 @@ export function TrainingGround() {
                   <div className="text-sm opacity-90">25-minute focused sessions with automatic completion</div>
                 </div>
               </button>
-              
+
               <button
                 onClick={() => startSessionWithMode('manual')}
                 className="w-full p-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all flex items-center gap-4"
@@ -319,7 +328,7 @@ export function TrainingGround() {
                 </div>
               </button>
             </div>
-            
+
             <button
               onClick={() => setShowModeSelection(false)}
               className="w-full mt-4 px-4 py-2 text-slate-400 hover:text-white transition-colors"
@@ -331,12 +340,15 @@ export function TrainingGround() {
       )}
 
       {/* Inventory */}
-      <div className="mb-6">
-        <h3 className="text-lg font-bold text-amber-300 mb-2">Inventory</h3>
+      <div className="mb-8">
+        <h3 className="text-xl font-bold text-tech-cyan mb-3 font-cinzel flex items-center gap-2">
+          <img src={techOrb} alt="Orb" className="w-6 h-6 pixelated" />
+          Card Inventory
+        </h3>
         <div
-          className="flex flex-wrap gap-3 min-h-[60px] p-2 border border-slate-700 rounded-lg bg-slate-900"
+          className="flex flex-wrap gap-3 min-h-[80px] p-4 border border-tech-cyan/30 rounded-xl bg-void-950/40 backdrop-blur-md shadow-[0_0_15px_rgba(0,240,255,0.1)]"
           onDragOver={e => e.preventDefault()}
-          onDrop={handleDropToZone(() => {}, inventoryCards, 'inventory')}
+          onDrop={handleDropToZone(() => { }, inventoryCards, 'inventory')}
         >
           {inventoryCards.map(card => (
             <CardComponent
@@ -351,16 +363,19 @@ export function TrainingGround() {
       </div>
 
       {/* Zones */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {/* Planning Zone */}
-        <div>
-          <h3 className="text-lg font-bold text-blue-300 mb-2">Planning Zone</h3>
+        <div className="flex flex-col h-full">
+          <h3 className="text-xl font-bold text-tech-magenta mb-3 font-cinzel flex items-center gap-2">
+            <Brain className="w-6 h-6 text-tech-magenta" />
+            Planning Zone
+          </h3>
           <div
-            className="min-h-[60px] p-2 border-2 border-blue-400 rounded-lg bg-blue-900/30 flex flex-wrap gap-3"
+            className="flex-1 min-h-[120px] p-4 border-2 border-tech-magenta/30 rounded-xl bg-void-950/40 backdrop-blur-md shadow-[0_0_15px_rgba(255,0,255,0.1)] flex flex-wrap gap-3 content-start transition-all hover:border-tech-magenta/50"
             onDragOver={e => e.preventDefault()}
             onDrop={handleDropToZone(setPlanningZone, planningZone, 'planning')}
           >
-            {planningZone.length === 0 && <div className="text-slate-400 italic">Drag cards here to plan your moves.</div>}
+            {planningZone.length === 0 && <div className="text-slate-400 italic font-inter text-sm w-full text-center mt-4">Drag cards here to plan your moves.</div>}
             {planningZone.map(card => (
               <CardComponent
                 key={card.id}
@@ -374,14 +389,18 @@ export function TrainingGround() {
         </div>
 
         {/* Action Field */}
-        <div>
-          <h3 className="text-lg font-bold text-emerald-300 mb-2">Action Field</h3>
+        <div className="flex flex-col h-full">
+          <h3 className="text-xl font-bold text-tech-gold mb-3 font-cinzel flex items-center gap-2">
+            <img src={techSword} alt="Sword" className="w-6 h-6 rounded-full border border-tech-gold" />
+            Action Field
+          </h3>
           <div
-            className="min-h-[60px] p-2 border-2 border-emerald-400 rounded-lg bg-emerald-900/30 flex flex-wrap gap-3"
+            className="flex-1 min-h-[120px] p-4 border-2 border-tech-gold rounded-xl bg-void-950/60 backdrop-blur-md shadow-[0_0_20px_rgba(255,215,0,0.15)] flex flex-wrap gap-3 content-start relative overflow-hidden group"
             onDragOver={e => e.preventDefault()}
             onDrop={handleDropToZone(setActionField, actionField, 'action')}
           >
-            {actionField.length === 0 && <div className="text-slate-400 italic">Drag cards here to use them this turn.</div>}
+            <div className="absolute inset-0 bg-gradient-to-b from-tech-gold/5 to-transparent pointer-events-none"></div>
+            {actionField.length === 0 && <div className="text-slate-400 italic font-inter text-sm w-full text-center mt-4">Drag cards here to use them this turn.</div>}
             {actionField.map(card => (
               <CardComponent
                 key={card.id}
@@ -394,30 +413,42 @@ export function TrainingGround() {
           </div>
 
           {/* Session Summary and Start */}
-          <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-900 border-2 border-amber-400 rounded-xl p-4 mt-2 flex flex-wrap gap-6 items-center shadow-lg">
-            <div><span className="text-amber-200 font-bold drop-shadow">Total Energy:</span> <span className="text-white font-semibold">{totalEnergy}</span></div>
-            <div><span className="text-amber-200 font-bold drop-shadow">Total XP:</span> <span className="text-white font-semibold">{totalXP}</span></div>
-            <div><span className="text-amber-200 font-bold drop-shadow">Skills:</span> <span className="text-white font-semibold">{allSkills.join(', ') || 'None'}</span></div>
+          <div className="bg-void-950/80 border border-tech-gold/50 rounded-xl p-4 mt-4 flex flex-wrap gap-4 items-center justify-between shadow-lg backdrop-blur-md">
+            <div className="flex flex-col">
+              <span className="text-tech-gold font-bold font-cinzel text-xs uppercase tracking-wider">Energy</span>
+              <span className="text-white font-bold font-inter text-lg">{totalEnergy}</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-tech-gold font-bold font-cinzel text-xs uppercase tracking-wider">XP</span>
+              <span className="text-white font-bold font-inter text-lg">{totalXP}</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-tech-gold font-bold font-cinzel text-xs uppercase tracking-wider">Skills</span>
+              <span className="text-white font-bold font-inter text-sm truncate max-w-[100px]">{allSkills.join(', ') || '-'}</span>
+            </div>
           </div>
 
           <button
             onClick={handleStartSession}
             disabled={actionField.length === 0 || isSessionActive}
-            className="mt-4 px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-900 font-bold rounded-2xl shadow-lg hover:from-amber-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="mt-4 w-full px-8 py-3 bg-gradient-to-r from-tech-gold to-orange-500 text-void-950 font-bold rounded-xl shadow-[0_0_15px_rgba(255,215,0,0.3)] hover:from-yellow-400 hover:to-orange-400 disabled:opacity-50 disabled:cursor-not-allowed font-cinzel tracking-wide transition-all transform hover:-translate-y-0.5 active:translate-y-0"
           >
             Start Session
           </button>
         </div>
 
         {/* Support Zone */}
-        <div>
-          <h3 className="text-lg font-bold text-purple-300 mb-2">Support Zone</h3>
+        <div className="flex flex-col h-full">
+          <h3 className="text-xl font-bold text-tech-cyan mb-3 font-cinzel flex items-center gap-2">
+            <img src={techLantern} alt="Lantern" className="w-6 h-6 pixelated" />
+            Support Zone
+          </h3>
           <div
-            className="min-h-[60px] p-2 border-2 border-purple-400 rounded-lg bg-purple-900/30 flex flex-wrap gap-3"
+            className="flex-1 min-h-[120px] p-4 border-2 border-tech-cyan/30 rounded-xl bg-void-950/40 backdrop-blur-md shadow-[0_0_15px_rgba(0,240,255,0.1)] flex flex-wrap gap-3 content-start transition-all hover:border-tech-cyan/50"
             onDragOver={e => e.preventDefault()}
             onDrop={handleDropToZone(setSupportZone, supportZone, 'support')}
           >
-            {supportZone.length === 0 && <div className="text-slate-400 italic">Drag support cards here for ongoing effects.</div>}
+            {supportZone.length === 0 && <div className="text-slate-400 italic font-inter text-sm w-full text-center mt-4">Drag support cards here.</div>}
             {supportZone.map(card => (
               <CardComponent
                 key={card.id}
@@ -433,98 +464,103 @@ export function TrainingGround() {
 
       {/* Active Session Display */}
       {isSessionActive && selectedCard && (
-        <div className="bg-gradient-to-r from-slate-800 to-indigo-900 border-2 border-amber-400 rounded-2xl p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-2xl font-bold text-amber-200">
-              Current Task: {selectedCard.title}
+        <div className="bg-void-950/80 border-2 border-tech-cyan rounded-2xl p-6 mb-8 shadow-[0_0_30px_rgba(0,240,255,0.15)] backdrop-blur-xl relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-tech-cyan to-transparent opacity-50"></div>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-2xl font-bold text-tech-cyan flex items-center gap-3 font-cinzel">
+              <span className="animate-pulse-slow">●</span>
+              Current Protocol: {selectedCard.name}
             </h3>
-            <div className="text-slate-300">
-              Card {currentSessionIndex + 1} of {actionField.length + currentSessionIndex + 1}
+            <div className="text-tech-cyan/70 font-inter text-sm border border-tech-cyan/30 px-3 py-1 rounded-full">
+              Sequence {currentSessionIndex + 1} / {actionField.length + currentSessionIndex + 1}
             </div>
           </div>
-          
-          <p className="text-slate-300 mb-4">{selectedCard.description}</p>
-          
+
+          <p className="text-slate-300 mb-6 font-inter text-lg leading-relaxed border-l-2 border-tech-cyan/30 pl-4">{selectedCard.description}</p>
+
           {executionMode === 'pomodoro' && (
-            <div className="bg-slate-900/50 rounded-xl p-6">
-              <h4 className="text-xl font-bold text-green-300 mb-4 flex items-center gap-2">
+            <div className="bg-void-900/50 rounded-xl p-8 border border-tech-cyan/20 relative">
+              <div className="absolute top-4 right-4 text-tech-cyan/20">
+                <Timer className="w-12 h-12" />
+              </div>
+              <h4 className="text-xl font-bold text-tech-cyan mb-6 flex items-center gap-2 font-cinzel">
                 <Timer className="w-6 h-6" />
-                Pomodoro Timer
+                Chronometer Active
               </h4>
-              
+
               {/* Timer Display */}
-              <div className="text-center mb-6">
-                <div className="text-6xl font-mono font-bold text-white mb-2">
+              <div className="text-center mb-8 relative">
+                <div className="text-7xl font-mono font-bold text-white mb-4 tracking-wider text-glow-sm">
                   {formatTime(pomodoro.timeLeft)}
                 </div>
-                <div className="w-full bg-slate-700 rounded-full h-3 mb-4">
-                  <div 
-                    className="bg-gradient-to-r from-green-500 to-emerald-500 h-3 rounded-full transition-all duration-1000"
+                <div className="w-full bg-void-800 rounded-full h-2 mb-4 overflow-hidden border border-void-700">
+                  <div
+                    className="bg-gradient-to-r from-tech-cyan to-blue-500 h-2 rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(0,240,255,0.5)]"
                     style={{ width: `${getTimerProgress()}%` }}
                   ></div>
                 </div>
-                <div className="text-slate-400">
-                  {pomodoro.mode === 'work' ? 'Focus Time' : 'Break Time'}
+                <div className="text-tech-cyan/80 font-cinzel uppercase tracking-widest text-sm">
+                  {pomodoro.mode === 'work' ? 'Focus Cycle Initiated' : 'Recharge Cycle Active'}
                 </div>
               </div>
-              
+
               {/* Timer Controls */}
               <div className="flex justify-center gap-4">
                 {!pomodoro.isActive ? (
                   <button
                     onClick={startPomodoro}
-                    className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    className="flex items-center gap-2 px-8 py-3 bg-tech-cyan/20 text-tech-cyan border border-tech-cyan/50 rounded-lg hover:bg-tech-cyan/30 hover:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all font-cinzel tracking-wide"
                   >
                     <Play className="w-5 h-5" />
-                    Start
+                    Initialize
                   </button>
                 ) : (
                   <button
                     onClick={pausePomodoro}
-                    className="flex items-center gap-2 px-6 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+                    className="flex items-center gap-2 px-8 py-3 bg-amber-500/20 text-amber-400 border border-amber-500/50 rounded-lg hover:bg-amber-500/30 transition-all font-cinzel tracking-wide"
                   >
                     <Pause className="w-5 h-5" />
-                    {pomodoro.isPaused ? 'Resume' : 'Pause'}
+                    {pomodoro.isPaused ? 'Resume' : 'Suspend'}
                   </button>
                 )}
-                
+
                 <button
                   onClick={resetPomodoro}
-                  className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="flex items-center gap-2 px-6 py-3 bg-void-800 text-slate-400 border border-slate-700 rounded-lg hover:bg-void-700 hover:text-white transition-all font-cinzel"
                 >
                   <RotateCcw className="w-5 h-5" />
                   Reset
                 </button>
-                
+
                 <button
                   onClick={stopPomodoro}
-                  className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  className="flex items-center gap-2 px-6 py-3 bg-red-900/20 text-red-400 border border-red-900/50 rounded-lg hover:bg-red-900/40 transition-all font-cinzel"
                 >
                   <Square className="w-5 h-5" />
-                  Stop
+                  Abort
                 </button>
               </div>
-              
+
               {/* Manual complete option for Pomodoro mode */}
-              <div className="mt-4 text-center">
+              <div className="mt-6 text-center">
                 <button
                   onClick={handleManualComplete}
-                  className="px-4 py-2 text-sm bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600 hover:text-white transition-colors"
+                  className="px-4 py-2 text-sm text-slate-500 hover:text-tech-cyan transition-colors font-inter underline decoration-slate-700 hover:decoration-tech-cyan"
                 >
-                  Mark as Complete (Skip Timer)
+                  Override Protocol (Mark Complete)
                 </button>
               </div>
             </div>
           )}
-          
+
           {executionMode === 'manual' && (
-            <div className="text-center">
+            <div className="text-center py-8">
               <button
                 onClick={handleManualComplete}
-                className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all mx-auto"
+                className="flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-tech-cyan to-blue-600 text-white font-bold rounded-xl hover:from-cyan-400 hover:to-blue-500 transition-all mx-auto shadow-[0_0_20px_rgba(0,240,255,0.3)] hover:shadow-[0_0_30px_rgba(0,240,255,0.5)] transform hover:-translate-y-1 font-cinzel text-lg"
               >
                 <CheckCircle className="w-6 h-6" />
-                Mark as Complete
+                Complete Protocol
               </button>
             </div>
           )}
@@ -560,55 +596,63 @@ export function TrainingGround() {
 
       {/* Session Summary */}
       {!isSessionActive && sessionResults.length > 0 && (
-        <div className="bg-gradient-to-br from-amber-900/90 via-emerald-900/80 to-indigo-900/90 border-4 border-amber-400 rounded-2xl p-8 mt-8 shadow-2xl text-center animate-fadeIn">
-          <h3 className="text-3xl font-extrabold text-amber-300 mb-4 flex items-center justify-center gap-2">
-            <Sparkles className="w-8 h-8 animate-bounce" /> Victory! Session Complete <Sparkles className="w-8 h-8 animate-bounce" />
-          </h3>
-          <div className="mb-4 text-lg text-white font-bold">
-            You earned <span className="text-amber-300">{sessionResults.reduce((sum, r) => sum + (r.progressGained || 0), 0)}</span> XP and used <span className="text-emerald-300">{sessionResults.reduce((sum, r) => sum + (r.energyConsumed || 0), 0)}</span> Energy!
-          </div>
-          <div className="mb-4 text-md text-indigo-200">
-            Skills trained: <span className="font-semibold">{allSkills.join(', ') || 'None'}</span>
-          </div>
-          <div className="mb-4 text-amber-200 italic">"Every session makes you stronger!"</div>
-          
-          {/* Show completion methods */}
-          <div className="mb-4 text-sm text-slate-300">
-            Completion methods: {sessionResults.map(r => r.completionMethod).join(', ')}
-          </div>
-          
-          {/* Show random bonus */}
-          {bonusMsg && (
-            <div className="mb-4 text-2xl font-bold text-amber-300 animate-pulse flex items-center justify-center gap-2">
-              {bonusMsg.includes('Chest') ? <GiftIcon className="w-7 h-7 animate-bounce" /> : bonusMsg.includes('Star') ? <Star className="w-7 h-7 animate-spin-slow" /> : <Sparkles className="w-7 h-7 animate-bounce" />} {bonusMsg}
+        <div className="bg-void-950/90 border-2 border-tech-gold rounded-2xl p-8 mt-8 shadow-[0_0_50px_rgba(255,215,0,0.2)] text-center animate-fadeIn relative overflow-hidden">
+          <div className="absolute inset-0 bg-[url('/src/assets/rpg_background.png')] opacity-20 bg-repeat"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-void-950 via-transparent to-void-950"></div>
+
+          <div className="relative z-10">
+            <h3 className="text-4xl font-extrabold text-tech-gold mb-6 flex items-center justify-center gap-4 font-cinzel text-glow-sm">
+              <img src={techOrb} alt="Orb" className="w-12 h-12 animate-spin-slow" />
+              Session Complete
+              <img src={techOrb} alt="Orb" className="w-12 h-12 animate-spin-slow" />
+            </h3>
+
+            <div className="mb-8 text-2xl text-white font-bold font-cinzel">
+              <span className="text-tech-gold drop-shadow-md">+{sessionResults.reduce((sum, r) => sum + (r.progressGained || 0), 0)} XP</span>
+              <span className="mx-4 text-slate-600">|</span>
+              <span className="text-tech-cyan drop-shadow-md">{sessionResults.reduce((sum, r) => sum + (r.energyConsumed || 0), 0)} Energy</span>
             </div>
-          )}
-          
-          <ul className="mb-4 text-slate-200">
-            {sessionResults.map((result, i) => (
-              <li key={i} className="mb-2">{result.message} <span className="text-xs text-slate-400">({result.effects?.join(', ')})</span></li>
-            ))}
-          </ul>
-          
-          <div className="flex gap-8 text-lg text-emerald-200 font-bold justify-center mb-4">
-            <div>Total Energy Used: {sessionResults.reduce((sum, r) => sum + (r.energyConsumed || 0), 0)}</div>
-            <div>Total XP Gained: {sessionResults.reduce((sum, r) => sum + (r.progressGained || 0), 0)}</div>
+
+            <div className="mb-6 text-lg text-mythic-300 font-inter bg-void-900/50 inline-block px-6 py-2 rounded-full border border-mythic-500/30">
+              Skills Advanced: <span className="font-bold text-mythic-100">{allSkills.join(', ') || 'None'}</span>
+            </div>
+
+            <div className="mb-8 text-slate-300 italic font-cinzel text-lg">"Your power grows with every challenge overcome."</div>
+
+            {/* Show random bonus */}
+            {bonusMsg && (
+              <div className="mb-8 p-4 bg-gradient-to-r from-tech-gold/20 to-orange-500/20 border border-tech-gold/50 rounded-xl inline-block animate-pulse-slow">
+                <div className="text-2xl font-bold text-tech-gold flex items-center justify-center gap-3 font-cinzel">
+                  {bonusMsg.includes('Chest') ? <GiftIcon className="w-8 h-8 animate-bounce" /> : bonusMsg.includes('Star') ? <Star className="w-8 h-8 animate-spin-slow" /> : <Sparkles className="w-8 h-8 animate-bounce" />}
+                  {bonusMsg}
+                </div>
+              </div>
+            )}
+
+            <div className="grid gap-2 mb-8 max-w-2xl mx-auto text-left">
+              {sessionResults.map((result, i) => (
+                <div key={i} className="bg-void-900/80 p-3 rounded-lg border border-void-700 flex justify-between items-center">
+                  <span className="text-slate-200 font-inter">{result.message}</span>
+                  <span className="text-xs text-tech-cyan font-mono">[{result.effects?.join(', ')}]</span>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => {
+                setSessionResults([]);
+                setActionField(planningZone);
+                setPlanningZone([]);
+                setSupportZone([]);
+                setDiscardZone([]);
+                setBonusMsg(null);
+                handleEpicSessionComplete();
+              }}
+              className="px-12 py-4 bg-gradient-to-r from-tech-gold to-orange-600 text-void-950 font-extrabold rounded-xl shadow-[0_0_30px_rgba(255,215,0,0.4)] hover:from-yellow-400 hover:to-orange-500 animate-pulse text-xl flex items-center gap-3 mx-auto font-cinzel transform hover:-translate-y-1 transition-all"
+            >
+              <Sparkles className="w-6 h-6" /> Continue Journey
+            </button>
           </div>
-          
-          <button
-            onClick={() => {
-              setSessionResults([]);
-              setActionField(planningZone);
-              setPlanningZone([]);
-              setSupportZone([]);
-              setDiscardZone([]);
-              setBonusMsg(null);
-              handleEpicSessionComplete();
-            }}
-            className="mt-6 px-10 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-900 font-extrabold rounded-2xl shadow-lg hover:from-amber-600 hover:to-orange-600 animate-pulse text-xl flex items-center gap-2"
-          >
-            <Sparkles className="w-6 h-6" /> Start Another Adventure!
-          </button>
         </div>
       )}
     </div>
